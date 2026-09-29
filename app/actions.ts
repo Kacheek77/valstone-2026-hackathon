@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { rewriteEmail, type RewriteRequest } from "@/lib/claude";
 import { eventLine } from "@/lib/format";
-import { pushToSalesforce } from "@/lib/salesforce";
+import { demoOpportunityId, pushToSalesforce, salesforceConfigured } from "@/lib/salesforce";
 import { refreshSignals, type RefreshResult } from "@/lib/signals-refresh";
 import { getSupabase } from "@/lib/supabase";
 import type { Account, Opportunity, Rep, Signal, Stage } from "@/lib/types";
@@ -143,12 +143,29 @@ export async function resetEmailAction(oppId: string): Promise<RewriteActionResu
 
 export type PushActionResult =
   | { ok: true; outcome: "salesforce"; url: string }
+  | { ok: true; outcome: "demo"; url: string }
   | { ok: true; outcome: "queued"; reason: string }
   | { ok: false; error: string };
 
 export async function pushToCrmAction(oppId: string): Promise<PushActionResult> {
   try {
     const { opp, account, signal } = await loadOpp(oppId);
+    const now = new Date().toISOString();
+    const db = getSupabase();
+    const moved = { stage: opp.stage === "draft" ? "pushed" : opp.stage, pushed_at: opp.pushed_at ?? now };
+
+    // No org connected: demo mode. The push succeeds with a DEMO- id and a mock record page.
+    if (!salesforceConfigured()) {
+      const { error } = await db
+        .from("opportunities")
+        .update({ ...moved, sf_opportunity_id: opp.sf_opportunity_id ?? demoOpportunityId(), sf_error: null })
+        .eq("id", oppId);
+      if (error) return { ok: false, error: `Could not save the push (${error.message}).` };
+      revalidateAll();
+      return { ok: true, outcome: "demo", url: `/crm/${oppId}` };
+    }
+
+    // Org connected: a real push. A real failure is queued and can be retried.
     const event = signal ? eventLine(signal) : "list prospecting";
     const sf = await pushToSalesforce({
       accountName: account.name,
@@ -156,12 +173,10 @@ export async function pushToCrmAction(oppId: string): Promise<PushActionResult> 
       amount: opp.amount,
       description: `${opp.why_now}\n\nSubject: ${opp.email_subject}\n\n${opp.email_body}`,
     });
-    const now = new Date().toISOString();
-    const { error } = await getSupabase()
+    const { error } = await db
       .from("opportunities")
       .update({
-        stage: opp.stage === "draft" ? "pushed" : opp.stage,
-        pushed_at: opp.pushed_at ?? now,
+        ...moved,
         sf_opportunity_id: sf.ok ? sf.opportunityId : opp.sf_opportunity_id,
         sf_error: sf.ok ? null : sf.error,
       })

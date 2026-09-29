@@ -89,3 +89,143 @@ export function signalDrivenShare(repId: string, data: AllData): number | null {
 export function signalWeeks(signals: Signal[]): string[] {
   return [...new Set(signals.map((s) => s.week_of))].sort();
 }
+
+// ---------------------------------------------------------------- results (VS-6)
+
+// Draft or pushed opportunities older than this are counted as expired.
+export const EXPIRE_DAYS = 21;
+
+export type SegmentKey = "won" | "sentOpen" | "pushed" | "draft";
+export type Segment = { value: number; count: number; amount: number };
+
+// Everything is in expected value (amount × score / 100), so the segments
+// always fit inside "available". The gray remainder is available minus the
+// four segments: lost deals, expired drafts and pushes, and matched accounts
+// nobody generated.
+export type Breakdown = {
+  available: number;
+  segments: Record<SegmentKey, Segment>;
+  remainder: number;
+  lost: { count: number; amount: number };
+  expired: { count: number; amount: number };
+  signals: number;
+  wonPct: number | null;
+};
+
+// Monday of the week containing an ISO date or timestamp.
+export function weekStart(iso: string): string {
+  const d = new Date(`${iso.slice(0, 10)}T12:00:00Z`);
+  const shift = (d.getUTCDay() + 6) % 7;
+  d.setUTCDate(d.getUTCDate() - shift);
+  return d.toISOString().slice(0, 10);
+}
+
+// The week an opportunity belongs to: its signal's week, or for a
+// list-prospected opportunity, the week it was created.
+export function oppWeek(o: Opportunity, signalById: Map<string, Signal>): string {
+  const s = o.signal_id ? signalById.get(o.signal_id) : undefined;
+  return s ? s.week_of : weekStart(o.created_at);
+}
+
+function isExpired(o: Opportunity, now: number): boolean {
+  return (o.stage === "draft" || o.stage === "pushed") && now - Date.parse(o.created_at) > EXPIRE_DAYS * 86_400_000;
+}
+
+export function breakdown(signals: Signal[], opps: Opportunity[], data: AllData, now = Date.now()): Breakdown {
+  const signalIds = new Set(signals.map((s) => s.id));
+  const available =
+    sumValues(signals, data).available +
+    expectedValue(opps.filter((o) => !o.signal_id || !signalIds.has(o.signal_id)));
+  const empty = (): Segment => ({ value: 0, count: 0, amount: 0 });
+  const segments: Record<SegmentKey, Segment> = { won: empty(), sentOpen: empty(), pushed: empty(), draft: empty() };
+  const lost = { count: 0, amount: 0 };
+  const expired = { count: 0, amount: 0 };
+  for (const o of opps) {
+    const ev = (o.amount * o.score) / 100;
+    if (o.stage === "lost") {
+      lost.count++;
+      lost.amount += o.amount;
+      continue;
+    }
+    if (isExpired(o, now)) {
+      expired.count++;
+      expired.amount += o.amount;
+      continue;
+    }
+    const key: SegmentKey = o.stage === "won" ? "won" : o.stage === "sent" ? "sentOpen" : o.stage === "pushed" ? "pushed" : "draft";
+    segments[key].value += ev;
+    segments[key].count++;
+    segments[key].amount += o.amount;
+  }
+  const used = Object.values(segments).reduce((s, g) => s + g.value, 0);
+  return {
+    available,
+    segments,
+    remainder: Math.max(0, available - used),
+    lost,
+    expired,
+    signals: signals.length,
+    wonPct: available > 0 ? (segments.won.value / available) * 100 : null,
+  };
+}
+
+export type WeekRow = { week: string; breakdown: Breakdown };
+
+// Per-week breakdowns for one rep (or everyone when repId is null), newest
+// first, for weeks between from and to (inclusive) that have any data.
+export function weeklyBreakdowns(data: AllData, repId: string | null, from: string, to: string, now = Date.now()): WeekRow[] {
+  const signalById = new Map(data.signals.map((s) => [s.id, s]));
+  const signals = data.signals.filter((s) => (repId === null || s.rep_id === repId) && s.week_of >= from && s.week_of <= to);
+  const opps = data.opps.filter((o) => repId === null || o.rep_id === repId);
+  const weeks = new Set<string>();
+  for (const s of signals) weeks.add(weekStart(s.week_of));
+  const oppsByWeek = new Map<string, Opportunity[]>();
+  for (const o of opps) {
+    const w = weekStart(oppWeek(o, signalById));
+    if (w < weekStart(from) || w > to) continue;
+    weeks.add(w);
+    oppsByWeek.set(w, [...(oppsByWeek.get(w) ?? []), o]);
+  }
+  return [...weeks]
+    .sort()
+    .reverse()
+    .map((w) => ({
+      week: w,
+      breakdown: breakdown(
+        signals.filter((s) => weekStart(s.week_of) === w),
+        oppsByWeek.get(w) ?? [],
+        data,
+        now,
+      ),
+    }));
+}
+
+// Sum of weekly rows: the period total.
+export function totalBreakdown(rows: WeekRow[]): Breakdown {
+  const empty = (): Segment => ({ value: 0, count: 0, amount: 0 });
+  const t: Breakdown = {
+    available: 0,
+    segments: { won: empty(), sentOpen: empty(), pushed: empty(), draft: empty() },
+    remainder: 0,
+    lost: { count: 0, amount: 0 },
+    expired: { count: 0, amount: 0 },
+    signals: 0,
+    wonPct: null,
+  };
+  for (const { breakdown: b } of rows) {
+    t.available += b.available;
+    t.remainder += b.remainder;
+    t.signals += b.signals;
+    t.lost.count += b.lost.count;
+    t.lost.amount += b.lost.amount;
+    t.expired.count += b.expired.count;
+    t.expired.amount += b.expired.amount;
+    for (const k of Object.keys(t.segments) as SegmentKey[]) {
+      t.segments[k].value += b.segments[k].value;
+      t.segments[k].count += b.segments[k].count;
+      t.segments[k].amount += b.segments[k].amount;
+    }
+  }
+  t.wonPct = t.available > 0 ? (t.segments.won.value / t.available) * 100 : null;
+  return t;
+}

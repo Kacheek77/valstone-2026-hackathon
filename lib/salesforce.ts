@@ -96,3 +96,21 @@ export async function pushToSalesforce(input: PushInput): Promise<PushResult> {
     return { ok: false, error: timeout ? "Salesforce did not answer within 8 seconds." : `Salesforce error: ${e instanceof Error ? e.message : String(e)}` };
   }
 }
+
+// ---------------------------------------------------------------- demo mode (VS-6)
+
+export const DEMO_PREFIX = "DEMO-";
+
+// With no org connected, a push "succeeds" in demo mode: a Salesforce-style
+// 15-character Opportunity id (key prefix 006), marked DEMO- so it can never be
+// mistaken for a real record. The mock record lives at /crm/<opportunity id>.
+export function demoOpportunityId(): string {
+  const chars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+  let id = "006";
+  for (let i = 0; i < 12; i++) id += chars[Math.floor(Math.random() * chars.length)];
+  return DEMO_PREFIX + id;
+}
+
+export function isDemoId(id: string | null | undefined): boolean {
+  return !!id && id.startsWith(DEMO_PREFIX);
+}

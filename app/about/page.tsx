@@ -17,7 +17,7 @@ const SEEDED = [
   "All 50 accounts, their contacts and the six reps are synthetic, placed in real Plains counties. A real deployment would read the Salesforce account base.",
   "The 23 signals across five weeks (8 this week) are seeded from a generated batch and checked against the real late-September drought picture.",
   "The 42 existing opportunities, their stages and push times are seeded history; the sparklines and time-to-act figures are computed from them.",
-  "Push to CRM writes an Opportunity and a follow-up Task to a Salesforce Developer Edition org when one is connected. Without a connection, or if Salesforce does not answer within 8 seconds, the push is queued for CRM sync and the opportunity still moves to Pushed.",
+  "Push to CRM writes an Opportunity and a follow-up Task to a Salesforce Developer Edition org when one is connected. No org is connected for the hackathon, so pushes run in demo mode: the opportunity moves to Pushed and “Open in Salesforce (demo)” shows a mock of the records the real push would create, clearly marked as a demo. If a connected org rejects a push, it is queued and can be retried.",
 ];
 
 export default async function About(props: PageProps<"/about">) {

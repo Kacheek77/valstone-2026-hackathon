@@ -23,7 +23,7 @@ export function Header({
 }: {
   view: View;
   reps: Pick<Rep, "id" | "name" | "is_manager" | "voice_note">[] | null;
-  active: "dashboard" | "team" | "pipeline" | null;
+  active: "dashboard" | "team" | "pipeline" | "results" | null;
   // Which switcher entry to show; defaults to the cookie view.
   selected?: string;
 }) {
@@ -58,6 +58,7 @@ export function Header({
         <nav className="flex items-center gap-5">
           {navItem(home.href, home.label, home.key)}
           {navItem("/pipeline", "Pipeline", "pipeline")}
+          {navItem("/results", "Results", "results")}
           <ViewSwitcher
             options={options}
             selected={current}

@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useTransition } from "react";
 import { pushToCrmAction, setStageAction } from "@/app/actions";
 import type { Stage } from "@/lib/types";
@@ -10,9 +11,15 @@ const primary =
 const outline =
   "rounded-full border-2 px-4 py-1.5 text-sm font-semibold transition-opacity duration-150 hover:opacity-80 disabled:cursor-not-allowed disabled:opacity-40";
 
-// Stage buttons for one opportunity. Push has two outcomes (in Salesforce, or
-// queued for CRM sync); both move the opportunity to Pushed.
-export function OppActions({ oppId, stage, sfUrl }: { oppId: string; stage: Stage; sfUrl: string | null }) {
+export type CrmState =
+  | { kind: "real"; url: string } // in a connected Salesforce org
+  | { kind: "demo"; url: string } // demo mode: mock record page
+  | { kind: "queued" } // a real push failed; retry available
+  | { kind: "none" }; // not in the CRM (a draft, or seeded history)
+
+// Stage buttons for one opportunity. Push outcomes: created in Salesforce,
+// created in demo mode (no org connected), or queued after a real failure.
+export function OppActions({ oppId, stage, crm }: { oppId: string; stage: Stage; crm: CrmState }) {
   const [busy, startTransition] = useTransition();
   const [toast, show] = useToast();
 
@@ -21,6 +28,7 @@ export function OppActions({ oppId, stage, sfUrl }: { oppId: string; stage: Stag
       try {
         const r = await pushToCrmAction(oppId);
         if (!r.ok) show("error", r.error);
+        else if (r.outcome === "demo") show("success", "Opportunity and Task created in Salesforce (demo).");
         else if (r.outcome === "salesforce")
           show("success", <>Created in Salesforce: Opportunity and follow-up Task. <a href={r.url} target="_blank" rel="noreferrer" className="underline">Open</a></>);
         else show("neutral", `Queued for CRM sync. ${r.reason}`);
@@ -42,19 +50,27 @@ export function OppActions({ oppId, stage, sfUrl }: { oppId: string; stage: Stag
         <button type="button" onClick={push} disabled={busy} className={primary}>
           {busy ? "Pushing…" : "Push to CRM"}
         </button>
-      ) : sfUrl ? (
-        <a href={sfUrl} target="_blank" rel="noreferrer" className={`${outline} border-[#1f9d55] text-[#1f9d55]`}>
+      ) : crm.kind === "real" ? (
+        <a href={crm.url} target="_blank" rel="noreferrer" className={`${outline} border-[#1f9d55] text-[#1f9d55]`}>
           Open in Salesforce ↗
         </a>
-      ) : (
+      ) : crm.kind === "demo" ? (
+        <Link href={crm.url} className={`${outline} border-[#1f9d55] text-[#1f9d55]`}>
+          Open in Salesforce (demo)
+        </Link>
+      ) : crm.kind === "queued" ? (
         <button
           type="button"
           onClick={push}
           disabled={busy}
-          title="Not in Salesforce yet. Click to retry the sync."
+          title="Salesforce did not accept the push. Click to retry."
           className={`${outline} border-[#7a8794] text-[#5a6975]`}
         >
           {busy ? "Retrying…" : "Queued for CRM sync ↻"}
+        </button>
+      ) : (
+        <button type="button" onClick={push} disabled={busy} className={`${outline} border-[#f55a00] text-[#f55a00]`}>
+          {busy ? "Pushing…" : "Create in CRM"}
         </button>
       )}
 

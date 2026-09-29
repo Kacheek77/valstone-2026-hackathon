@@ -14,6 +14,7 @@ Built for the Valstone Fall Summit 2026 Hackathon, Problem 1 (Sales), on Next.js
 | Faster deals | Outreach lands in the week the grower feels the problem, with the reason stated in their terms: county, event, acres, module | Signal detail "Why now"; the drafted email on each opportunity |
 | Administrative work that disappears | The Opportunity, Task and email are drafted for the rep; tone pills and a one-line instruction rewrite the email in the rep's own voice; one click pushes to the CRM | Opportunity page: **Push to CRM**, tone pills, **Copy email** |
 | (Management) | Capture rate against the value the weather created, time to act, off-territory and list-prospected work, per rep | Team view (Enter as manager) |
+| Proof it worked | Results shows what was won against the expected value the weather created, per week, per rep and for the team | Results tab |
 
 ## What is real and what is seeded
 
@@ -22,7 +23,10 @@ Built for the Valstone Fall Summit 2026 Hackathon, Problem 1 (Sales), on Next.js
 - Matching is deterministic: accounts in the signal's county (for drought, the whole territory), with a relevant crop, that don't own the module.
 - **Refresh signals** calls the US Drought Monitor county data service live and adds a signal only when a territory county's drought category has risen.
 - Amounts come from one formula: module rate per acre × acres + $2,500 setup, rounded to $100.
-- **Push to CRM** writes to a Salesforce Developer Edition org through the client-credentials OAuth flow when `SF_LOGIN_URL`, `SF_CLIENT_ID` and `SF_CLIENT_SECRET` are set. Without them, or if Salesforce fails or takes more than 8 seconds, the push is queued for CRM sync and the opportunity still moves to Pushed.
+- **Push to CRM** writes an Opportunity and a follow-up Task to a Salesforce Developer Edition org through the client-credentials OAuth flow when `SF_LOGIN_URL`, `SF_CLIENT_ID` and `SF_CLIENT_SECRET` are set. If a connected org rejects the push or takes more than 8 seconds, the push is queued and can be retried.
+
+**Demo mode (the live site today)**
+- No Salesforce org is connected, so **Push to CRM** runs in demo mode. The opportunity moves to Pushed with a `DEMO-` record id, and **Open in Salesforce (demo)** opens a mock of the Opportunity and Task the real push would create, labelled as a demo on the page.
 
 **Seeded**
 - The 50 accounts, their contacts and the six reps are synthetic, placed in 18 real Plains counties.

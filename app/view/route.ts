@@ -1,16 +1,17 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { parseView, VIEW_COOKIE } from "@/lib/view";
 
-// GET /view?as=manager | /view?as=<rep id>
+// GET /view?as=manager | /view?as=<rep id>   (&to=results lands on Results)
 // Sets the sd_view cookie and lands on the right screen. Linked with plain
 // <a> tags (never <Link>) so prefetching can't switch the view by accident.
 export function GET(request: NextRequest) {
   const view = parseView(request.nextUrl.searchParams.get("as"));
+  const toResults = request.nextUrl.searchParams.get("to") === "results";
   const target =
     view?.kind === "manager"
-      ? "/team"
+      ? toResults ? "/results" : "/team"
       : view?.kind === "rep"
-        ? `/dashboard?rep=${view.repId}`
+        ? toResults ? `/results?rep=${view.repId}` : `/dashboard?rep=${view.repId}`
         : "/";
   const res = NextResponse.redirect(new URL(target, request.url));
   if (view) {

@@ -2,11 +2,11 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { DraftEditor } from "@/components/DraftEditor";
 import { Header } from "@/components/Header";
-import { OppActions } from "@/components/OppActions";
+import { OppActions, type CrmState } from "@/components/OppActions";
 import { BackLink, Card, ErrorBox, Page, StageBadge } from "@/components/ui";
 import { loadAll } from "@/lib/data";
 import { dateTime, eventLine, usdExact } from "@/lib/format";
-import { recordUrl } from "@/lib/salesforce";
+import { isDemoId, recordUrl } from "@/lib/salesforce";
 import { isLead } from "@/lib/types";
 import { getView } from "@/lib/view";
 
@@ -40,14 +40,30 @@ export default async function OpportunityPage(props: PageProps<"/opportunities/[
   const account = accounts.find((a) => a.id === opp.account_id);
   const signal = signals.find((s) => s.id === opp.signal_id);
   const rep = reps.find((r) => r.id === opp.rep_id);
-  const sfUrl = opp.sf_opportunity_id ? recordUrl(opp.sf_opportunity_id) : null;
+  const demo = isDemoId(opp.sf_opportunity_id);
+  const realUrl = opp.sf_opportunity_id && !demo ? recordUrl(opp.sf_opportunity_id) : null;
+  const crm: CrmState = demo
+    ? { kind: "demo", url: `/crm/${opp.id}` }
+    : realUrl
+      ? { kind: "real", url: realUrl }
+      : opp.sf_error
+        ? { kind: "queued" }
+        : { kind: "none" };
 
   const crmLine =
-    opp.stage === "draft"
-      ? "Not in the CRM yet. Push creates the Opportunity and a follow-up Task."
-      : opp.sf_opportunity_id
-        ? `In Salesforce as ${opp.sf_opportunity_id}${opp.pushed_at ? `, pushed ${dateTime(opp.pushed_at)}` : ""}.`
-        : `Queued for CRM sync${opp.pushed_at ? ` since ${dateTime(opp.pushed_at)}` : ""}${opp.sf_error ? `: ${opp.sf_error}` : "."}`;
+    opp.stage === "draft" ? (
+      "Not in the CRM yet. Push creates the Opportunity and a follow-up Task."
+    ) : crm.kind === "demo" || crm.kind === "real" ? (
+      <span className="flex flex-wrap items-center gap-x-2">
+        <span className="font-semibold text-[#1f9d55]">✓ Pushed to Salesforce · Opportunity and Task created</span>
+        {crm.kind === "demo" && <span className="text-xs text-[#7a8794]">(demo mode — no org connected)</span>}
+        {opp.pushed_at && <span className="text-xs text-[#7a8794]">{dateTime(opp.pushed_at)}</span>}
+      </span>
+    ) : crm.kind === "queued" ? (
+      `Queued for CRM sync${opp.pushed_at ? ` since ${dateTime(opp.pushed_at)}` : ""}: ${opp.sf_error}`
+    ) : (
+      "Pushed before Signal Desk recorded CRM ids (seeded history). Create in CRM makes the record now."
+    );
 
   return (
     <>
@@ -142,8 +158,8 @@ export default async function OpportunityPage(props: PageProps<"/opportunities/[
               />
             </Card>
             <Card className="flex flex-col gap-3 px-5 py-4">
-              <OppActions oppId={opp.id} stage={opp.stage} sfUrl={sfUrl} />
-              <p className="text-sm text-[#5a6975]">CRM: {crmLine}</p>
+              <OppActions oppId={opp.id} stage={opp.stage} crm={crm} />
+              <div className="text-sm text-[#5a6975]">{crmLine}</div>
             </Card>
           </div>
         </div>
