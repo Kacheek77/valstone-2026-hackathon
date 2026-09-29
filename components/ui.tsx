@@ -82,10 +82,10 @@ export function SignalIcon({ type, severity }: { type: SignalType; severity: Sev
   );
 }
 
-export function Tile({ label, children, tint = "#f6f7f8" }: { label: string; children: ReactNode; tint?: string }) {
+export function Tile({ label, children, tint = "#f6f7f8" }: { label: ReactNode; children: ReactNode; tint?: string }) {
   return (
     <div className="flex flex-1 flex-col gap-1 rounded-xl px-4 py-3" style={{ background: tint }}>
-      <p className="text-sm text-[#5a6975]">{label}</p>
+      <div className="text-sm text-[#5a6975]">{label}</div>
       {children}
     </div>
   );
@@ -111,5 +111,34 @@ export function OutlineButtonLink({ href, children, color = "#1f9d55" }: { href:
     >
       {children}
     </Link>
+  );
+}
+
+// Hover or keyboard-focus popover. CSS only, so it works in server components.
+export function InfoTip({ label, children, align = "left" }: { label: string; children: ReactNode; align?: "left" | "right" }) {
+  return (
+    <span className="group relative inline-flex align-middle">
+      <button
+        type="button"
+        aria-label={label}
+        className="inline-flex h-4 w-4 items-center justify-center rounded-full border border-[#9aa5ae] text-[10px] font-bold leading-none text-[#5a6975] transition-colors duration-150 hover:border-[#3a728a] hover:text-[#3a728a] focus-visible:outline-2 focus-visible:outline-[#3a728a]"
+      >
+        i
+      </button>
+      <span
+        role="tooltip"
+        className={`pointer-events-none invisible absolute top-6 z-40 w-72 rounded-lg border border-[#d9dee3] bg-white px-3 py-2 text-left text-xs font-normal normal-case leading-relaxed tracking-normal text-[#3f4e5b] opacity-0 shadow-lg transition-opacity duration-150 group-hover:visible group-hover:opacity-100 group-focus-within:visible group-focus-within:opacity-100 ${align === "right" ? "right-0" : "left-0"}`}
+      >
+        {children}
+      </span>
+    </span>
+  );
+}
+
+export function StatusBadge({ status }: { status: "Customer" | "Prospect" }) {
+  return status === "Customer" ? (
+    <span className="rounded-full bg-[#e6f4ec] px-2 py-0.5 text-xs font-medium text-[#14693a]">Customer</span>
+  ) : (
+    <span className="rounded-full bg-[#fff4ec] px-2 py-0.5 text-xs font-medium text-[#c64800]">Prospect</span>
   );
 }

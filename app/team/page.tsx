@@ -94,10 +94,10 @@ export default async function Team() {
         </div>
 
         <Card className="overflow-x-auto">
-          <table className="w-full min-w-[980px] text-sm">
+          <table className="w-full min-w-[980px] text-sm [&_td]:whitespace-nowrap [&_th]:whitespace-nowrap">
             <thead className="bg-[#efefef] text-[#3f4e5b]">
               <tr>
-                <th className="px-4 py-2.5 text-left font-semibold">Rep</th>
+                <th className="sticky left-0 z-20 bg-[#efefef] px-4 py-2.5 text-left font-semibold">Rep</th>
                 <th className="px-3 py-2.5 text-left font-semibold">Territory</th>
                 <th className="px-3 py-2.5 text-right font-semibold">Signals</th>
                 <th className="px-3 py-2.5 text-right font-semibold">Opps</th>
@@ -115,8 +115,8 @@ export default async function Team() {
             </thead>
             <tbody>
               {rows.map((r) => (
-                <tr key={r.rep.id} className="relative border-t border-[#eef0f2] transition-colors duration-150 hover:bg-[#f6f7f8]">
-                  <td className="px-4 py-3 font-semibold text-[#3a728a]">
+                <tr key={r.rep.id} className="group relative border-t border-[#eef0f2] transition-colors duration-150 hover:bg-[#f6f7f8]">
+                  <td className="sticky left-0 z-10 whitespace-nowrap bg-white px-4 py-3 font-semibold text-[#3a728a] shadow-[1px_0_0_#eef0f2] transition-colors duration-150 group-hover:bg-[#f6f7f8]">
                     {/* Plain <a>: /view sets the cookie. The ::after stretches the link over the whole row. */}
                     <a href={`/view?as=${r.rep.id}`} className="after:absolute after:inset-0 hover:underline">
                       {r.rep.name}
@@ -127,7 +127,7 @@ export default async function Team() {
                   <td className="px-3 py-3 text-right tabular-nums">{r.opps}</td>
                   <td className="px-3 py-3 text-right tabular-nums">{r.value.available > 0 ? usd(r.value.available) : "—"}</td>
                   <td className="px-3 py-3 text-right tabular-nums">{r.value.available > 0 ? usd(r.value.captured) : "—"}</td>
-                  <td className={`px-3 py-3 text-right font-bold tabular-nums ${captureColor(r.capture)}`}>
+                  <td className={`whitespace-nowrap px-3 py-3 text-right font-bold tabular-nums ${captureColor(r.capture)}`}>
                     {r.capture !== null && <span aria-hidden className="mr-1.5 inline-block h-2 w-2 rounded-full bg-current" />}
                     {pct(r.capture)}
                   </td>

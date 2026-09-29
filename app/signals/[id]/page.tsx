@@ -2,18 +2,18 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { GenerateButton } from "@/components/GenerateButton";
 import { Header } from "@/components/Header";
-import { BackLink, Card, EmptyState, ErrorBox, Page, SEVERITY_COLOR, SEVERITY_TINT } from "@/components/ui";
+import { PromoteButton } from "@/components/PromoteButton";
+import { BackLink, Card, EmptyState, ErrorBox, InfoTip, Page, SEVERITY_COLOR, SEVERITY_TINT, StatusBadge } from "@/components/ui";
 import { loadAll } from "@/lib/data";
 import { usdExact, weekLabel } from "@/lib/format";
 import { matchAccounts } from "@/lib/match";
 import { amountFor } from "@/lib/pricing";
-import { isLead, type Account, type Opportunity, type SignalType } from "@/lib/types";
+import { DEFAULT_THRESHOLD, isLead, THRESHOLDS, type Account, type Opportunity, type SignalType } from "@/lib/types";
 import { DEMO_REP_ID, getView } from "@/lib/view";
 
 export const dynamic = "force-dynamic";
 
 const SIGNAL_ID = /^SIG-\d{4}$/;
-const THRESHOLD = 50;
 
 const TYPE_LABEL: Record<SignalType, string> = {
   drought: "Drought worsened",
@@ -23,10 +23,10 @@ const TYPE_LABEL: Record<SignalType, string> = {
 
 type Row = { account: Account; leadWith: string; opp: Opportunity | null; estimate: number };
 
-function ScoreRing({ score }: { score: number }) {
+function ScoreRing({ score, threshold }: { score: number; threshold: number }) {
   const r = 15;
   const c = 2 * Math.PI * r;
-  const color = score >= 75 ? "#1f9d55" : score >= THRESHOLD ? "#3a728a" : "#bcc4cb";
+  const color = score >= 75 ? "#1f9d55" : score >= threshold ? "#3a728a" : "#bcc4cb";
   return (
     <svg viewBox="0 0 40 40" className="h-10 w-10" role="img" aria-label={`Score ${score}`}>
       <circle cx="20" cy="20" r={r} fill="none" stroke="#e3e7eb" strokeWidth="4" />
@@ -44,6 +44,10 @@ function ScoreRing({ score }: { score: number }) {
 export default async function SignalDetail(props: PageProps<"/signals/[id]">) {
   const { id } = await props.params;
   if (!SIGNAL_ID.test(id)) notFound();
+  const sp = await props.searchParams;
+  const tParam = Number(typeof sp.t === "string" ? sp.t : NaN);
+  // Changing the threshold re-classifies rows; it never re-scores them.
+  const threshold = THRESHOLDS.includes(tParam) ? tParam : DEFAULT_THRESHOLD;
   const view = await getView();
 
   const loaded = await loadAll();
@@ -108,11 +112,28 @@ export default async function SignalDetail(props: PageProps<"/signals/[id]">) {
             <p className="mt-2 text-sm text-[#5a6975]">Source: {signal.source}</p>
           </div>
           <div className="md:pt-2">
-            <GenerateButton signalId={signal.id} pendingAccountIds={pending} total={rows.length} leads={sOpps.filter((o) => isLead(o)).length} />
+            <GenerateButton signalId={signal.id} pendingAccountIds={pending} total={rows.length} leads={sOpps.filter((o) => isLead(o, threshold)).length} />
           </div>
         </div>
 
-        <h2 className="mb-2 font-semibold text-[#3f4e5b]">Affected accounts, ranked</h2>
+        <div className="mb-2 flex flex-wrap items-center justify-between gap-3">
+          <h2 className="font-semibold text-[#3f4e5b]">Affected accounts, ranked</h2>
+          <nav className="flex items-center gap-2 text-sm" aria-label="Lead threshold">
+            <span className="text-[#5a6975]">Lead threshold</span>
+            {THRESHOLDS.map((t) => (
+              <Link
+                key={t}
+                href={t === DEFAULT_THRESHOLD ? `/signals/${signal.id}` : `/signals/${signal.id}?t=${t}`}
+                scroll={false}
+                className={`rounded-full px-3 py-1 transition-colors duration-150 ${
+                  t === threshold ? "bg-[#3a728a] font-medium text-white" : "border border-[#bcc4cb] text-[#3f4e5b] hover:bg-white"
+                }`}
+              >
+                {t}
+              </Link>
+            ))}
+          </nav>
+        </div>
         {rows.length === 0 ? (
           <EmptyState>
             No accounts match this signal: none farm a relevant crop in {signal.county}
@@ -123,8 +144,23 @@ export default async function SignalDetail(props: PageProps<"/signals/[id]">) {
             <table className="w-full min-w-[760px] text-left text-sm">
               <thead className="bg-[#efefef] text-[#3f4e5b]">
                 <tr>
-                  <th className="px-4 py-2.5 font-semibold">Score</th>
+                  <th className="px-4 py-2.5 font-semibold">
+                    <span className="flex items-center gap-1.5">
+                      Score
+                      <InfoTip label="What drives the score">
+                        <b>Drivers:</b> signal severity (High 35, Medium 25), acreage (up to 25), module gap (20 when the
+                        account lacks the signal&apos;s own module, else 10), crop directly affected (10), existing customer (5)
+                        and contact in the last 30 days (5). Claude starts from that total and may move it by up to 10 with a
+                        reason.
+                        <br />
+                        <br />
+                        <b>If Claude is offline:</b> High 70 / Medium 55, +15 over 3,000 acres or +8 over 1,500, +10 for a
+                        prospect, capped at 100, marked &ldquo;AI offline&rdquo;.
+                      </InfoTip>
+                    </span>
+                  </th>
                   <th className="px-3 py-2.5 font-semibold">Account</th>
+                  <th className="px-3 py-2.5 font-semibold">Status</th>
                   <th className="px-3 py-2.5 font-semibold">Crops · acres</th>
                   <th className="px-3 py-2.5 font-semibold">Lead with</th>
                   <th className="px-3 py-2.5 font-semibold">Why now</th>
@@ -133,11 +169,12 @@ export default async function SignalDetail(props: PageProps<"/signals/[id]">) {
               </thead>
               <tbody>
                 {rows.map(({ account, leadWith, opp, estimate }) => {
-                  const below = opp !== null && opp.score < THRESHOLD;
+                  const below = opp !== null && !isLead(opp, threshold);
+                  const underScore = opp !== null && opp.score < threshold;
                   return (
                     <tr key={account.id} className={`border-t border-[#eef0f2] align-top transition-colors duration-150 hover:bg-[#f6f7f8] ${below ? "text-[#9aa5ae]" : ""}`}>
                       <td className="px-4 py-2.5">
-                        {opp ? <ScoreRing score={opp.score} /> : <span className="inline-block pt-2 text-[#bcc4cb]">—</span>}
+                        {opp ? <ScoreRing score={opp.score} threshold={threshold} /> : <span className="inline-block pt-2 text-[#bcc4cb]">—</span>}
                       </td>
                       <td className="px-3 py-3">
                         {opp ? (
@@ -149,8 +186,10 @@ export default async function SignalDetail(props: PageProps<"/signals/[id]">) {
                         )}
                         <p className="text-xs text-[#7a8794]">
                           {account.county}, {account.state}
-                          {account.customer_status === "Prospect" ? " · prospect" : ""}
                         </p>
+                      </td>
+                      <td className="px-3 py-3">
+                        <StatusBadge status={account.customer_status} />
                       </td>
                       <td className="px-3 py-3">
                         {account.crops.join(", ")} · {account.acres.toLocaleString("en-US")}
@@ -162,6 +201,7 @@ export default async function SignalDetail(props: PageProps<"/signals/[id]">) {
                             {opp.why_now}
                             <span className="mt-1 flex gap-2">
                               {below && <span className="rounded bg-[#eef0f2] px-1.5 py-0.5 text-xs text-[#7a8794]">below threshold</span>}
+                              {underScore && <PromoteButton oppId={opp.id} promoted={opp.promoted === true} />}
                               {opp.ai_offline && <span className="rounded bg-[#fcf1d9] px-1.5 py-0.5 text-xs text-[#8a5a00]">AI offline</span>}
                             </span>
                           </>
@@ -182,7 +222,7 @@ export default async function SignalDetail(props: PageProps<"/signals/[id]">) {
         <p className="mt-3 text-xs text-[#7a8794]">
           Matching is deterministic: accounts in the county{signal.type === "drought" ? " and the rest of its territory" : ""}, with a
           relevant crop, that do not yet own the module. Claude scores and writes each row; a rules-based score marked
-          &ldquo;AI offline&rdquo; stands in if Claude is unavailable. Rows under {THRESHOLD} are grayed as below threshold.
+          &ldquo;AI offline&rdquo; stands in if Claude is unavailable. Rows under the threshold ({threshold}) are grayed unless promoted to a lead.
         </p>
       </Page>
     </>

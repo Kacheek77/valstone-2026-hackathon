@@ -9,6 +9,7 @@ import {
   Card,
   EmptyState,
   ErrorBox,
+  InfoTip,
   OutlineButtonLink,
   Page,
   PrimaryButtonLink,
@@ -16,15 +17,27 @@ import {
   Tile,
 } from "@/components/ui";
 import { currentWeek, inWeek, loadAll, type AllData } from "@/lib/data";
-import { eventLine, firstName, usd } from "@/lib/format";
+import { eventLine, firstName, usd, weekLabel } from "@/lib/format";
 import { matchAccounts } from "@/lib/match";
 import { captureRate, expectedValue, signalWeeks, sumValues } from "@/lib/metrics";
-import { ACTED_STAGES, type Opportunity, type Signal } from "@/lib/types";
+import { isLead, type Opportunity, type Signal } from "@/lib/types";
 import { getView, parseView } from "@/lib/view";
 
 export const dynamic = "force-dynamic";
 
 const MINUTES_PER_OPP = 20;
+
+const PERIODS = [
+  { key: "week", label: "This week", days: 7, phrase: "this week" },
+  { key: "4w", label: "4 weeks", days: 28, phrase: "in the last 4 weeks" },
+  { key: "season", label: "Season", days: Infinity, phrase: "this season" },
+] as const;
+
+function inPeriod(weekOf: string, current: string | null, days: number): boolean {
+  if (!current) return false;
+  const diff = (Date.parse(current) - Date.parse(weekOf)) / 86_400_000;
+  return diff >= 0 && diff < days;
+}
 
 function greeting(): string {
   const hour = Number(
@@ -55,6 +68,13 @@ export default async function Dashboard(props: PageProps<"/dashboard">) {
   const repId = override?.kind === "rep" ? override.repId : view.kind === "rep" ? view.repId : null;
   if (repId === null) redirect("/team");
   const demo = sp.demo === "1";
+  const period = PERIODS.find((p) => p.key === sp.period) ?? PERIODS[0];
+  const periodHref = (key: string) => {
+    const q = new URLSearchParams({ rep: repId });
+    if (key !== "week") q.set("period", key);
+    if (demo) q.set("demo", "1");
+    return `/dashboard?${q}`;
+  };
 
   const loaded = await loadAll();
   if (!loaded.ok) {
@@ -85,7 +105,8 @@ export default async function Dashboard(props: PageProps<"/dashboard">) {
 
   const week = currentWeek(signals);
   const repAllSignals = signals.filter((s) => s.rep_id === rep.id);
-  const repSignals = repAllSignals.filter((s) => inWeek(s.week_of, week));
+  // The period decides what the map, cards and tiles show.
+  const repSignals = repAllSignals.filter((s) => inPeriod(s.week_of, week, period.days));
   const myAccounts = accounts.filter((a) => a.rep_id === rep.id);
   const now = weekNumbers(repSignals, data);
 
@@ -106,10 +127,25 @@ export default async function Dashboard(props: PageProps<"/dashboard">) {
             </h1>
             <p className="text-[#5a6975]">
               {rep.territory_name} · {myAccounts.length} accounts · {repSignals.length} signal
-              {repSignals.length === 1 ? "" : "s"} this week
+              {repSignals.length === 1 ? "" : "s"} {period.phrase}
             </p>
           </div>
-          <RefreshButton demo={demo} />
+          <div className="flex flex-wrap items-center gap-3">
+            <nav className="flex gap-2 text-sm" aria-label="Period">
+              {PERIODS.map((p) => (
+                <Link
+                  key={p.key}
+                  href={periodHref(p.key)}
+                  className={`rounded-full px-4 py-1.5 transition-colors duration-150 ${
+                    p.key === period.key ? "bg-[#3a728a] font-medium text-white" : "border border-[#bcc4cb] text-[#3f4e5b] hover:bg-white"
+                  }`}
+                >
+                  {p.label}
+                </Link>
+              ))}
+            </nav>
+            <RefreshButton demo={demo} />
+          </div>
         </div>
 
         <div className="grid gap-5 lg:grid-cols-[minmax(0,400px)_1fr]">
@@ -120,13 +156,16 @@ export default async function Dashboard(props: PageProps<"/dashboard">) {
 
           <div className="flex flex-col gap-3">
             {repSignals.length === 0 ? (
-              <EmptyState>No signals yet. Refresh to load this week&apos;s weather.</EmptyState>
+              <EmptyState>
+                {period.key === "week" ? "No signals yet. Refresh to load this week's weather." : `No signals ${period.phrase}.`}
+              </EmptyState>
             ) : (
               repSignals.map((s) => {
                 const matches = matchAccounts(s, accounts, reps);
                 const sOpps = opps.filter((o) => o.signal_id === s.id);
+                const leads = sOpps.filter((o) => isLead(o));
+                const below = sOpps.length - leads.length;
                 const acctCount = new Set([...matches.map((m) => m.account.id), ...sOpps.map((o) => o.account_id)]).size;
-                const captured = sOpps.filter((o) => ACTED_STAGES.includes(o.stage));
                 return (
                   <Card key={s.id} className="flex items-center gap-4 px-4 py-3 transition-shadow duration-150 hover:shadow-md">
                     <SignalIcon type={s.type} severity={s.severity} />
@@ -135,22 +174,31 @@ export default async function Dashboard(props: PageProps<"/dashboard">) {
                         {eventLine(s)}
                       </Link>
                       <p className="text-sm text-[#3f4e5b]">
-                        {acctCount} account{acctCount === 1 ? "" : "s"} · {s.target_module} ·{" "}
                         {sOpps.length === 0 ? (
-                          <span className="text-[#7a8794]">— expected</span>
-                        ) : captured.length === sOpps.length ? (
-                          <b>{usd(expectedValue(sOpps))} captured</b>
+                          <>
+                            {acctCount} account{acctCount === 1 ? "" : "s"} · {s.target_module} ·{" "}
+                            <span className="text-[#7a8794]">not generated</span>
+                          </>
                         ) : (
-                          <b>{usd(expectedValue(sOpps))} expected</b>
+                          <>
+                            {leads.length} lead{leads.length === 1 ? "" : "s"}
+                            {below > 0 && <span className="text-[#7a8794]"> · {below} below threshold</span>} · {s.target_module} ·{" "}
+                            <b>{usd(expectedValue(leads.length ? leads : sOpps))} expected</b>
+                          </>
                         )}
+                        {period.key !== "week" && <span className="text-[#7a8794]"> · {weekLabel(s.week_of)}</span>}
                       </p>
                     </div>
-                    {sOpps.length > 0 ? (
+                    {sOpps.length === 0 ? (
+                      <PrimaryButtonLink href={`/signals/${s.id}`}>Generate →</PrimaryButtonLink>
+                    ) : leads.length > 0 ? (
                       <OutlineButtonLink href={`/pipeline?signal=${s.id}`}>
-                        {sOpps.length} opp{sOpps.length === 1 ? "" : "s"} ✓
+                        View {leads.length} lead{leads.length === 1 ? "" : "s"}
                       </OutlineButtonLink>
                     ) : (
-                      <PrimaryButtonLink href={`/signals/${s.id}`}>Generate →</PrimaryButtonLink>
+                      <OutlineButtonLink href={`/signals/${s.id}`} color="#7a8794">
+                        Review
+                      </OutlineButtonLink>
                     )}
                   </Card>
                 );
@@ -158,7 +206,7 @@ export default async function Dashboard(props: PageProps<"/dashboard">) {
             )}
 
             <div className="mt-1 flex flex-col gap-3 sm:flex-row">
-              <Tile label="Pipeline this week">
+              <Tile label={`Pipeline, ${period.label.toLowerCase()}`}>
                 <p className="text-2xl font-bold text-[#3a728a]">
                   <CountUp value={now.pipeline} format="usd" />
                   <span className="ml-2 text-sm font-normal text-[#5a6975]">
@@ -167,24 +215,42 @@ export default async function Dashboard(props: PageProps<"/dashboard">) {
                 </p>
                 <Sparkline values={series((n) => n.pipeline)} color="#3a728a" label="Pipeline, last five weeks" />
               </Tile>
-              <Tile label="Capture rate">
+              <Tile
+                label={
+                  <span className="flex items-center gap-1.5">
+                    Capture rate
+                    <InfoTip label="How capture rate is calculated">
+                      Expected value you pushed, sent or won, divided by the expected value the weather created: every generated
+                      opportunity at amount × score, plus, for any signal you have not generated at all, its matched accounts at a
+                      score of 50.
+                    </InfoTip>
+                  </span>
+                }
+              >
                 <p className="text-2xl font-bold text-[#1f9d55]">
                   {now.capture === null ? "—" : <CountUp value={now.capture} format="pct" />}
                 </p>
                 <Sparkline values={series((n) => n.capture)} color="#1f9d55" label="Capture rate, last five weeks" />
               </Tile>
-              <Tile label="Hours saved" tint="#ffebdd">
+              <Tile
+                label={
+                  <span className="flex items-center gap-1.5">
+                    Hours saved
+                    <InfoTip label="How hours saved is estimated" align="right">
+                      Opportunities generated × 20 minutes: the CRM record, note, task and email a rep would otherwise type by hand.
+                      The 20 minutes is an estimate, not a measurement.
+                    </InfoTip>
+                  </span>
+                }
+                tint="#ffebdd"
+              >
                 <p className="text-2xl font-bold text-[#c64800]">
                   <CountUp value={now.hours} format="hours" />
                 </p>
                 <Sparkline values={series((n) => n.hours)} color="#c64800" label="Hours saved, last five weeks" />
               </Tile>
             </div>
-            <p className="text-xs text-[#7a8794]">
-              Capture rate: expected value pushed, sent or won ÷ expected value available, where available also counts the
-              matched accounts on any signal with no opportunities yet (valued at a score of 50). Hours saved: 20 minutes of CRM typing per opportunity (an
-              assumption). Sparklines show the four prior weeks of seeded history, then this week.
-            </p>
+            <p className="text-xs text-[#7a8794]">Sparklines show the four prior weeks of seeded history, then this week.</p>
           </div>
         </div>
       </Page>
