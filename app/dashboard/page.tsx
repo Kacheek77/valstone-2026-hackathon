@@ -6,7 +6,7 @@ import { Header } from "@/components/Header";
 import { RefreshButton } from "@/components/RefreshButton";
 import { TaskDoneButton } from "@/components/TaskDoneButton";
 import { Sparkline } from "@/components/Sparkline";
-import { MapLegend, TerritoryMap } from "@/components/TerritoryMap";
+import { SignalMapLoader } from "@/components/SignalMapLoader";
 import {
   Card,
   EmptyState,
@@ -19,6 +19,7 @@ import {
 } from "@/components/ui";
 import { currentWeek, inWeek, loadAll, type AllData } from "@/lib/data";
 import { eventLine, firstName, usd, weekLabel } from "@/lib/format";
+import { buildMapData } from "@/lib/mapData";
 import { matchAccounts } from "@/lib/match";
 import { captureRate, expectedValue, signalWeeks, sumValues } from "@/lib/metrics";
 import { formatDue, tasksDue } from "@/lib/steps";
@@ -152,12 +153,12 @@ export default async function Dashboard(props: PageProps<"/dashboard">) {
           </div>
         </div>
 
-        <div className="grid gap-5 lg:grid-cols-[minmax(0,400px)_1fr]">
-          <div className="flex flex-col gap-2">
-            <TerritoryMap territoryCounties={rep.counties} accounts={accounts} repId={rep.id} signals={repSignals} />
-            <MapLegend />
-          </div>
+        {/* VS-8: MapLibre map with the click drawer beside it. */}
+        <div className="mb-5">
+          <SignalMapLoader data={buildMapData(data, repSignals)} mode="rep" repId={rep.id} layout="beside" height={460} />
+        </div>
 
+        <div>
           <div className="flex flex-col gap-3">
             {repSignals.length === 0 ? (
               <EmptyState>

@@ -14,6 +14,8 @@ export const dynamic = "force-dynamic";
 export default async function Pipeline(props: PageProps<"/pipeline">) {
   const sp = await props.searchParams;
   const signalFilter = typeof sp.signal === "string" && /^SIG-\d{4}$/.test(sp.signal) ? sp.signal : null;
+  // VS-8: the map's account drawer links here with ?q=<account name>.
+  const initialQuery = typeof sp.q === "string" ? sp.q.slice(0, 100) : "";
   const view = await getView();
 
   const loaded = await loadAll();
@@ -85,6 +87,7 @@ export default async function Pipeline(props: PageProps<"/pipeline">) {
           reps={reps.filter((r) => !r.is_manager).map((r) => r.name)}
           manager={view.kind === "manager"}
           initialSignal={filterSignal ? filterSignal.id : null}
+          initialQuery={initialQuery}
         />
         <p className="mt-3 text-xs text-[#7a8794]">
           Leads are opportunities scoring 50 or more, plus any a rep promoted. Open pipeline counts Draft, Accepted and Sent in the

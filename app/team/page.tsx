@@ -1,9 +1,11 @@
 import Link from "next/link";
 import { CountUp } from "@/components/CountUp";
 import { Header } from "@/components/Header";
+import { SignalMapLoader } from "@/components/SignalMapLoader";
 import { hoursLabel } from "@/components/hoursLabel";
 import { Card, ErrorBox, Page, Tile } from "@/components/ui";
 import { currentWeek, loadAll } from "@/lib/data";
+import { buildMapData } from "@/lib/mapData";
 import { captureColor, pct, usd, weekLabel } from "@/lib/format";
 import { captureRate, periodFor, periodSignals, PERIODS, sumValues, teamRow } from "@/lib/metrics";
 import { tasksDue } from "@/lib/steps";
@@ -78,6 +80,11 @@ export default async function Team(props: PageProps<"/team">) {
               {teamCapture === null ? "—" : <CountUp value={teamCapture} format="pct" />}
             </p>
           </Tile>
+        </div>
+
+        {/* VS-8: all six territories; the click drawer opens under the map. */}
+        <div className="mb-5">
+          <SignalMapLoader data={buildMapData(data, allSignals)} mode="manager" repId={null} layout="under" height={440} />
         </div>
 
         <Card className="overflow-x-auto">

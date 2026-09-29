@@ -72,16 +72,18 @@ export function PipelineClient({
   reps,
   manager,
   initialSignal,
+  initialQuery = "",
 }: {
   rows: PipelineRow[];
   signalOptions: SignalOption[];
   reps: string[];
   manager: boolean;
   initialSignal: string | null;
+  initialQuery?: string;
 }) {
   const [stage, setStage] = useState<"all" | Stage>("all");
   const [showBelow, setShowBelow] = useState(false);
-  const [q, setQ] = useState("");
+  const [q, setQ] = useState(initialQuery);
   const [module, setModule] = useState("");
   const [signal, setSignal] = useState(initialSignal ?? "");
   const [source, setSource] = useState("");

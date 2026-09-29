@@ -33,3 +33,33 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .sd-pulse { animation: none; opacity: 0.5; }
 }
+
+/* VS-8 map markers (MapLibre HTML markers). */
+.sd-sig {
+  width: 36px; height: 36px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 2px 6px rgba(0,0,0,.35), 0 0 0 3px rgba(255,255,255,.85);
+  cursor: pointer; position: relative;
+}
+.sd-sig.High { width: 42px; height: 42px; }
+.sd-sig.High::after {
+  content: ""; position: absolute; inset: -6px; border-radius: 50%;
+  border: 3px solid currentColor; animation: sd-sig-pulse 1.5s ease-out infinite;
+}
+@keyframes sd-sig-pulse { 0% { transform: scale(.8); opacity: .9 } 100% { transform: scale(2); opacity: 0 } }
+.sd-acct {
+  width: 22px; height: 22px; border-radius: 50%;
+  background: #3a728a; color: #fff; border: 2px solid #fff;
+  box-shadow: 0 1px 4px rgba(0,0,0,.35);
+  display: flex; align-items: center; justify-content: center; cursor: pointer;
+}
+.sd-acct.prospect { background: #fff; color: #3a728a; border-color: #3a728a; }
+.sd-acct.other { opacity: .45; }
+.sd-acct.hot { box-shadow: 0 0 0 3px #f55a00, 0 1px 4px rgba(0,0,0,.35); }
+.sd-mgr .sd-sig { width: 28px; height: 28px; }
+.sd-mgr .sd-sig.High { width: 32px; height: 32px; }
+.sd-mgr .sd-acct { width: 16px; height: 16px; }
+.sd-mgr.sd-zoomed-out .sd-acct { display: none; }
+.sd-tip { pointer-events: none; }
+.sd-tip .maplibregl-popup-content { font-size: 13px; line-height: 1.4; padding: 8px 11px; border-radius: 8px; box-shadow: 0 4px 14px rgba(0,0,0,.2); }
+@media (prefers-reduced-motion: reduce) { .sd-sig.High::after { animation: none; } }
