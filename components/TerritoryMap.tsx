@@ -1,9 +1,9 @@
 import { countySquare, MAP_HEIGHT, MAP_WIDTH, project, STATE_SHAPES } from "@/lib/geo";
-import type { Account, Signal } from "@/lib/types";
+import { droughtLevel, shortCounty, type Account, type Signal } from "@/lib/types";
 
 function shortLabel(s: Signal): string {
-  if (s.type === "drought" && s.drought_level !== null) return `${s.county} · D${s.drought_level}`;
-  return `${s.county} · ${s.type}`;
+  const level = droughtLevel(s);
+  return `${shortCounty(s.county)} · ${level !== null ? `D${level}` : s.type}`;
 }
 
 export function TerritoryMap({
@@ -14,7 +14,7 @@ export function TerritoryMap({
 }: {
   territoryCounties: string[];
   accounts: Account[];
-  repId: number;
+  repId: string;
   signals: Signal[];
 }) {
   const territory = territoryCounties.map(countySquare).filter(Boolean).join(" ");

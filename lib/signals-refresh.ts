@@ -1,6 +1,7 @@
 import { COUNTY_CENTROIDS } from "./geo";
+import { formatId, nextIdNumber, UNIQUE_VIOLATION } from "./ids";
 import { getSupabase } from "./supabase";
-import type { Rep, Signal } from "./types";
+import { droughtLevel, shortCounty, type Rep, type Signal } from "./types";
 
 export type RefreshResult =
   | { ok: true; inserted: number; message: string }
@@ -29,11 +30,26 @@ function levelOf(r: UsdmRow): number {
   return -1;
 }
 
-const LEVEL_NAME = ["abnormally dry", "moderate drought", "severe drought", "extreme drought", "exceptional drought"];
-const STATE_NAME: Record<string, string> = { KS: "Kansas", NE: "Nebraska", OK: "Oklahoma", TX: "Texas" };
+const LEVEL_NAME = ["Abnormally Dry", "Moderate Drought", "Severe Drought", "Extreme Drought", "Exceptional Drought"];
 
 function mdy(d: Date): string {
   return `${d.getUTCMonth() + 1}/${d.getUTCDate()}/${d.getUTCFullYear()}`;
+}
+
+type NewSignal = Omit<Signal, "id">;
+
+// Inserts with SIG- ids, retrying on an id clash from a concurrent insert.
+async function insertSignals(rows: NewSignal[]): Promise<string | null> {
+  const db = getSupabase();
+  for (let attempt = 0; attempt < 5; attempt++) {
+    const start = await nextIdNumber("signals", "SIG");
+    const { error } = await db
+      .from("signals")
+      .insert(rows.map((r, i) => ({ id: formatId("SIG", start + i), ...r })));
+    if (!error) return null;
+    if (error.code !== UNIQUE_VIOLATION) return error.message;
+  }
+  return "Could not allocate a signal id.";
 }
 
 async function latestWeek(): Promise<string | null> {
@@ -45,42 +61,47 @@ async function latestWeek(): Promise<string | null> {
   return data?.[0]?.week_of ?? null;
 }
 
-// The guaranteed demo path: one canned signal, inserted once.
+// The guaranteed demo path: one canned signal in the demo rep's territory,
+// inserted once. Seward moved D2 → D3 the week before, so D3 → D4 is plausible.
 async function insertDemoSignal(): Promise<RefreshResult> {
   const db = getSupabase();
   const week = (await latestWeek()) ?? new Date().toISOString().slice(0, 10);
   const { data: existing, error: readErr } = await db
     .from("signals")
     .select("id")
-    .eq("county", "Kearny")
+    .eq("county", "Seward County")
     .eq("state", "KS")
     .eq("type", "drought")
     .eq("week_of", week)
     .limit(1);
   if (readErr) return { ok: false, message: `Could not read signals: ${readErr.message}` };
   if (existing && existing.length > 0) {
-    return { ok: true, inserted: 0, message: "No new signals. The Kearny County update is already loaded." };
+    return { ok: true, inserted: 0, message: "No new signals. The Seward County drought update is already loaded." };
   }
 
-  const [lat, lng] = COUNTY_CENTROIDS["Kearny, KS"];
-  const { error } = await db.from("signals").insert({
-    week_of: week,
-    county: "Kearny",
-    state: "KS",
-    lat,
-    lng,
-    type: "drought",
-    severity: "Medium",
-    headline: "Kearny County, Kansas moved from D1 to D2 (severe drought)",
-    detail:
-      "Drought spread west from Finney County this week. Pivot corn along the Arkansas River is near its last irrigation, and ditch deliveries are being cut.",
-    source: "US Drought Monitor (demo signal)",
-    status: "new",
-    rep_id: 1,
-    drought_level: 2,
-  });
-  if (error) return { ok: false, message: `Could not save the new signal: ${error.message}` };
-  return { ok: true, inserted: 1, message: "1 new signal: Kearny County, KS moved to D2." };
+  const [lat, lng] = COUNTY_CENTROIDS["Seward County, KS"];
+  const err = await insertSignals([
+    {
+      week_of: week,
+      county: "Seward County",
+      state: "KS",
+      // Nudged south of the centroid so it does not sit on this week's Seward rain signal.
+      lat: lat - 0.18,
+      lng,
+      type: "drought",
+      severity: "High",
+      headline: "Seward, KS moved D3 → D4 (Exceptional Drought)",
+      detail:
+        "Seward County, KS drought category worsened to D4 (Exceptional Drought) this week, a second weekly step after D2 → D3. Pivot corn is at its last irrigation and well capacity is the constraint.",
+      source: "US Drought Monitor (demo signal)",
+      target_module: "Irrigation Scheduling",
+      status: "new",
+      rep_id: "REP-01",
+      drought_level: 4,
+    },
+  ]);
+  if (err) return { ok: false, message: `Could not save the new signal: ${err}` };
+  return { ok: true, inserted: 1, message: "1 new signal: Seward County, KS moved to D4." };
 }
 
 async function fetchState(state: string, start: Date, end: Date, signal: AbortSignal): Promise<UsdmRow[]> {
@@ -103,16 +124,16 @@ async function refreshFromUsdm(): Promise<RefreshResult> {
     return { ok: false, message: `Could not read the database: ${(repErr ?? sigErr)!.message}` };
   }
 
-  const owner = new Map<string, number>();
+  const owner = new Map<string, string>(); // "Finney County, KS" -> rep id
   for (const r of (reps ?? []) as Rep[]) for (const c of r.counties) owner.set(c, r.id);
   const states = [...new Set([...owner.keys()].map((k) => k.split(", ")[1]))];
 
   const end = new Date();
   const start = new Date(end.getTime() - 21 * 86_400_000);
-  const signal = AbortSignal.timeout(FETCH_TIMEOUT_MS);
+  const abort = AbortSignal.timeout(FETCH_TIMEOUT_MS);
   let rows: UsdmRow[];
   try {
-    rows = (await Promise.all(states.map((s) => fetchState(s, start, end, signal)))).flat();
+    rows = (await Promise.all(states.map((s) => fetchState(s, start, end, abort)))).flat();
   } catch (e) {
     const why = e instanceof Error && e.name === "TimeoutError" ? "did not answer within 6 seconds" : "could not be reached";
     return { ok: false, message: `The US Drought Monitor ${why}. Showing the signals already loaded.` };
@@ -124,11 +145,11 @@ async function refreshFromUsdm(): Promise<RefreshResult> {
     if (!latestStored.has(k)) latestStored.set(k, s);
   }
 
-  const inserts = [];
+  const inserts: NewSignal[] = [];
   for (const [key, repId] of owner) {
     const [county, st] = key.split(", ");
     const history = rows
-      .filter((r) => r.state === st && r.county === `${county} County`)
+      .filter((r) => r.state === st && r.county === county)
       .sort((a, b) => b.mapDate.localeCompare(a.mapDate));
     if (history.length === 0) continue;
 
@@ -137,13 +158,13 @@ async function refreshFromUsdm(): Promise<RefreshResult> {
     const level = levelOf(latest);
     const prev = latestStored.get(key);
     if (prev && prev.week_of >= week) continue; // already have this week or newer
-    const baseline = prev?.drought_level ?? (history[1] ? levelOf(history[1]) : level);
+    const baseline = (prev && droughtLevel(prev)) ?? (history[1] ? levelOf(history[1]) : level);
     if (level <= baseline || level < 0) continue;
 
     const centroid = COUNTY_CENTROIDS[key];
     if (!centroid) continue;
     const [lat, lng] = centroid;
-    const from = baseline < 0 ? "no drought" : `D${baseline}`;
+    const from = baseline < 0 ? "none" : `D${baseline}`;
     const pct = [latest.d0, latest.d1, latest.d2, latest.d3, latest.d4][level];
     inserts.push({
       week_of: week,
@@ -152,10 +173,11 @@ async function refreshFromUsdm(): Promise<RefreshResult> {
       lat,
       lng,
       type: "drought",
-      severity: level - Math.max(baseline, -1) >= 2 ? "High" : "Medium",
-      headline: `${county} County, ${STATE_NAME[st] ?? st} moved from ${from} to D${level} (${LEVEL_NAME[level]})`,
-      detail: `US Drought Monitor map of ${week}: ${pct.toFixed(0)}% of the county is at D${level} or worse.`,
+      severity: level - baseline >= 2 ? "High" : "Medium",
+      headline: `${shortCounty(county)}, ${st} moved ${from} → D${level} (${LEVEL_NAME[level]})`,
+      detail: `US Drought Monitor map of ${week}: ${pct.toFixed(0)}% of ${county} is at D${level} or worse.`,
       source: "US Drought Monitor (live)",
+      target_module: "Irrigation Scheduling",
       status: "new",
       rep_id: repId,
       drought_level: level,
@@ -165,8 +187,8 @@ async function refreshFromUsdm(): Promise<RefreshResult> {
   if (inserts.length === 0) {
     return { ok: true, inserted: 0, message: "No new signals. Drought categories are unchanged this week." };
   }
-  const { error } = await db.from("signals").insert(inserts);
-  if (error) return { ok: false, message: `Could not save new signals: ${error.message}` };
+  const err = await insertSignals(inserts);
+  if (err) return { ok: false, message: `Could not save new signals: ${err}` };
   return {
     ok: true,
     inserted: inserts.length,

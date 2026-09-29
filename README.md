@@ -10,7 +10,7 @@ This is a stub; the full README (feature-to-brief mapping, real vs. seeded, term
 
 1. `npm install`
 2. Create `.env.local` with `SUPABASE_URL`, `SUPABASE_ANON_KEY` and, optionally, `ANTHROPIC_API_KEY` (without it, scoring falls back to rules).
-3. Run `supabase/schema.sql`, then `supabase/seed.sql`, in the Supabase SQL editor.
+3. Run `supabase/schema.sql`, then `supabase/seed.sql` (the supplied dataset, copied verbatim), in the Supabase SQL editor.
 4. `npm run dev` and open http://localhost:3000
 
-Add `?demo=1` to the dashboard URL to make Refresh signals insert a canned signal.
+Add `?demo=1` to the dashboard URL to make Refresh signals insert a canned signal (Seward County, KS, D3 → D4).

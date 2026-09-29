@@ -8,13 +8,13 @@ import { getView } from "@/lib/view";
 
 export const dynamic = "force-dynamic";
 
-const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const OPP_ID = /^OPP-\d{4}$/;
 
 // Read-only opportunity view so every link resolves in VS-4. VS-5 replaces
 // this with the editable draft and the CRM push.
 export default async function OpportunityPage(props: PageProps<"/opportunities/[id]">) {
   const { id } = await props.params;
-  if (!UUID.test(id)) notFound();
+  if (!OPP_ID.test(id)) notFound();
   const view = await getView();
 
   const loaded = await loadAll();
@@ -48,21 +48,29 @@ export default async function OpportunityPage(props: PageProps<"/opportunities/[
               <p className="mt-1 text-lg font-bold">{account?.name ?? "Unknown account"}</p>
               {account && (
                 <p className="text-sm text-[#3f4e5b]">
-                  {account.contact_name} · {account.county}, {account.state}
+                  {account.contact_name}
+                  {account.contact_email ? ` · ${account.contact_email}` : ""}
+                  <br />
+                  {account.county}, {account.state} · {account.customer_status}
                   <br />
                   {account.crops.join(", ")} · {account.acres.toLocaleString("en-US")} acres
                   <br />
-                  Owns: {account.modules_owned.length ? account.modules_owned.join(", ") : "nothing yet (prospect)"}
+                  Owns: {account.modules_owned.length ? account.modules_owned.join(", ") : "no FieldSense modules yet"}
                 </p>
               )}
             </Card>
-            {signal && (
+            {signal ? (
               <Card className="px-5 py-4">
                 <p className="text-xs font-semibold uppercase tracking-wider text-[#7a8794]">Signal</p>
                 <Link href={`/signals/${signal.id}`} className="mt-1 block font-semibold text-[#3a728a] hover:underline">
                   {eventLine(signal)}
                 </Link>
                 <p className="text-sm text-[#3f4e5b]">{signal.headline}</p>
+              </Card>
+            ) : (
+              <Card className="px-5 py-4">
+                <p className="text-xs font-semibold uppercase tracking-wider text-[#7a8794]">Signal</p>
+                <p className="mt-1 text-sm text-[#3f4e5b]">None: list-prospected, not signal-driven.</p>
               </Card>
             )}
             <Card className="px-5 py-4">
@@ -74,6 +82,7 @@ export default async function OpportunityPage(props: PageProps<"/opportunities/[
               <p className="mt-2 text-xl font-bold">{usdExact(opp.amount)}</p>
               <p className="text-xs text-[#7a8794]">Module rate per acre × acres + $2,500 setup, rounded to $100</p>
               {opp.ai_offline && <p className="mt-2 text-xs text-[#8a5a00]">AI offline: rules-based score and template draft.</p>}
+              {opp.is_off_territory && <p className="mt-2 text-xs text-[#8a5a00]">Off-territory: the account sits outside the rep&apos;s counties.</p>}
             </Card>
           </div>
           <div className="flex flex-col gap-3">

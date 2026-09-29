@@ -20,8 +20,8 @@ export async function loadAll(): Promise<Loaded<AllData>> {
     const [reps, accounts, signals, opps, settings] = await Promise.all([
       db.from("reps").select("*").order("id"),
       db.from("accounts").select("*").order("name"),
-      db.from("signals").select("*").order("week_of", { ascending: false }).order("created_at"),
-      db.from("opportunities").select("*").order("created_at"),
+      db.from("signals").select("*").order("week_of", { ascending: false }).order("id"),
+      db.from("opportunities").select("*").order("id"),
       db.from("settings").select("*").eq("id", 1).maybeSingle(),
     ]);
     const failed = [reps, accounts, signals, opps, settings].find((r) => r.error);
@@ -35,10 +35,7 @@ export async function loadAll(): Promise<Loaded<AllData>> {
         accounts: accounts.data as Account[],
         signals: signals.data as Signal[],
         opps: opps.data as Opportunity[],
-        settings: (settings.data as Settings | null) ?? {
-          price_list: DEFAULT_PRICES,
-          weekly_history: {},
-        },
+        settings: { price_list: (settings.data as Settings | null)?.price_list ?? DEFAULT_PRICES },
       },
     };
   } catch (e) {
@@ -59,8 +56,4 @@ export function inWeek(weekOf: string, current: string | null): boolean {
   if (!current) return false;
   const diff = (Date.parse(current) - Date.parse(weekOf)) / 86_400_000;
   return diff >= 0 && diff < 7;
-}
-
-export function expectedValue(opps: Opportunity[]): number {
-  return opps.reduce((sum, o) => sum + (o.amount * o.score) / 100, 0);
 }

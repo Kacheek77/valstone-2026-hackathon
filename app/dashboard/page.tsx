@@ -15,10 +15,11 @@ import {
   SignalIcon,
   Tile,
 } from "@/components/ui";
-import { currentWeek, expectedValue, inWeek, loadAll } from "@/lib/data";
+import { currentWeek, inWeek, loadAll, type AllData } from "@/lib/data";
 import { eventLine, firstName, usd } from "@/lib/format";
 import { matchAccounts } from "@/lib/match";
-import { ACTED_STAGES, TYPE_MODULE } from "@/lib/types";
+import { captureRate, expectedValue, signalWeeks, sumValues } from "@/lib/metrics";
+import { ACTED_STAGES, type Opportunity, type Signal } from "@/lib/types";
 import { getView, parseView } from "@/lib/view";
 
 export const dynamic = "force-dynamic";
@@ -34,6 +35,19 @@ function greeting(): string {
   return "Good evening";
 }
 
+type WeekNumbers = { pipeline: number; capture: number | null; hours: number; opps: Opportunity[] };
+
+function weekNumbers(signals: Signal[], data: AllData): WeekNumbers {
+  const ids = new Set(signals.map((s) => s.id));
+  const opps = data.opps.filter((o) => o.signal_id && ids.has(o.signal_id));
+  return {
+    pipeline: opps.filter((o) => o.stage !== "lost").reduce((sum, o) => sum + o.amount, 0),
+    capture: captureRate(sumValues(signals, data)),
+    hours: (opps.length * MINUTES_PER_OPP) / 60,
+    opps,
+  };
+}
+
 export default async function Dashboard(props: PageProps<"/dashboard">) {
   const sp = await props.searchParams;
   const view = await getView();
@@ -46,7 +60,7 @@ export default async function Dashboard(props: PageProps<"/dashboard">) {
   if (!loaded.ok) {
     return (
       <>
-        <Header view={view} reps={null} active="dashboard" selected={String(repId)} />
+        <Header view={view} reps={null} active="dashboard" selected={repId} />
         <Page>
           <ErrorBox>{loaded.error} The dashboard will load once the database is reachable.</ErrorBox>
         </Page>
@@ -54,9 +68,10 @@ export default async function Dashboard(props: PageProps<"/dashboard">) {
     );
   }
 
-  const { reps, accounts, signals, opps, settings } = loaded.data;
+  const data = loaded.data;
+  const { reps, accounts, signals, opps } = data;
   const rep = reps.find((r) => r.id === repId && !r.is_manager);
-  const header = <Header view={view} reps={reps} active={view.kind === "rep" ? "dashboard" : null} selected={String(repId)} />;
+  const header = <Header view={view} reps={reps} active={view.kind === "rep" ? "dashboard" : null} selected={repId} />;
   if (!rep) {
     return (
       <>
@@ -69,16 +84,16 @@ export default async function Dashboard(props: PageProps<"/dashboard">) {
   }
 
   const week = currentWeek(signals);
-  const repSignals = signals.filter((s) => s.rep_id === rep.id && inWeek(s.week_of, week));
+  const repAllSignals = signals.filter((s) => s.rep_id === rep.id);
+  const repSignals = repAllSignals.filter((s) => inWeek(s.week_of, week));
   const myAccounts = accounts.filter((a) => a.rep_id === rep.id);
-  const weekSignalIds = new Set(repSignals.map((s) => s.id));
-  const weekOpps = opps.filter((o) => weekSignalIds.has(o.signal_id));
+  const now = weekNumbers(repSignals, data);
 
-  const pipeline = weekOpps.filter((o) => o.stage !== "lost").reduce((sum, o) => sum + o.amount, 0);
-  const acted = weekOpps.filter((o) => ACTED_STAGES.includes(o.stage)).length;
-  const capture = weekOpps.length ? (acted / weekOpps.length) * 100 : null;
-  const hours = (weekOpps.length * MINUTES_PER_OPP) / 60;
-  const history = settings.weekly_history[String(rep.id)];
+  // Sparklines: the four weeks before this one, from the seeded history, then this week.
+  const priorWeeks = signalWeeks(signals).filter((w) => !inWeek(w, week)).slice(-4);
+  const history = priorWeeks.map((w) => weekNumbers(repAllSignals.filter((s) => s.week_of === w), data));
+  const series = (pick: (n: WeekNumbers) => number | null) =>
+    [...history, now].map(pick).filter((v): v is number => v !== null);
 
   return (
     <>
@@ -97,7 +112,7 @@ export default async function Dashboard(props: PageProps<"/dashboard">) {
           <RefreshButton demo={demo} />
         </div>
 
-        <div className="grid gap-5 lg:grid-cols-[minmax(0,420px)_1fr]">
+        <div className="grid gap-5 lg:grid-cols-[minmax(0,400px)_1fr]">
           <div className="flex flex-col gap-2">
             <TerritoryMap territoryCounties={rep.counties} accounts={accounts} repId={rep.id} signals={repSignals} />
             <MapLegend />
@@ -108,9 +123,9 @@ export default async function Dashboard(props: PageProps<"/dashboard">) {
               <EmptyState>No signals yet. Refresh to load this week&apos;s weather.</EmptyState>
             ) : (
               repSignals.map((s) => {
-                const matches = matchAccounts(s, accounts);
+                const matches = matchAccounts(s, accounts, reps);
                 const sOpps = opps.filter((o) => o.signal_id === s.id);
-                const acctCount = Math.max(matches.length, sOpps.length);
+                const acctCount = new Set([...matches.map((m) => m.account.id), ...sOpps.map((o) => o.account_id)]).size;
                 const captured = sOpps.filter((o) => ACTED_STAGES.includes(o.stage));
                 return (
                   <Card key={s.id} className="flex items-center gap-4 px-4 py-3 transition-shadow duration-150 hover:shadow-md">
@@ -120,7 +135,7 @@ export default async function Dashboard(props: PageProps<"/dashboard">) {
                         {eventLine(s)}
                       </Link>
                       <p className="text-sm text-[#3f4e5b]">
-                        {acctCount} account{acctCount === 1 ? "" : "s"} · {TYPE_MODULE[s.type]} ·{" "}
+                        {acctCount} account{acctCount === 1 ? "" : "s"} · {s.target_module} ·{" "}
                         {sOpps.length === 0 ? (
                           <span className="text-[#7a8794]">— expected</span>
                         ) : captured.length === sOpps.length ? (
@@ -131,7 +146,9 @@ export default async function Dashboard(props: PageProps<"/dashboard">) {
                       </p>
                     </div>
                     {sOpps.length > 0 ? (
-                      <OutlineButtonLink href={`/pipeline?signal=${s.id}`}>{sOpps.length} opps ✓</OutlineButtonLink>
+                      <OutlineButtonLink href={`/pipeline?signal=${s.id}`}>
+                        {sOpps.length} opp{sOpps.length === 1 ? "" : "s"} ✓
+                      </OutlineButtonLink>
                     ) : (
                       <PrimaryButtonLink href={`/signals/${s.id}`}>Generate →</PrimaryButtonLink>
                     )}
@@ -143,33 +160,30 @@ export default async function Dashboard(props: PageProps<"/dashboard">) {
             <div className="mt-1 flex flex-col gap-3 sm:flex-row">
               <Tile label="Pipeline this week">
                 <p className="text-2xl font-bold text-[#3a728a]">
-                  <CountUp value={pipeline} format="usd" />
-                  <span className="ml-2 text-sm font-normal text-[#5a6975]">{weekOpps.length} opps</span>
+                  <CountUp value={now.pipeline} format="usd" />
+                  <span className="ml-2 text-sm font-normal text-[#5a6975]">
+                    {now.opps.length} opp{now.opps.length === 1 ? "" : "s"}
+                  </span>
                 </p>
-                {history && <Sparkline values={[...history.pipeline, pipeline]} color="#3a728a" label="Pipeline, last five weeks" />}
+                <Sparkline values={series((n) => n.pipeline)} color="#3a728a" label="Pipeline, last five weeks" />
               </Tile>
               <Tile label="Capture rate">
                 <p className="text-2xl font-bold text-[#1f9d55]">
-                  {capture === null ? "—" : <CountUp value={capture} format="pct" />}
+                  {now.capture === null ? "—" : <CountUp value={now.capture} format="pct" />}
                 </p>
-                {history && (
-                  <Sparkline
-                    values={capture === null ? history.capture : [...history.capture, capture]}
-                    color="#1f9d55"
-                    label="Capture rate, last five weeks"
-                  />
-                )}
+                <Sparkline values={series((n) => n.capture)} color="#1f9d55" label="Capture rate, last five weeks" />
               </Tile>
               <Tile label="Hours saved" tint="#ffebdd">
                 <p className="text-2xl font-bold text-[#c64800]">
-                  <CountUp value={hours} format="hours" />
+                  <CountUp value={now.hours} format="hours" />
                 </p>
-                {history && <Sparkline values={[...history.hours, hours]} color="#c64800" label="Hours saved, last five weeks" />}
+                <Sparkline values={series((n) => n.hours)} color="#c64800" label="Hours saved, last five weeks" />
               </Tile>
             </div>
             <p className="text-xs text-[#7a8794]">
-              Capture rate: opportunities acted on (pushed, sent or won) ÷ generated. Hours saved: 20 minutes of CRM typing
-              per opportunity (an assumption). Earlier weeks in the sparklines are seeded.
+              Capture rate: expected value pushed, sent or won ÷ expected value available, where available includes matched
+              accounts not yet generated (valued at a score of 50). Hours saved: 20 minutes of CRM typing per opportunity (an
+              assumption). Sparklines show the four prior weeks of seeded history, then this week.
             </p>
           </div>
         </div>

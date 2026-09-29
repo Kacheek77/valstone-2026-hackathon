@@ -29,6 +29,7 @@ export default async function Pipeline(props: PageProps<"/pipeline">) {
   const { reps, accounts, signals, opps } = loaded.data;
   const accountById = new Map(accounts.map((a) => [a.id, a]));
   const signalById = new Map(signals.map((s) => [s.id, s]));
+  const listLabel = "List prospecting";
   const repById = new Map(reps.map((r) => [r.id, r]));
   const filterSignal = signalFilter ? signalById.get(signalFilter) : undefined;
 
@@ -72,7 +73,7 @@ export default async function Pipeline(props: PageProps<"/pipeline">) {
               </thead>
               <tbody>
                 {visible.map((o) => {
-                  const s = signalById.get(o.signal_id);
+                  const s = o.signal_id ? signalById.get(o.signal_id) : undefined;
                   return (
                     <tr key={o.id} className="relative border-t border-[#eef0f2] transition-colors duration-150 hover:bg-[#f6f7f8]">
                       <td className="px-4 py-3 font-bold text-[#3a728a] tabular-nums">{o.score}</td>
@@ -81,8 +82,8 @@ export default async function Pipeline(props: PageProps<"/pipeline">) {
                           {accountById.get(o.account_id)?.name ?? "Unknown account"}
                         </Link>
                       </td>
-                      {view.kind === "manager" && <td className="px-3 py-3">{repById.get(o.rep_id ?? 0)?.name ?? "—"}</td>}
-                      <td className="px-3 py-3">{s ? `${eventLine(s)} · ${weekLabel(s.week_of)}` : "—"}</td>
+                      {view.kind === "manager" && <td className="px-3 py-3">{repById.get(o.rep_id ?? "")?.name ?? "—"}</td>}
+                      <td className="px-3 py-3">{s ? `${eventLine(s)} · ${weekLabel(s.week_of)}` : <span className="text-[#7a8794]">{listLabel}</span>}</td>
                       <td className="px-3 py-3">{o.lead_with}</td>
                       <td className="px-3 py-3 text-right tabular-nums">{usdExact(o.amount)}</td>
                       <td className="px-4 py-3"><StageBadge stage={o.stage} /></td>

@@ -1,4 +1,4 @@
-import type { Signal } from "./types";
+import { shortCounty, type Signal } from "./types";
 
 export function usd(n: number): string {
   if (n >= 1000) return `$${Math.round(n / 1000).toLocaleString("en-US")}k`;
@@ -47,10 +47,10 @@ export function captureColor(p: number | null): string {
   return "text-[#d23b3b]";
 }
 
-// "Finney, KS · D2 → D3" or "Deaf Smith, TX · 4 days over 98 °F".
+// "Finney, KS · D2 → D3" or "Moore, TX · a hail warning alongside extreme heat…".
 export function eventLine(s: Signal): string {
-  const place = `${s.county}, ${s.state}`;
-  const drought = s.headline.match(/from (D\d|no drought) to (D\d)/);
+  const place = `${shortCounty(s.county)}, ${s.state}`;
+  const drought = s.headline.match(/(D\d)\s*→\s*(D\d)/);
   if (drought) return `${place} · ${drought[1]} → ${drought[2]}`;
   const after = s.headline.split(": ")[1];
   return after ? `${place} · ${after}` : place;

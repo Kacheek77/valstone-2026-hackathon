@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { BrandMark } from "@/components/Header";
-import { DANA_ID } from "@/lib/view";
+import { DEMO_REP_ID } from "@/lib/view";
 
 // Static: no data calls, so the root URL always loads.
 export const dynamic = "force-static";
@@ -71,10 +71,10 @@ export default function Welcome() {
                 Enter as manager →
               </a>
               <a
-                href={`/view?as=${DANA_ID}`}
+                href={`/view?as=${DEMO_REP_ID}`}
                 className="rounded-full border-2 border-[#3a728a] px-5 py-2 text-sm font-bold text-[#3a728a] transition-colors duration-150 hover:bg-[#3a728a] hover:text-white"
               >
-                Enter as a rep (Dana) →
+                Enter as a rep (Jordan) →
               </a>
             </div>
             <div className="flex flex-wrap gap-5 text-sm">

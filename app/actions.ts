@@ -5,6 +5,7 @@ import { scoreAndDraft } from "@/lib/claude";
 import { leadWithFor } from "@/lib/match";
 import { amountFor, DEFAULT_PRICES } from "@/lib/pricing";
 import { refreshSignals, type RefreshResult } from "@/lib/signals-refresh";
+import { formatId, nextIdNumber, UNIQUE_VIOLATION } from "@/lib/ids";
 import { getSupabase } from "@/lib/supabase";
 import type { Account, PriceList, Signal } from "@/lib/types";
 
@@ -44,27 +45,47 @@ export async function generateOneAction(
     const leadWith = leadWithFor(account, signal);
     if (!leadWith) return { ok: false, error: `${account.name} already owns every module.` };
 
-    const { data: rep } = await db.from("reps").select("name").eq("id", signal.rep_id ?? 1).maybeSingle();
+    const { data: rep } = await db.from("reps").select("name, counties").eq("id", signal.rep_id ?? "").maybeSingle();
     const prices = (settings.data?.price_list as PriceList | undefined) ?? DEFAULT_PRICES;
-    const draft = await scoreAndDraft(account, signal, leadWith, rep?.name ?? "Dana Whitfield");
+    const draft = await scoreAndDraft(account, signal, leadWith, rep?.name ?? "Jordan Ellsworth");
+    const territory: string[] = rep?.counties ?? [];
 
-    const { error } = await db.from("opportunities").upsert(
-      {
-        signal_id: signal.id,
-        account_id: account.id,
-        rep_id: signal.rep_id,
-        score: draft.score,
-        lead_with: leadWith,
-        why_now: draft.why_now,
-        email_subject: draft.email_subject,
-        email_body: draft.email_body,
-        amount: amountFor(leadWith, account.acres, prices),
-        stage: "draft",
-        ai_offline: draft.ai_offline,
-      },
-      { onConflict: "signal_id,account_id", ignoreDuplicates: true },
-    );
-    if (error) return { ok: false, error: error.message };
+    const row = {
+      signal_id: signal.id,
+      account_id: account.id,
+      rep_id: signal.rep_id,
+      score: draft.score,
+      lead_with: leadWith,
+      why_now: draft.why_now,
+      email_subject: draft.email_subject,
+      email_body: draft.email_body,
+      amount: amountFor(leadWith, account.acres, prices),
+      stage: "draft",
+      ai_offline: draft.ai_offline,
+      is_signal_driven: true,
+      is_off_territory: !territory.includes(`${account.county}, ${account.state}`),
+    };
+
+    // OPP- + next number. Three generations run at once, so two can pick the
+    // same id; on a clash, check whether this pair already exists, else retry.
+    let saved = false;
+    for (let attempt = 0; attempt < 6 && !saved; attempt++) {
+      const id = formatId("OPP", (await nextIdNumber("opportunities", "OPP")) + attempt);
+      const { error } = await db.from("opportunities").insert({ id, ...row });
+      if (!error) {
+        saved = true;
+        break;
+      }
+      if (error.code !== UNIQUE_VIOLATION) return { ok: false, error: error.message };
+      const { data: dup } = await db
+        .from("opportunities")
+        .select("id")
+        .eq("signal_id", signal.id)
+        .eq("account_id", account.id)
+        .limit(1);
+      if (dup && dup.length > 0) return { ok: true, aiOffline: draft.ai_offline };
+    }
+    if (!saved) return { ok: false, error: "Could not allocate an opportunity id." };
 
     revalidatePath(`/signals/${signalId}`);
     return { ok: true, aiOffline: draft.ai_offline };

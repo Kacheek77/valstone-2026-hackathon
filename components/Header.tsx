@@ -12,8 +12,8 @@ export function BrandMark({ className = "h-6 w-6" }: { className?: string }) {
 }
 
 const FALLBACK_REPS = [
-  "Dana Whitfield", "Rep 2", "Rep 3", "Rep 4", "Rep 5", "Rep 6",
-].map((name, i) => ({ id: i + 1, name }));
+  "Jordan Ellsworth", "Priya Nathan", "Marcus Deleon", "Renee Okafor", "Tyler Bramlett", "Sofia Marchetti",
+].map((name, i) => ({ id: `REP-0${i + 1}`, name }));
 
 export function Header({
   view,
@@ -31,9 +31,9 @@ export function Header({
   const repList = reps ? reps.filter((r) => !r.is_manager) : FALLBACK_REPS;
   const options = [
     { value: "manager", label: "Manager · Plains" },
-    ...repList.map((r) => ({ value: String(r.id), label: r.name })),
+    ...repList.map((r) => ({ value: r.id, label: r.name })),
   ];
-  const current = selected ?? (view.kind === "manager" ? "manager" : String(view.repId));
+  const current = selected ?? (view.kind === "manager" ? "manager" : view.repId);
   const home = view.kind === "manager" ? { href: "/team", label: "Team", key: "team" } : { href: "/dashboard", label: "Dashboard", key: "dashboard" };
 
   const navItem = (href: string, label: string, key: string) => (

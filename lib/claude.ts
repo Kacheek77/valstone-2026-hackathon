@@ -46,7 +46,7 @@ export function rulesDraft(
   leadWith: string,
   repName: string,
 ): Draft {
-  const prospect = account.modules_owned.length === 0;
+  const prospect = account.customer_status === "Prospect";
   let score = signal.severity === "High" ? 70 : 55;
   if (account.acres > 3000) score += 15;
   else if (account.acres > 1500) score += 8;
@@ -61,7 +61,7 @@ export function rulesDraft(
   return {
     score,
     why_now: `${signal.headline}; ${account.name} has ${acres} acres of ${crops} and does not yet use ${leadWith}.`,
-    email_subject: `${signal.county} County this week: ${leadWith}`,
+    email_subject: `${signal.county} this week: ${leadWith}`,
     email_body: `${contact},\n\n${signal.headline}. With ${acres} acres of ${crops}, this is the week it shows up in your fields.\n\n${leadWith} is built for exactly this. It turns the conditions into a field-by-field plan so the decisions you are making now are backed by data.\n\nCould we take 15 minutes this week to look at it on your acres?\n\n${rep}`,
     ai_offline: true,
   };
@@ -86,7 +86,7 @@ export async function scoreAndDraft(
         crops: account.crops,
         acres: account.acres,
         modules_owned: account.modules_owned,
-        prospect: account.modules_owned.length === 0,
+        customer_status: account.customer_status,
         last_contact: account.last_contact,
       },
       signal: {

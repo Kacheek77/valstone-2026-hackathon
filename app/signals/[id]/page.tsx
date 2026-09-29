@@ -8,11 +8,11 @@ import { usdExact, weekLabel } from "@/lib/format";
 import { matchAccounts } from "@/lib/match";
 import { amountFor } from "@/lib/pricing";
 import type { Account, Opportunity, SignalType } from "@/lib/types";
-import { getView } from "@/lib/view";
+import { DEMO_REP_ID, getView } from "@/lib/view";
 
 export const dynamic = "force-dynamic";
 
-const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const SIGNAL_ID = /^SIG-\d{4}$/;
 const THRESHOLD = 50;
 
 const TYPE_LABEL: Record<SignalType, string> = {
@@ -43,7 +43,7 @@ function ScoreRing({ score }: { score: number }) {
 
 export default async function SignalDetail(props: PageProps<"/signals/[id]">) {
   const { id } = await props.params;
-  if (!UUID.test(id)) notFound();
+  if (!SIGNAL_ID.test(id)) notFound();
   const view = await getView();
 
   const loaded = await loadAll();
@@ -61,7 +61,7 @@ export default async function SignalDetail(props: PageProps<"/signals/[id]">) {
   const signal = signals.find((s) => s.id === id);
   if (!signal) notFound();
 
-  const matches = matchAccounts(signal, accounts);
+  const matches = matchAccounts(signal, accounts, reps);
   const sOpps = opps.filter((o) => o.signal_id === signal.id);
   const byAccount = new Map(sOpps.map((o) => [o.account_id, o]));
 
@@ -86,7 +86,7 @@ export default async function SignalDetail(props: PageProps<"/signals/[id]">) {
 
   const pending = rows.filter((r) => !r.opp).map((r) => r.account.id);
   const color = SEVERITY_COLOR[signal.severity];
-  const backHref = view.kind === "manager" ? `/dashboard?rep=${signal.rep_id ?? 1}` : "/dashboard";
+  const backHref = view.kind === "manager" ? `/dashboard?rep=${signal.rep_id ?? DEMO_REP_ID}` : "/dashboard";
   const owner = reps.find((r) => r.id === signal.rep_id);
 
   return (
@@ -115,8 +115,8 @@ export default async function SignalDetail(props: PageProps<"/signals/[id]">) {
         <h2 className="mb-2 font-semibold text-[#3f4e5b]">Affected accounts, ranked</h2>
         {rows.length === 0 ? (
           <EmptyState>
-            No accounts match this signal: none farm a relevant crop in {signal.county} County
-            {signal.type === "drought" ? " or the counties next to it" : ""}, or they already own every module.
+            No accounts match this signal: none farm a relevant crop in {signal.county}
+            {signal.type === "drought" ? " or the rest of the territory" : ""}, or they already own every module.
           </EmptyState>
         ) : (
           <Card className="overflow-x-auto">
@@ -149,7 +149,7 @@ export default async function SignalDetail(props: PageProps<"/signals/[id]">) {
                         )}
                         <p className="text-xs text-[#7a8794]">
                           {account.county}, {account.state}
-                          {account.modules_owned.length === 0 ? " · prospect" : ""}
+                          {account.customer_status === "Prospect" ? " · prospect" : ""}
                         </p>
                       </td>
                       <td className="px-3 py-3">
@@ -180,7 +180,7 @@ export default async function SignalDetail(props: PageProps<"/signals/[id]">) {
           </Card>
         )}
         <p className="mt-3 text-xs text-[#7a8794]">
-          Matching is deterministic: accounts in the county{signal.type === "drought" ? " and the counties next to it" : ""}, with a
+          Matching is deterministic: accounts in the county{signal.type === "drought" ? " and the rest of its territory" : ""}, with a
           relevant crop, that do not yet own the module. Claude scores and writes each row; a rules-based score marked
           &ldquo;AI offline&rdquo; stands in if Claude is unavailable. Rows under {THRESHOLD} are grayed as below threshold.
         </p>
