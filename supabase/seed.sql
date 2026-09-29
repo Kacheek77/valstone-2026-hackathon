@@ -118,7 +118,7 @@ Seward County, KS 7-day forecast shows 3.1in of rain with flooding risk, closing
 
 Fifteen minutes Thursday?
 
-Jordan Ellsworth', 18800, 'pushed', false, true, false, NULL, NULL, '2026-09-29T14:00:00Z', '2026-09-29T15:00:00Z', NULL),
+Jordan Ellsworth', 18800, 'pushed', false, true, false, NULL, NULL, '2026-09-29T14:00:00Z', '2026-09-29T19:00:00Z', NULL),
 ('OPP-0005', 'SIG-0004', 'ACC-038', 'REP-01', 20, 'Yield & Insurance Records', 'Yoder Land & Cattle Co. has 2,800 acres of corn in Perkins County under highs above 98°F with overnight lows above 75°F; yield loss documentation starts now if a claim follows.', 'Perkins County heat during grain fill — getting your yield records in order now', 'Hi Mary,
 
 Perkins County, NE forecast shows highs above 98°F with overnight lows above 75°F during grain fill and harvest dry-down (NOAA). With 2,800 acres of corn, FieldSense Yield & Insurance Records can tell you which fields matter most this week and keep the records straight if it turns into a claim.
@@ -139,14 +139,14 @@ Cimarron County, OK drought category worsened to D1 (Moderate Drought) this week
 
 Fifteen minutes Thursday?
 
-Renee Okafor', 19300, 'pushed', false, true, false, NULL, NULL, '2026-09-26T14:00:00Z', '2026-09-21T06:00:00Z', NULL),
+Renee Okafor', 19300, 'pushed', false, true, false, NULL, NULL, '2026-09-26T14:00:00Z', '2026-09-21T08:00:00Z', NULL),
 ('OPP-0008', 'SIG-0011', 'ACC-044', 'REP-01', 51, 'Yield & Insurance Records', 'Friesen Family Farm has 800 acres of corn in Deaf Smith County under highs above 95°F for 3+ consecutive days; yield loss documentation starts now if a claim follows.', 'Deaf Smith County heat during grain fill — getting your yield records in order now', 'Hi Susan,
 
 Deaf Smith County, TX forecast shows highs above 95°F for 3+ consecutive days during grain fill and harvest dry-down (NOAA). With 800 acres of corn, FieldSense Yield & Insurance Records can tell you which fields matter most this week and keep the records straight if it turns into a claim.
 
 Fifteen minutes Thursday?
 
-Jordan Ellsworth', 3700, 'sent', false, true, true, NULL, NULL, '2026-09-17T14:00:00Z', '2026-09-19T15:00:00Z', '2026-09-20T16:30:00Z'),
+Jordan Ellsworth', 3700, 'sent', false, true, true, NULL, NULL, '2026-09-17T14:00:00Z', '2026-09-15T15:00:00Z', '2026-09-17T03:00:00Z'),
 ('OPP-0009', 'SIG-0006', 'ACC-018', 'REP-02', 0, 'Field-Work Planner', 'Schmidt Bros. Farms has 2,200 acres in Sherman County facing 2.5in of rain over 4 days; field-work windows are the constraint this week.', 'Sherman County: 2.5in of rain over 4 days — planning the field days you have left', 'Hi James,
 
 Sherman County, KS 7-day forecast shows 2.5in of rain over 4 days, closing multiple field-work days (NOAA). With 2,200 acres of wheat, FieldSense Field-Work Planner can tell you which fields matter most this week and keep the records straight if it turns into a claim.
@@ -174,7 +174,7 @@ Deaf Smith County, TX forecast shows highs above 95°F for 3+ consecutive days d
 
 Fifteen minutes Thursday?
 
-Tyler Bramlett', 3700, 'sent', false, true, false, NULL, NULL, '2026-09-18T14:00:00Z', '2026-09-20T00:00:00Z', '2026-09-22T00:00:00Z'),
+Tyler Bramlett', 3700, 'sent', false, true, false, NULL, NULL, '2026-09-18T14:00:00Z', '2026-09-18T00:00:00Z', '2026-09-22T00:00:00Z'),
 ('OPP-0013', 'SIG-0016', 'ACC-049', 'REP-05', 33, 'Yield & Insurance Records', 'Becker Ranch has 6,500 acres of cotton in Moore County under a hail warning alongside extreme heat; yield loss documentation starts now if a claim follows.', 'Moore County heat during grain fill — getting your yield records in order now', 'Hi Ruth,
 
 Moore County, TX forecast shows a hail warning alongside extreme heat during grain fill and harvest dry-down (NOAA). With 6,500 acres of cotton, FieldSense Yield & Insurance Records can tell you which fields matter most this week and keep the records straight if it turns into a claim.
@@ -202,7 +202,7 @@ Beaver County, OK 7-day forecast shows 1.8in of rain plus high winds, closing mu
 
 Fifteen minutes Thursday?
 
-Renee Okafor', 8000, 'won', false, true, false, NULL, NULL, '2026-09-12T14:00:00Z', '2026-09-07T06:00:00Z', '2026-09-07T16:00:00Z'),
+Renee Okafor', 8000, 'won', false, true, false, NULL, NULL, '2026-09-12T14:00:00Z', '2026-09-07T09:00:00Z', '2026-09-07T16:00:00Z'),
 ('OPP-0017', 'SIG-0006', 'ACC-010', 'REP-03', 52, 'Field-Work Planner', 'Voss Ranch has 5,000 acres in Sherman County facing 2.5in of rain over 4 days; field-work windows are the constraint this week.', 'Sherman County: 2.5in of rain over 4 days — planning the field days you have left', 'Hi Ruth,
 
 Sherman County, KS 7-day forecast shows 2.5in of rain over 4 days, closing multiple field-work days (NOAA). With 5,000 acres of corn, FieldSense Field-Work Planner can tell you which fields matter most this week and keep the records straight if it turns into a claim.
@@ -237,21 +237,21 @@ Perkins County, NE forecast shows highs above 98°F with overnight lows above 75
 
 Fifteen minutes Thursday?
 
-Jordan Ellsworth', 12200, 'sent', false, true, true, NULL, NULL, '2026-09-05T14:00:00Z', '2026-09-06T15:00:00Z', '2026-09-28T16:30:00Z'),
+Jordan Ellsworth', 12200, 'sent', false, true, true, NULL, NULL, '2026-09-05T14:00:00Z', '2026-09-01T17:00:00Z', '2026-09-03T03:00:00Z'),
 ('OPP-0022', 'SIG-0012', 'ACC-040', 'REP-01', 32, 'Irrigation Scheduling', 'Goertzen Agri-Services runs 6,500 acres of corn in Seward County, which D2 to D3 this week; a watering plan pays for itself in the week allocations tighten.', 'Seward County just moved to extreme drought — a watering plan for the acres you can still irrigate', 'Hi Michael,
 
 Seward County, KS drought category worsened to D3 (Extreme Drought) this week (US Drought Monitor). With 6,500 acres of corn, FieldSense Irrigation Scheduling can tell you which fields matter most this week and keep the records straight if it turns into a claim.
 
 Fifteen minutes Thursday?
 
-Jordan Ellsworth', 28500, 'pushed', false, true, false, NULL, NULL, '2026-09-21T14:00:00Z', '2026-09-23T15:00:00Z', NULL),
+Jordan Ellsworth', 28500, 'pushed', false, true, false, NULL, NULL, '2026-09-21T14:00:00Z', '2026-09-22T14:00:00Z', NULL),
 ('OPP-0023', 'SIG-0010', 'ACC-050', 'REP-04', 100, 'Yield & Insurance Records', 'Neufeld Ranch has 3,500 acres of wheat in Cheyenne County under highs above 98°F with overnight lows above 75°F; yield loss documentation starts now if a claim follows.', 'Cheyenne County heat during grain fill — getting your yield records in order now', 'Hi Linda,
 
 Cheyenne County, NE forecast shows highs above 98°F with overnight lows above 75°F during grain fill and harvest dry-down (NOAA). With 3,500 acres of wheat, FieldSense Yield & Insurance Records can tell you which fields matter most this week and keep the records straight if it turns into a claim.
 
 Fifteen minutes Thursday?
 
-Renee Okafor', 7800, 'won', false, true, true, NULL, NULL, '2026-09-15T14:00:00Z', '2026-09-14T06:00:00Z', '2026-09-15T06:00:00Z'),
+Renee Okafor', 7800, 'won', false, true, true, NULL, NULL, '2026-09-15T14:00:00Z', '2026-09-14T03:00:00Z', '2026-09-14T22:00:00Z'),
 ('OPP-0024', NULL, 'ACC-020', 'REP-06', 0, 'Irrigation Scheduling', 'List-based prospecting: Weber Land & Cattle Co. was called as part of the quarterly territory sweep, not in response to a weather event.', 'FieldSense Irrigation Scheduling for Weber Land & Cattle Co.', 'Hi Brian,
 
 Checking in on Irrigation Scheduling for your 5,000 acres. Happy to walk through it when you have fifteen minutes.
@@ -326,7 +326,7 @@ Tyler Bramlett', 19300, 'sent', false, false, false, NULL, NULL, '2026-08-27T14:
 
 Checking in on Yield & Insurance Records for your 1,600 acres. Happy to walk through it when you have fifteen minutes.
 
-Renee Okafor', 4900, 'sent', false, false, false, NULL, NULL, '2026-09-01T14:00:00Z', '2026-09-01T19:00:00Z', '2026-09-02T02:00:00Z'),
+Renee Okafor', 4900, 'sent', false, false, false, NULL, NULL, '2026-09-01T14:00:00Z', '2026-09-01T20:00:00Z', '2026-09-02T12:00:00Z'),
 ('OPP-0039', 'SIG-0020', 'ACC-009', 'REP-04', 82, 'Irrigation Scheduling', 'Hartman Family Farm runs 1,600 acres of wheat in Cimarron County, which D3 to D4 this week; a watering plan pays for itself in the week allocations tighten.', 'Cimarron County just moved to exceptional drought — a watering plan for the acres you can still irrigate', 'Hi Sandra,
 
 Cimarron County, OK drought category worsened to D4 (Exceptional Drought) this week (US Drought Monitor). With 1,600 acres of wheat, FieldSense Irrigation Scheduling can tell you which fields matter most this week and keep the records straight if it turns into a claim.
@@ -341,12 +341,12 @@ Cimarron County, OK drought category worsened to D4 (Exceptional Drought) this w
 Fifteen minutes Thursday?
 
 Renee Okafor', 19300, 'pushed', false, true, false, NULL, NULL, '2026-09-28T09:00:00Z', '2026-09-28T14:00:00Z', NULL),
-('OPP-0041', NULL, 'ACC-001', 'REP-05', 14, 'Irrigation Scheduling', 'List-based prospecting: Whitfield Land & Cattle Co. was called from a purchased list; no weather event in play.', 'FieldSense Irrigation Scheduling for Whitfield Land & Cattle Co.', 'Hi Mary,
+('OPP-0041', NULL, 'ACC-001', 'REP-05', 9, 'Irrigation Scheduling', 'List-based prospecting: Whitfield Land & Cattle Co. was called from a purchased list; no weather event in play.', 'FieldSense Irrigation Scheduling for Whitfield Land & Cattle Co.', 'Hi Mary,
 
 Reaching out about FieldSense Irrigation Scheduling. Let me know if there is a good time to talk.
 
 Tyler Bramlett', 11300, 'pushed', false, false, true, NULL, NULL, '2026-08-18T14:00:00Z', '2026-08-25T15:00:00Z', NULL),
-('OPP-0042', NULL, 'ACC-003', 'REP-05', 15, 'Irrigation Scheduling', 'List-based prospecting: Neufeld Grain Co. was called from a purchased list; no weather event in play.', 'FieldSense Irrigation Scheduling for Neufeld Grain Co.', 'Hi Robert,
+('OPP-0042', NULL, 'ACC-003', 'REP-05', 10, 'Irrigation Scheduling', 'List-based prospecting: Neufeld Grain Co. was called from a purchased list; no weather event in play.', 'FieldSense Irrigation Scheduling for Neufeld Grain Co.', 'Hi Robert,
 
 Reaching out about FieldSense Irrigation Scheduling. Let me know if there is a good time to talk.
 

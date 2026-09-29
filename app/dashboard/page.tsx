@@ -181,8 +181,8 @@ export default async function Dashboard(props: PageProps<"/dashboard">) {
               </Tile>
             </div>
             <p className="text-xs text-[#7a8794]">
-              Capture rate: expected value pushed, sent or won ÷ expected value available, where available includes matched
-              accounts not yet generated (valued at a score of 50). Hours saved: 20 minutes of CRM typing per opportunity (an
+              Capture rate: expected value pushed, sent or won ÷ expected value available, where available also counts the
+              matched accounts on any signal with no opportunities yet (valued at a score of 50). Hours saved: 20 minutes of CRM typing per opportunity (an
               assumption). Sparklines show the four prior weeks of seeded history, then this week.
             </p>
           </div>

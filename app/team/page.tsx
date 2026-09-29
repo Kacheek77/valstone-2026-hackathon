@@ -143,7 +143,8 @@ export default async function Team() {
         </Card>
         <p className="mt-3 text-xs text-[#7a8794]">
           Click a rep to open their dashboard. Available = Σ amount × score ÷ 100 over this week&apos;s generated opportunities,
-          plus matched accounts not yet generated at a score of 50, so an ignored signal still counts against the rep.
+          plus, for any signal with no opportunities at all, its matched accounts at a score of 50, so an ignored signal
+          still counts against the rep.
           Captured = the same over those pushed, sent or won. Capture rate: green 70%+, amber 50–69%, red under 50%. Time to
           act: median hours from a signal&apos;s week to the CRM push, across all weeks. Off-territory and signal-driven cover
           all of the rep&apos;s opportunities; signal-driven is weighted by open pipeline dollars. Score is a model estimate

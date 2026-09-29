@@ -7,11 +7,12 @@ import { ACTED_STAGES, OPEN_STAGES, type Module, type Opportunity, type Signal }
 // Score assumed for a matched account nobody has generated yet.
 const UNGENERATED_SCORE = 50;
 
-// VS-4a ruling: available includes matched-but-ungenerated accounts on every
-// signal, so ignoring a signal cannot improve a rep's capture rate. Set this
-// to true to count ungenerated accounts only on signals with no opportunities
-// at all (an alternative raised in the VS-4a report, awaiting the advisor).
-const UNGENERATED_ONLY_WHEN_IGNORED = false;
+// VS-4b ruling (final): Option C. Matched-but-ungenerated accounts count as
+// available only on signals the rep ignored entirely (zero opportunities), so
+// ignoring a signal still costs capture rate, but a rep who acted on a signal
+// is judged on the opportunities they generated. Counting every ungenerated
+// match (VS-4a) flattened the deliberate performers in the seed.
+const UNGENERATED_ONLY_WHEN_IGNORED = true;
 
 export function expectedValue(opps: Opportunity[]): number {
   return opps.reduce((sum, o) => sum + (o.amount * o.score) / 100, 0);
