@@ -19,11 +19,12 @@ function remainderTitle(b: Breakdown): string {
   ].join("\n");
 }
 
-// Won % bands: green 25%+, amber 15–24%, red under 15%.
+// Won % bands (VS-6 ruling): green 15%+, amber 8–14%, red under 8%.
+// Team capture-rate bands are separate and unchanged.
 export function wonColor(p: number | null): string {
   if (p === null) return "text-[#7a8794]";
-  if (p >= 25) return "text-[#1f9d55]";
-  if (p >= 15) return "text-[#c47d00]";
+  if (p >= 15) return "text-[#1f9d55]";
+  if (p >= 8) return "text-[#c47d00]";
   return "text-[#d23b3b]";
 }
 

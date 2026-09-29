@@ -195,7 +195,7 @@ export default async function Results(props: PageProps<"/results">) {
         )}
         <p className="mt-3 text-xs text-[#7a8794]">
           {byWeek ? FOOTNOTE : "Bar length = expected value available to that rep this quarter. Gray remainder = lost or expired. Prior-week figures are seeded history."}{" "}
-          Won % = won ÷ available, in expected value (amount × score ÷ 100); green 25%+, amber 15–24%, red under 15%. Click a rep
+          Won % = won ÷ available, in expected value (amount × score ÷ 100); green 15%+, amber 8–14%, red under 8%. Click a rep
           to open their results.
         </p>
       </Page>
