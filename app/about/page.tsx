@@ -17,7 +17,7 @@ const REAL = [
 const SEEDED = [
   "All 50 accounts, their contacts and the six reps are synthetic, placed in real Plains counties. A real deployment would read the company's CRM account base.",
   "Rain and heat signals are seeded. They are written in the form NOAA county forecasts and observations take (rain totals over 4–7 days, consecutive days above 95–98 °F, hail warnings), but Refresh signals does not yet call NOAA; that feed is the next integration. Drought is the only signal type refreshed live.",
-  "The 23 signals across five weeks (8 this week) come from a generated batch checked against the real late-September 2026 drought picture.",
+  "The 39 signals across 13 weeks (8 this week) come from a generated batch checked against the real late-September 2026 drought picture.",
   "The existing opportunities, their stages and accept times are seeded history; the sparklines, time-to-act and Results figures are computed from them.",
 ];
 
