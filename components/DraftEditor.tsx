@@ -10,11 +10,14 @@ export function DraftEditor({
   subject: initialSubject,
   body: initialBody,
   historyLength: initialHistory,
+  readOnly = false,
 }: {
   oppId: string;
   subject: string;
   body: string;
   historyLength: number;
+  // Closed (won or lost) opportunities: plain text, no editing, Copy only.
+  readOnly?: boolean;
 }) {
   const [subject, setSubject] = useState(initialSubject);
   const [body, setBody] = useState(initialBody);
@@ -82,6 +85,25 @@ export function DraftEditor({
   };
 
   const statusColor = { ok: "text-[#1f9d55]", warn: "text-[#8a5a00]", error: "text-[#8f2424]" };
+
+  if (readOnly) {
+    return (
+      <div className="flex flex-col gap-3">
+        <p className="font-semibold">{subject}</p>
+        <p className="whitespace-pre-line leading-relaxed text-[#3f4e5b]">{body}</p>
+        <div className="flex flex-wrap items-center gap-4 text-sm">
+          <button
+            type="button"
+            onClick={copy}
+            className="rounded-full border border-[#3a728a] px-4 py-1.5 font-semibold text-[#3a728a] transition-colors duration-150 hover:bg-[#3a728a] hover:text-white"
+          >
+            Copy email
+          </button>
+          {status && <p className={statusColor[status.tone]}>{status.text}</p>}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col gap-3">

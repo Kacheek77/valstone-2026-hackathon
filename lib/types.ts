@@ -7,7 +7,34 @@ export type Module = (typeof MODULES)[number];
 
 export type SignalType = "drought" | "rain" | "heat";
 export type Severity = "High" | "Medium";
+// Internal stage values. "pushed" is shown as "Accepted" (VS-7: Signal Desk is
+// standalone, so accepting a lead replaces the CRM push); the value itself is
+// unchanged so the schema and seed stay as they are.
 export type Stage = "draft" | "pushed" | "sent" | "won" | "lost";
+export const STAGE_LABEL: Record<Stage, string> = {
+  draft: "Draft",
+  pushed: "Accepted",
+  sent: "Sent",
+  won: "Won",
+  lost: "Lost",
+};
+
+export type StepChannel = "email" | "call" | "text";
+export type StepStatus = "planned" | "scheduled" | "done";
+export type OutreachStep = {
+  id: string;
+  opportunity_id: string;
+  day: number;
+  channel: StepChannel;
+  title: string;
+  body: string;
+  status: StepStatus;
+  ai_offline: boolean;
+  done_at: string | null;
+  created_at: string;
+};
+// Day 0 is the opportunity's own email; the stored steps are the follow-ups.
+export const SEQUENCE_DAYS = [3, 7, 14] as const;
 
 // The module each kind of weather makes urgent (signals also carry it as
 // target_module; this is the fallback).
@@ -40,6 +67,8 @@ export type Account = {
   customer_status: "Customer" | "Prospect";
   contact_name: string | null;
   contact_email: string | null;
+  contact_role?: string | null; // VS-7
+  notes?: string | null; // VS-7: the rep's note on the account
   last_contact: string | null;
   rep_id: string | null;
 };

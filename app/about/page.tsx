@@ -4,20 +4,21 @@ import { BackLink, Card, Page } from "@/components/ui";
 // Dynamic only to read ?admin=1; there are no data calls on this page.
 export const dynamic = "force-dynamic";
 
-// [draft] copy: pending her voice pass.
+// Final copy (her voice pass, VS-7 tweak 3), verbatim.
 const REAL = [
-  "Claude scores every matched account and writes the why-now line and the email when you click Generate leads. If Claude is unreachable, a rules-based score and a template stand in, marked “AI offline”.",
+  "Claude scores every matched account and writes the why-now line and the email when you click Generate leads. If Claude is unreachable, a rules-based score and a template stand in, marked 'AI offline'.",
   "Matching is real logic: accounts in the affected county (for drought, the whole territory), with a relevant crop, that do not yet own the module.",
-  "Refresh signals calls the US Drought Monitor’s county data service live and adds a signal only when a county’s drought category has risen.",
+  "Drought signals are live: Refresh signals calls the US Drought Monitor's county data service and adds a signal only when a county's drought category has risen.",
   "Amounts come from one formula: module rate per acre × acres + $2,500 setup, rounded to $100.",
-  "Tone pills and “Tell Claude what to change” rewrite a draft live, in the rep’s own voice note; every earlier version is kept so the original can be restored.",
+  "Tone pills and 'Tell Claude what to change' rewrite a draft live, in the rep's own voice note; every earlier version is kept so the original can be restored.",
+  "Accept lead, the outreach sequence and the task list are the working pipeline; nothing leaves the app.",
 ];
 
 const SEEDED = [
-  "All 50 accounts, their contacts and the six reps are synthetic, placed in real Plains counties. A real deployment would read the Salesforce account base.",
-  "The 23 signals across five weeks (8 this week) are seeded from a generated batch and checked against the real late-September drought picture.",
-  "The 42 existing opportunities, their stages and push times are seeded history; the sparklines and time-to-act figures are computed from them.",
-  "Push to CRM writes an Opportunity and a follow-up Task to a Salesforce Developer Edition org when one is connected. No org is connected for the hackathon, so pushes run in demo mode: the opportunity moves to Pushed and “Open in Salesforce (demo)” shows a mock of the records the real push would create, clearly marked as a demo. If a connected org rejects a push, it is queued and can be retried.",
+  "All 50 accounts, their contacts and the six reps are synthetic, placed in real Plains counties. A real deployment would read the company's CRM account base.",
+  "Rain and heat signals are seeded. They are written in the form NOAA county forecasts and observations take (rain totals over 4–7 days, consecutive days above 95–98 °F, hail warnings), but Refresh signals does not yet call NOAA; that feed is the next integration. Drought is the only signal type refreshed live.",
+  "The 23 signals across five weeks (8 this week) come from a generated batch checked against the real late-September 2026 drought picture.",
+  "The existing opportunities, their stages and accept times are seeded history; the sparklines, time-to-act and Results figures are computed from them.",
 ];
 
 export default async function About(props: PageProps<"/about">) {
@@ -44,6 +45,10 @@ export default async function About(props: PageProps<"/about">) {
           </Card>
         </div>
         <Card className="mt-4 px-5 py-4 text-sm text-[#3f4e5b]">
+          Standalone for the hackathon. ThiboLiSoft runs Salesforce; syncing accounts in and opportunities/tasks out is the first
+          production step.
+        </Card>
+        <Card className="mt-4 px-5 py-4 text-sm text-[#3f4e5b]">
           <b>Demo flag.</b> Live drought data changes slowly, so a refresh often finds nothing new. Open the dashboard with{" "}
           <code className="rounded bg-[#eef0f2] px-1">?demo=1</code> and Refresh signals adds one canned signal (Seward County, KS,
           D3 → D4) so the full flow can be shown on any day.
@@ -51,7 +56,10 @@ export default async function About(props: PageProps<"/about">) {
         {admin && (
           <Card className="mt-4 flex flex-col gap-2 border-[#d23b3b] px-5 py-4 text-sm text-[#3f4e5b]">
             <b>Admin: reset the demo.</b>
-            <p>Deletes every opportunity on the Finney signal (SIG-0023) and sets it back to new, so Generate leads can run live again.</p>
+            <p>
+              Deletes every opportunity on the Finney signal (SIG-0023), with their outreach steps, and sets it back to new, so
+              Score &amp; generate leads can run live again.
+            </p>
             <ResetDemoButton />
           </Card>
         )}

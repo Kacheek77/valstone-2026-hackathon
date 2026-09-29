@@ -4,25 +4,13 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { finishSignalAction } from "@/app/actions";
-import type { GenerateResult } from "@/lib/generate";
+import { runGenerate } from "./runGenerate";
 
-const CONCURRENCY = 3;
+const primaryClass =
+  "whitespace-nowrap rounded-full bg-[#f55a00] px-5 py-2 text-sm font-semibold text-white transition-colors duration-150 hover:bg-[#d94f00] disabled:cursor-wait disabled:opacity-70";
 
-async function generate(signalId: string, accountId: string): Promise<GenerateResult> {
-  try {
-    const res = await fetch("/api/generate", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ signalId, accountId }),
-    });
-    return (await res.json()) as GenerateResult;
-  } catch {
-    return { ok: false, error: "The server did not answer." };
-  }
-}
-
-// Scores three accounts at a time through /api/generate, so the ranked table
-// fills in row by row instead of waiting for the whole batch.
+// Signal page: scores the pending accounts and refreshes after each one, so
+// the ranked table fills in row by row.
 export function GenerateButton({
   signalId,
   pendingAccountIds,
@@ -58,18 +46,12 @@ export function GenerateButton({
     setFailed([]);
     setOffline(0);
     setBatch(pendingAccountIds.length);
-    const queue = [...pendingAccountIds];
-    const worker = async () => {
-      while (queue.length > 0) {
-        const id = queue.shift()!;
-        const r = await generate(signalId, id);
-        if (!r.ok) setFailed((f) => [...f, r.error]);
-        else if (r.aiOffline) setOffline((n) => n + 1);
-        setDone((n) => n + 1);
-        router.refresh();
-      }
-    };
-    await Promise.all(Array.from({ length: Math.min(CONCURRENCY, queue.length) }, worker));
+    await runGenerate(signalId, pendingAccountIds, (s) => {
+      setDone(s.done);
+      setFailed(s.failed);
+      setOffline(s.offline);
+      router.refresh();
+    });
     try {
       await finishSignalAction(signalId);
     } catch {
@@ -82,13 +64,8 @@ export function GenerateButton({
   const count = pendingAccountIds.length;
   return (
     <div className="flex flex-col items-end gap-1">
-      <button
-        type="button"
-        onClick={run}
-        disabled={running}
-        className="whitespace-nowrap rounded-full bg-[#f55a00] px-5 py-2 text-sm font-semibold text-white transition-colors duration-150 hover:bg-[#d94f00] disabled:cursor-wait disabled:opacity-70"
-      >
-        {running ? `Scoring ${done} of ${batch}…` : `Generate leads (${count === total ? total : `${count} of ${total}`})`}
+      <button type="button" onClick={run} disabled={running} className={primaryClass}>
+        {running ? `Scoring ${done} of ${batch}…` : `Score & generate leads (${count === total ? total : `${count} of ${total}`})`}
       </button>
       {offline > 0 && <p className="text-xs text-[#5a6975]">AI offline for {offline}: rules-based scores used.</p>}
       {failed.length > 0 && !running && (
@@ -96,6 +73,41 @@ export function GenerateButton({
           {failed.length} could not be saved ({failed[0]}). Click again to retry.
         </p>
       )}
+    </div>
+  );
+}
+
+// Tweak 7, dashboard card: scores in place with progress on the card, then
+// opens the signal page already populated.
+export function CardGenerateButton({ signalId, pendingAccountIds }: { signalId: string; pendingAccountIds: string[] }) {
+  const router = useRouter();
+  const [running, setRunning] = useState(false);
+  const [done, setDone] = useState(0);
+  const [error, setError] = useState<string | null>(null);
+
+  const run = async () => {
+    setRunning(true);
+    setError(null);
+    const s = await runGenerate(signalId, pendingAccountIds, (p) => setDone(p.done));
+    try {
+      await finishSignalAction(signalId);
+    } catch {
+      // Cosmetic status only.
+    }
+    if (s.failed.length === pendingAccountIds.length && s.failed.length > 0) {
+      setRunning(false);
+      setError(s.failed[0]);
+      return;
+    }
+    router.push(`/signals/${signalId}`);
+  };
+
+  return (
+    <div className="flex flex-col items-end gap-1">
+      <button type="button" onClick={run} disabled={running} className={primaryClass}>
+        {running ? `Scoring ${done} of ${pendingAccountIds.length}…` : `Score & generate leads (${pendingAccountIds.length})`}
+      </button>
+      {error && <p className="max-w-[220px] text-right text-xs text-[#8f2424]">{error}</p>}
     </div>
   );
 }

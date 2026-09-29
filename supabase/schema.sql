@@ -1,4 +1,5 @@
--- Signal Desk schema (VS-5). Run this first, then seed.sql, then seed-extras.sql, in the Supabase SQL editor.
+-- Signal Desk schema (VS-7). Run this first, then seed.sql, in the Supabase SQL editor.
+-- (seed-extras.sql is now a no-op: the seed carries every rep's voice note.)
 -- Matches the schema in "From LC Claude/data/README-DATA.md", plus the columns the
 -- advisor kept in VS-4a: signals.drought_level, settings.weekly_history and the
 -- unique (signal_id, account_id) on opportunities. Drops and recreates everything.
@@ -8,6 +9,7 @@
 -- data. A real deployment needs authenticated users and per-rep policies.
 
 drop table if exists public.dry_run_entries cascade;   -- VS-3 leftover
+drop table if exists public.outreach_steps cascade;
 drop table if exists public.opportunities cascade;
 drop table if exists public.signals cascade;
 drop table if exists public.accounts cascade;
@@ -43,6 +45,8 @@ create table public.accounts (
   customer_status text not null,                     -- Customer | Prospect
   contact_name text,
   contact_email text,
+  contact_role text,                                 -- VS-7
+  notes text,                                        -- VS-7: the rep's note on the account
   last_contact date,
   rep_id text references public.reps (id)
 );
@@ -91,6 +95,22 @@ create table public.opportunities (
   unique (signal_id, account_id)                     -- makes Generate idempotent
 );
 
+-- VS-7: outreach sequence. Day 0 is the opportunity's own email; these rows
+-- are the follow-up touches (Day 3 call, Day 7 email, Day 14 text).
+create table public.outreach_steps (
+  id uuid primary key default gen_random_uuid(),
+  opportunity_id text not null references public.opportunities (id) on delete cascade,
+  day integer not null,
+  channel text not null check (channel in ('email', 'call', 'text')),
+  title text not null,
+  body text not null,
+  status text not null default 'planned' check (status in ('planned', 'scheduled', 'done')),
+  ai_offline boolean not null default false,
+  done_at timestamptz,
+  created_at timestamptz not null default now(),
+  unique (opportunity_id, day)
+);
+
 create table public.settings (
   id integer primary key default 1 check (id = 1),
   price_list jsonb not null,
@@ -103,6 +123,7 @@ alter table public.accounts enable row level security;
 alter table public.signals enable row level security;
 alter table public.opportunities enable row level security;
 alter table public.settings enable row level security;
+alter table public.outreach_steps enable row level security;
 
 create policy "anon select reps" on public.reps for select to anon using (true);
 create policy "anon insert reps" on public.reps for insert to anon with check (true);
@@ -120,6 +141,11 @@ create policy "anon select opportunities" on public.opportunities for select to 
 create policy "anon insert opportunities" on public.opportunities for insert to anon with check (true);
 create policy "anon update opportunities" on public.opportunities for update to anon using (true) with check (true);
 
+create policy "anon select outreach_steps" on public.outreach_steps for select to anon using (true);
+create policy "anon insert outreach_steps" on public.outreach_steps for insert to anon with check (true);
+create policy "anon update outreach_steps" on public.outreach_steps for update to anon using (true) with check (true);
+create policy "anon delete outreach_steps" on public.outreach_steps for delete to anon using (true);
+
 create policy "anon select settings" on public.settings for select to anon using (true);
 create policy "anon insert settings" on public.settings for insert to anon with check (true);
 create policy "anon update settings" on public.settings for update to anon using (true) with check (true);
@@ -132,4 +158,5 @@ grant select, insert, update on public.reps, public.accounts, public.signals, pu
 -- HACKATHON ONLY: lets the /about?admin=1 "Reset demo" button delete the
 -- Finney demo opportunities. Remove before any real use.
 grant delete on public.opportunities to anon;
+grant select, insert, update, delete on public.outreach_steps to anon;
 create policy "anon delete opportunities" on public.opportunities for delete to anon using (true);

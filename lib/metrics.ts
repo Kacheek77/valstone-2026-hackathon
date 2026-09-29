@@ -92,7 +92,7 @@ export function signalWeeks(signals: Signal[]): string[] {
 
 // ---------------------------------------------------------------- results (VS-6)
 
-// Draft or pushed opportunities older than this are counted as expired.
+// Draft or accepted opportunities older than this are counted as expired.
 export const EXPIRE_DAYS = 21;
 
 export type SegmentKey = "won" | "sentOpen" | "pushed" | "draft";

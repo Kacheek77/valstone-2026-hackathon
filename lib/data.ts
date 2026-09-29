@@ -1,12 +1,13 @@
 import { DEFAULT_PRICES } from "./pricing";
 import { getSupabase } from "./supabase";
-import type { Account, Opportunity, Rep, Settings, Signal } from "./types";
+import type { Account, Opportunity, OutreachStep, Rep, Settings, Signal } from "./types";
 
 export type AllData = {
   reps: Rep[];
   accounts: Account[];
   signals: Signal[];
   opps: Opportunity[];
+  steps: OutreachStep[];
   settings: Settings;
 };
 
@@ -17,12 +18,13 @@ export type Loaded<T> = { ok: true; data: T } | { ok: false; error: string };
 export async function loadAll(): Promise<Loaded<AllData>> {
   try {
     const db = getSupabase();
-    const [reps, accounts, signals, opps, settings] = await Promise.all([
+    const [reps, accounts, signals, opps, settings, steps] = await Promise.all([
       db.from("reps").select("*").order("id"),
       db.from("accounts").select("*").order("name"),
       db.from("signals").select("*").order("week_of", { ascending: false }).order("id"),
       db.from("opportunities").select("*").order("id"),
       db.from("settings").select("*").eq("id", 1).maybeSingle(),
+      db.from("outreach_steps").select("*").order("day"),
     ]);
     const failed = [reps, accounts, signals, opps, settings].find((r) => r.error);
     if (failed?.error) {
@@ -35,6 +37,9 @@ export async function loadAll(): Promise<Loaded<AllData>> {
         accounts: accounts.data as Account[],
         signals: signals.data as Signal[],
         opps: opps.data as Opportunity[],
+        // Sequences are an add-on: if the table is missing (VS-7 migration not
+        // run yet), the rest of the app still works without them.
+        steps: steps.error ? [] : (steps.data as OutreachStep[]),
         settings: { price_list: (settings.data as Settings | null)?.price_list ?? DEFAULT_PRICES },
       },
     };

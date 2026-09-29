@@ -1,6 +1,6 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
-import type { Severity, SignalType, Stage } from "@/lib/types";
+import { STAGE_LABEL, type Severity, type SignalType, type Stage } from "@/lib/types";
 
 export function Page({ children }: { children: ReactNode }) {
   return <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-6 sm:px-6">{children}</main>;
@@ -54,7 +54,7 @@ export function StageBadge({ stage }: { stage: Stage }) {
   return (
     <span className="inline-flex items-center gap-1.5 text-sm font-medium" style={{ color: STAGE_COLOR[stage] }}>
       <span className="h-2 w-2 rounded-full" style={{ background: STAGE_COLOR[stage] }} />
-      {stage[0].toUpperCase() + stage.slice(1)}
+      {STAGE_LABEL[stage]}
     </span>
   );
 }

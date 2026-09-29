@@ -52,7 +52,7 @@ Return score within 10 points of baseline_score. Move it only for a concrete rea
 
 // ---------------------------------------------------------------- prompts
 
-const FIELDSENSE = `FieldSense is farm-operations software sold by ThiboLiSoft to crop growers in the US Plains. Modules: Irrigation Scheduling (soil-moisture and ET watering plans), Field-Work Planner (planting, spraying and harvest windows), Yield & Insurance Records (yield forecasts and crop-insurance documentation).`;
+export const FIELDSENSE = `FieldSense is farm-operations software sold by ThiboLiSoft to crop growers in the US Plains. Modules: Irrigation Scheduling (soil-moisture and ET watering plans), Field-Work Planner (planting, spraying and harvest windows), Yield & Insurance Records (yield forecasts and crop-insurance documentation).`;
 
 const EMAIL_RULES = `Email rules:
 - At most 120 words in the body.
@@ -64,7 +64,8 @@ const EMAIL_RULES = `Email rules:
 - If customer_status is Customer: name the modules they already own and skip any introduction of FieldSense.
 - If customer_status is Prospect: one short sentence introducing FieldSense in paragraph 2; assume no familiarity.
 - Plain, specific language. No marketing phrases, no exclamation marks unless the voice note allows them.
-- If the rep has a voice note, follow it.`;
+- If the rep has a voice note, follow it.
+- Use the contact's role and the rep's note on the account where they make the email more specific; never quote the note verbatim.`;
 
 const DRAFT_SYSTEM = `You are a sales assistant for FieldSense. ${FIELDSENSE}
 
@@ -97,15 +98,17 @@ const TONE_GUIDE: Record<string, string> = {
 
 // ---------------------------------------------------------------- helpers
 
-function firstName(full: string | null | undefined, fallback: string): string {
+export function firstName(full: string | null | undefined, fallback: string): string {
   const f = (full ?? "").trim().split(/\s+/)[0];
   return f || fallback;
 }
 
-function accountFacts(account: Account) {
+export function accountFacts(account: Account) {
   return {
     name: account.name,
     contact_first_name: firstName(account.contact_name, "there"),
+    contact_role: account.contact_role ?? null,
+    rep_note: account.notes ?? null,
     county: `${account.county}, ${account.state}`,
     crops: account.crops,
     acres: account.acres,
@@ -115,7 +118,7 @@ function accountFacts(account: Account) {
   };
 }
 
-function signalFacts(signal: Signal) {
+export function signalFacts(signal: Signal) {
   return {
     type: signal.type,
     severity: signal.severity,
@@ -125,7 +128,7 @@ function signalFacts(signal: Signal) {
   };
 }
 
-async function callJson<T>(system: string, input: unknown, schema: Record<string, unknown>): Promise<T | null> {
+export async function callJson<T>(system: string, input: unknown, schema: Record<string, unknown>): Promise<T | null> {
   if (!process.env.ANTHROPIC_API_KEY) return null;
   try {
     const client = new Anthropic({ timeout: TIMEOUT_MS, maxRetries: 0 });

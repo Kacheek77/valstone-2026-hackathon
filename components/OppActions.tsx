@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useTransition } from "react";
-import { pushToCrmAction, setStageAction } from "@/app/actions";
+import { acceptLeadAction, setStageAction } from "@/app/actions";
 import type { Stage } from "@/lib/types";
 import { useToast } from "./Toast";
 
@@ -11,29 +11,20 @@ const primary =
 const outline =
   "rounded-full border-2 px-4 py-1.5 text-sm font-semibold transition-opacity duration-150 hover:opacity-80 disabled:cursor-not-allowed disabled:opacity-40";
 
-export type CrmState =
-  | { kind: "real"; url: string } // in a connected Salesforce org
-  | { kind: "demo"; url: string } // demo mode: mock record page
-  | { kind: "queued" } // a real push failed; retry available
-  | { kind: "none" }; // not in the CRM (a draft, or seeded history)
-
-// Stage buttons for one opportunity. Push outcomes: created in Salesforce,
-// created in demo mode (no org connected), or queued after a real failure.
-export function OppActions({ oppId, stage, crm }: { oppId: string; stage: Stage; crm: CrmState }) {
+// Stage buttons for an open opportunity: Draft → Accept lead → Mark sent →
+// Mark won / lost. Closed opportunities show a banner instead (see the page).
+export function OppActions({ oppId, stage }: { oppId: string; stage: Stage }) {
   const [busy, startTransition] = useTransition();
   const [toast, show] = useToast();
 
-  const push = () =>
+  const accept = () =>
     startTransition(async () => {
       try {
-        const r = await pushToCrmAction(oppId);
-        if (!r.ok) show("error", r.error);
-        else if (r.outcome === "demo") show("success", "Opportunity and Task created in Salesforce (demo).");
-        else if (r.outcome === "salesforce")
-          show("success", <>Created in Salesforce: Opportunity and follow-up Task. <a href={r.url} target="_blank" rel="noreferrer" className="underline">Open</a></>);
-        else show("neutral", `Queued for CRM sync. ${r.reason}`);
+        const r = await acceptLeadAction(oppId);
+        if (!r.ok) show("error", r.error ?? "Could not accept the lead.");
+        else show("success", "Accepted into your pipeline. Build the outreach sequence next.");
       } catch {
-        show("error", "The push did not reach the server. Nothing changed.");
+        show("error", "The server did not answer. Nothing changed.");
       }
     });
 
@@ -47,31 +38,13 @@ export function OppActions({ oppId, stage, crm }: { oppId: string; stage: Stage;
   return (
     <div className="flex flex-wrap items-center gap-3">
       {stage === "draft" ? (
-        <button type="button" onClick={push} disabled={busy} className={primary}>
-          {busy ? "Pushing…" : "Push to CRM"}
-        </button>
-      ) : crm.kind === "real" ? (
-        <a href={crm.url} target="_blank" rel="noreferrer" className={`${outline} border-[#1f9d55] text-[#1f9d55]`}>
-          Open in Salesforce ↗
-        </a>
-      ) : crm.kind === "demo" ? (
-        <Link href={crm.url} className={`${outline} border-[#1f9d55] text-[#1f9d55]`}>
-          Open in Salesforce (demo)
-        </Link>
-      ) : crm.kind === "queued" ? (
-        <button
-          type="button"
-          onClick={push}
-          disabled={busy}
-          title="Salesforce did not accept the push. Click to retry."
-          className={`${outline} border-[#7a8794] text-[#5a6975]`}
-        >
-          {busy ? "Retrying…" : "Queued for CRM sync ↻"}
+        <button type="button" onClick={accept} disabled={busy} className={primary}>
+          {busy ? "Accepting…" : "Accept lead"}
         </button>
       ) : (
-        <button type="button" onClick={push} disabled={busy} className={`${outline} border-[#f55a00] text-[#f55a00]`}>
-          {busy ? "Pushing…" : "Create in CRM"}
-        </button>
+        <Link href={`/opportunities/${oppId}/sequence`} className={`${outline} border-[#3a728a] text-[#3a728a]`}>
+          Open sequence →
+        </Link>
       )}
 
       {(stage === "draft" || stage === "pushed") && (
@@ -79,7 +52,7 @@ export function OppActions({ oppId, stage, crm }: { oppId: string; stage: Stage;
           type="button"
           onClick={() => setStage("sent")}
           disabled={busy || stage === "draft"}
-          title={stage === "draft" ? "Push to CRM first" : undefined}
+          title={stage === "draft" ? "Accept the lead first" : undefined}
           className={`${outline} border-[#2a6fb5] text-[#2a6fb5]`}
         >
           Mark sent
@@ -98,5 +71,20 @@ export function OppActions({ oppId, stage, crm }: { oppId: string; stage: Stage;
       )}
       {toast}
     </div>
+  );
+}
+
+// Tweak 6: Reopen a closed opportunity (back to Sent) for corrections.
+export function ReopenLink({ oppId }: { oppId: string }) {
+  const [busy, startTransition] = useTransition();
+  return (
+    <button
+      type="button"
+      disabled={busy}
+      onClick={() => startTransition(async () => void (await setStageAction(oppId, "sent")))}
+      className="text-sm underline underline-offset-2 opacity-80 hover:opacity-100 disabled:opacity-50"
+    >
+      {busy ? "Reopening…" : "Reopen"}
+    </button>
   );
 }

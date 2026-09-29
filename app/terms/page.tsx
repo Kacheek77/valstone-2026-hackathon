@@ -12,8 +12,8 @@ const TERMS: [string, string][] = [
   ["Lead with", "The one FieldSense module to open the conversation with, chosen from the signal type and the modules the account does not yet own."],
   ["Score", "0–100 likelihood this account will engage this week, produced by Claude from acreage, crop, module gap and signal severity. Sorts the list; does not set the amount."],
   ["Why now", "One sentence, written per account, that a rep can say on the phone: what happened, why it matters to this farm, this week."],
-  ["Amount", "Estimated first-year value: module rate per acre × the account's acres, plus setup. Becomes the Salesforce Opportunity Amount."],
-  ["Stage", "Draft (generated, not yet in CRM) → Pushed (Opportunity and Task created in Salesforce, or queued) → Sent (rep sent the email) → Won or Lost."],
+  ["Amount", "Estimated first-year value: module rate per acre × the account's acres, plus setup. The opportunity's value in the pipeline."],
+  ["Stage", "Draft (generated, not yet accepted) → Accepted (the rep took the lead into their pipeline; the outreach sequence runs from here) → Sent (rep sent the email) → Won or Lost."],
 ];
 
 export default function Terms() {

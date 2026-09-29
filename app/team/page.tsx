@@ -4,6 +4,7 @@ import { Card, ErrorBox, Page, Tile } from "@/components/ui";
 import { currentWeek, inWeek, loadAll } from "@/lib/data";
 import { captureColor, pct, usd, weekLabel } from "@/lib/format";
 import { captureRate, offTerritoryCount, signalDrivenShare, sumValues, timeToAct } from "@/lib/metrics";
+import { tasksDue } from "@/lib/steps";
 import { getView } from "@/lib/view";
 
 export const dynamic = "force-dynamic";
@@ -46,6 +47,7 @@ export default async function Team() {
       tta: timeToAct(rep.id, data),
       offTerritory: offTerritoryCount(rep.id, data),
       signalDriven: signalDrivenShare(rep.id, data),
+      tasksDue: tasksDue(data, rep.id).length,
     };
   });
 
@@ -94,7 +96,7 @@ export default async function Team() {
         </div>
 
         <Card className="overflow-x-auto">
-          <table className="w-full min-w-[980px] text-sm [&_td]:whitespace-nowrap [&_th]:whitespace-nowrap">
+          <table className="w-full min-w-[1060px] text-sm [&_td]:whitespace-nowrap [&_th]:whitespace-nowrap">
             <thead className="bg-[#efefef] text-[#3f4e5b]">
               <tr>
                 <th className="sticky left-0 z-20 bg-[#efefef] px-4 py-2.5 text-left font-semibold">Rep</th>
@@ -108,8 +110,11 @@ export default async function Team() {
                 <th className="px-3 py-2.5 text-right font-semibold" title="Opportunities on accounts outside the rep's counties, all weeks">
                   Off-territory
                 </th>
-                <th className="px-4 py-2.5 text-right font-semibold" title="Share of open pipeline dollars that came from a signal">
+                <th className="px-3 py-2.5 text-right font-semibold" title="Share of open pipeline dollars that came from a signal">
                   Signal-driven
+                </th>
+                <th className="px-4 py-2.5 text-right font-semibold" title="Scheduled outreach steps due in the next 7 days, overdue included">
+                  Tasks due
                 </th>
               </tr>
             </thead>
@@ -135,7 +140,8 @@ export default async function Team() {
                   <td className={`px-3 py-3 text-right tabular-nums ${r.offTerritory > 1 ? "font-semibold text-[#c47d00]" : ""}`}>
                     {r.offTerritory}
                   </td>
-                  <td className="px-4 py-3 text-right tabular-nums">{pct(r.signalDriven)}</td>
+                  <td className="px-3 py-3 text-right tabular-nums">{pct(r.signalDriven)}</td>
+                  <td className="px-4 py-3 text-right tabular-nums">{r.tasksDue}</td>
                 </tr>
               ))}
             </tbody>
@@ -145,8 +151,8 @@ export default async function Team() {
           Click a rep to open their dashboard. Available = Σ amount × score ÷ 100 over this week&apos;s generated opportunities,
           plus, for any signal with no opportunities at all, its matched accounts at a score of 50, so an ignored signal
           still counts against the rep.
-          Captured = the same over those pushed, sent or won. Capture rate: green 70%+, amber 50–69%, red under 50%. Time to
-          act: median hours from a signal&apos;s week to the CRM push, across all weeks. Off-territory and signal-driven cover
+          Captured = the same over those accepted, sent or won. Capture rate: green 70%+, amber 50–69%, red under 50%. Time to
+          act = signal to accept: median hours from a signal&apos;s week to the rep accepting the lead, across all weeks. Off-territory and signal-driven cover
           all of the rep&apos;s opportunities; signal-driven is weighted by open pipeline dollars. Score is a model estimate
           until a season of closes calibrates it.
         </p>

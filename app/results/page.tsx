@@ -49,7 +49,7 @@ function PeriodPills() {
 }
 
 const FOOTNOTE =
-  "Bar length = expected value available that week. Gray remainder = lost or expired. Prior-week figures are seeded history.";
+  "Bar length = expected value available that week. Gray remainder = lost or expired. Prior-week figures are seeded history. Time to act = signal to accept.";
 
 export default async function Results(props: PageProps<"/results">) {
   const sp = await props.searchParams;

@@ -4,7 +4,7 @@ import { usd, usdExact } from "@/lib/format";
 export const SEGMENTS: { key: SegmentKey; label: string; color: string }[] = [
   { key: "won", label: "Won", color: "#1f9d55" },
   { key: "sentOpen", label: "Sent, open", color: "#4b8fae" },
-  { key: "pushed", label: "Pushed, not sent", color: "#a7cce5" },
+  { key: "pushed", label: "Accepted, not sent", color: "#a7cce5" },
   { key: "draft", label: "Draft", color: "#d9dee3" },
 ];
 // Hatched, so "lost or expired" never reads as the flat gray of Draft.
@@ -14,7 +14,7 @@ function remainderTitle(b: Breakdown): string {
   return [
     `Lost or expired: ${usdExact(b.remainder)} expected value`,
     `${b.lost.count} lost (${usdExact(b.lost.amount)} amount)`,
-    `${b.expired.count} expired: draft or pushed, created more than ${EXPIRE_DAYS} days ago (${usdExact(b.expired.amount)} amount)`,
+    `${b.expired.count} expired: draft or accepted, created more than ${EXPIRE_DAYS} days ago (${usdExact(b.expired.amount)} amount)`,
     "plus matched accounts on ignored signals that were never generated",
   ].join("\n");
 }

@@ -4,66 +4,66 @@
 
 TRUNCATE opportunities, signals, accounts, reps, settings RESTART IDENTITY CASCADE;
 
-INSERT INTO reps (id, name, territory_name, counties, quota_quarterly, is_manager) VALUES
-('REP-01', 'Jordan Ellsworth', 'Southwest Kansas', ARRAY['Finney County, KS','Grant County, KS','Seward County, KS']::text[], 180000, false),
-('REP-02', 'Priya Nathan', 'Northwest & Central Kansas', ARRAY['Thomas County, KS','Sherman County, KS','Ford County, KS']::text[], 300000, false),
-('REP-03', 'Marcus Deleon', 'Southwest Nebraska', ARRAY['Perkins County, NE','Chase County, NE','Dundy County, NE']::text[], 240000, false),
-('REP-04', 'Renee Okafor', 'Oklahoma Panhandle', ARRAY['Texas County, OK','Beaver County, OK','Cimarron County, OK']::text[], 240000, false),
-('REP-05', 'Tyler Bramlett', 'Texas Panhandle', ARRAY['Deaf Smith County, TX','Dallam County, TX','Moore County, TX']::text[], 210000, false),
-('REP-06', 'Sofia Marchetti', 'Nebraska Panhandle', ARRAY['Box Butte County, NE','Cheyenne County, NE','Keith County, NE']::text[], 180000, false),
-('MGR-01', 'Plains Region Manager', 'Plains region (all)', ARRAY[]::text[], 0, true);
+INSERT INTO reps (id, name, territory_name, counties, quota_quarterly, is_manager, voice_note) VALUES
+('REP-01', 'Jordan Ellsworth', 'Southwest Kansas', ARRAY['Finney County, KS','Grant County, KS','Seward County, KS']::text[], 180000, false, 'Plain and neighborly. Mention the county by name. One idea per paragraph. Sign off ''Jordan''.'),
+('REP-02', 'Priya Nathan', 'Northwest & Central Kansas', ARRAY['Thomas County, KS','Sherman County, KS','Ford County, KS']::text[], 300000, false, 'Precise, numbers first. No exclamation marks. Lead with the acreage and the dollar figure. Sign off ''Priya Nathan''.'),
+('REP-03', 'Marcus Deleon', 'Southwest Nebraska', ARRAY['Perkins County, NE','Chase County, NE','Dundy County, NE']::text[], 240000, false, 'Easygoing, a little dry. Short sentences. Reference the last conversation if there was one. Sign off ''Marcus''.'),
+('REP-04', 'Renee Okafor', 'Oklahoma Panhandle', ARRAY['Texas County, OK','Beaver County, OK','Cimarron County, OK']::text[], 240000, false, 'Short sentences. No exclamation marks. Say what changed, say what to do, ask for the meeting. Sign off ''Talk soon, Renee.'''),
+('REP-05', 'Tyler Bramlett', 'Texas Panhandle', ARRAY['Deaf Smith County, TX','Dallam County, TX','Moore County, TX']::text[], 210000, false, 'Friendly and a bit long. Likes a warm opener about the weather. Sign off ''Best, Tyler Bramlett''.'),
+('REP-06', 'Sofia Marchetti', 'Nebraska Panhandle', ARRAY['Box Butte County, NE','Cheyenne County, NE','Keith County, NE']::text[], 180000, false, 'Direct and technical. Use the module''s actual capability, not benefits language. Sign off ''Sofia''.'),
+('MGR-01', 'Plains Region Manager', 'Plains region (all)', ARRAY[]::text[], 0, true, NULL);
 
-INSERT INTO accounts (id, name, county, state, lat, lng, crops, acres, modules_owned, customer_status, contact_name, contact_email, last_contact, rep_id) VALUES
-('ACC-001', 'Whitfield Land & Cattle Co.', 'Grant County', 'KS', 37.5177, -101.4147, ARRAY['Corn','Sorghum']::text[], 2200, ARRAY[]::text[], 'Prospect', 'Mary Esch', 'mary.esch1@whitfieldag.example.com', '2026-09-12', 'REP-01'),
-('ACC-002', 'Wiens Family Farm', 'Grant County', 'KS', 37.4574, -101.2992, ARRAY['Wheat','Sorghum']::text[], 1200, ARRAY['Yield & Insurance Records']::text[], 'Customer', 'Carol Friesen', 'carol.friesen2@wiensag.example.com', '2026-09-10', 'REP-01'),
-('ACC-003', 'Neufeld Grain Co.', 'Dundy County', 'NE', 40.2783, -101.7756, ARRAY['Corn','Wheat']::text[], 2800, ARRAY[]::text[], 'Prospect', 'Robert Ehler', 'robert.ehler3@neufeldag.example.com', '2026-06-05', 'REP-03'),
-('ACC-004', 'Friesen Agri-Services', 'Beaver County', 'OK', 36.7304, -100.5578, ARRAY['Sorghum','Wheat']::text[], 1600, ARRAY['Yield & Insurance Records']::text[], 'Customer', 'Ruth Esch', 'ruth.esch4@friesenag.example.com', '2026-06-08', 'REP-04'),
-('ACC-005', 'Regier Farms', 'Ford County', 'KS', 37.5842, -99.8704, ARRAY['Wheat','Sorghum']::text[], 800, ARRAY[]::text[], 'Prospect', 'Mark Haas', 'mark.haas5@regierag.example.com', '2026-09-09', 'REP-02'),
-('ACC-006', 'Voss Ag Partners', 'Beaver County', 'OK', 36.7685, -100.511, ARRAY['Wheat','Sorghum']::text[], 2200, ARRAY[]::text[], 'Prospect', 'Mark Lindqvist', 'mark.lindqvist6@vossag.example.com', '2026-09-13', 'REP-04'),
-('ACC-007', 'Janzen Land & Cattle Co.', 'Deaf Smith County', 'TX', 34.9836, -102.71, ARRAY['Corn','Silage']::text[], 2200, ARRAY[]::text[], 'Prospect', 'Ruth Krueger', 'ruth.krueger7@janzenag.example.com', '2026-08-19', 'REP-05'),
-('ACC-008', 'Brandt Ranch', 'Dallam County', 'TX', 36.2898, -102.5787, ARRAY['Wheat','Corn']::text[], 4200, ARRAY['Yield & Insurance Records']::text[], 'Customer', 'Donna Klein', 'donna.klein8@brandtag.example.com', '2026-08-09', 'REP-05'),
-('ACC-009', 'Hartman Family Farm', 'Cimarron County', 'OK', 36.6547, -102.4986, ARRAY['Wheat','Sorghum']::text[], 1600, ARRAY[]::text[], 'Prospect', 'Sandra Ehler', 'sandra.ehler9@hartmanag.example.com', '2026-06-21', 'REP-04'),
-('ACC-010', 'Voss Ranch', 'Sherman County', 'KS', 39.2534, -101.6564, ARRAY['Corn']::text[], 5000, ARRAY['Irrigation Scheduling','Yield & Insurance Records']::text[], 'Customer', 'Ruth Haas', 'ruth.haas10@vossag.example.com', '2026-09-09', 'REP-02'),
-('ACC-011', 'Peters Family Farm', 'Texas County', 'OK', 36.7786, -101.4911, ARRAY['Wheat','Sorghum']::text[], 4200, ARRAY['Yield & Insurance Records']::text[], 'Customer', 'Daniel Reyes', 'daniel.reyes11@petersag.example.com', '2026-06-07', 'REP-04'),
-('ACC-012', 'Kaufman Agri-Services', 'Chase County', 'NE', 40.5865, -101.7103, ARRAY['Corn']::text[], 2800, ARRAY[]::text[], 'Prospect', 'Kevin Ehler', 'kevin.ehler12@kaufmanag.example.com', '2026-06-24', 'REP-03'),
-('ACC-013', 'Bontrager Farming LLC', 'Texas County', 'OK', 36.7019, -101.4017, ARRAY['Wheat','Sorghum']::text[], 1600, ARRAY['Irrigation Scheduling','Field-Work Planner']::text[], 'Customer', 'Donna Schmidt', 'donna.schmidt13@bontragerag.example.com', '2026-07-24', 'REP-04'),
-('ACC-014', 'Reimer Grain Co.', 'Dallam County', 'TX', 36.1796, -102.6599, ARRAY['Corn']::text[], 2200, ARRAY['Irrigation Scheduling','Yield & Insurance Records']::text[], 'Customer', 'Donna Voss', 'donna.voss14@reimerag.example.com', '2026-06-29', 'REP-05'),
-('ACC-015', 'Castaneda Farming LLC', 'Moore County', 'TX', 35.8951, -101.9536, ARRAY['Corn','Wheat']::text[], 5000, ARRAY[]::text[], 'Prospect', 'Karen Krueger', 'karen.krueger15@castanedaag.example.com', '2026-08-25', 'REP-05'),
-('ACC-016', 'Alvarado Bros. Farms', 'Grant County', 'KS', 37.5629, -101.4105, ARRAY['Wheat','Sorghum']::text[], 2200, ARRAY[]::text[], 'Prospect', 'David Toews', 'david.toews16@alvaradoag.example.com', '2026-08-17', 'REP-01'),
-('ACC-017', 'Duerksen Grain Co.', 'Seward County', 'KS', 37.294, -100.8735, ARRAY['Corn']::text[], 6500, ARRAY['Irrigation Scheduling']::text[], 'Customer', 'Robert Peters', 'robert.peters17@duerksenag.example.com', '2026-09-05', 'REP-01'),
-('ACC-018', 'Schmidt Bros. Farms', 'Sherman County', 'KS', 39.4135, -101.6981, ARRAY['Wheat','Sunflowers']::text[], 2200, ARRAY[]::text[], 'Prospect', 'James Voss', 'james.voss18@schmidtag.example.com', '2026-06-29', 'REP-02'),
-('ACC-019', 'Hartman Ag Partners', 'Thomas County', 'KS', 39.3969, -101.0317, ARRAY['Corn','Wheat']::text[], 800, ARRAY[]::text[], 'Prospect', 'Robert Reyes', 'robert.reyes19@hartmanag.example.com', '2026-05-31', 'REP-02'),
-('ACC-020', 'Weber Land & Cattle Co.', 'Cheyenne County', 'NE', 41.1165, -103.1119, ARRAY['Wheat']::text[], 5000, ARRAY['Yield & Insurance Records']::text[], 'Customer', 'Brian Carver', 'brian.carver20@weberag.example.com', '2026-05-26', 'REP-06'),
-('ACC-021', 'Sorensen Ag Partners', 'Cimarron County', 'OK', 36.7973, -102.6505, ARRAY['Corn','Wheat']::text[], 4200, ARRAY['Yield & Insurance Records']::text[], 'Customer', 'Sandra Epp', 'sandra.epp21@sorensenag.example.com', '2026-07-07', 'REP-04'),
-('ACC-022', 'Suderman Ranch', 'Finney County', 'KS', 38.0753, -100.5921, ARRAY['Corn','Sorghum']::text[], 800, ARRAY[]::text[], 'Prospect', 'Linda Hartman', 'linda.hartman22@sudermanag.example.com', '2026-07-14', 'REP-01'),
-('ACC-023', 'Dietz Ag Partners', 'Thomas County', 'KS', 39.402, -100.9439, ARRAY['Wheat','Sunflowers']::text[], 2200, ARRAY['Field-Work Planner']::text[], 'Customer', 'Karen Haas', 'karen.haas23@dietzag.example.com', '2026-09-19', 'REP-02'),
-('ACC-024', 'Lindqvist Ag Partners', 'Chase County', 'NE', 40.6258, -101.7434, ARRAY['Corn','Soybeans']::text[], 5000, ARRAY[]::text[], 'Prospect', 'Ruth Dietz', 'ruth.dietz24@lindqvistag.example.com', '2026-08-26', 'REP-03'),
-('ACC-025', 'Hartman Agri-Services', 'Perkins County', 'NE', 40.8485, -101.7345, ARRAY['Corn']::text[], 1200, ARRAY[]::text[], 'Prospect', 'Susan Friesen', 'susan.friesen25@hartmanag.example.com', '2026-08-22', 'REP-03'),
-('ACC-026', 'Ratzlaff Farms & Feedlot', 'Finney County', 'KS', 38.0972, -100.7706, ARRAY['Corn','Sorghum']::text[], 2200, ARRAY[]::text[], 'Prospect', 'Mary Friesen', 'mary.friesen26@ratzlaffag.example.com', '2026-09-04', 'REP-01'),
-('ACC-027', 'Thiessen Farms', 'Box Butte County', 'NE', 42.1399, -103.1195, ARRAY['Dry beans','Wheat']::text[], 2800, ARRAY[]::text[], 'Prospect', 'Steven Wiens', 'steven.wiens27@thiessenag.example.com', '2026-08-20', 'REP-06'),
-('ACC-028', 'Suderman Agri-Services', 'Cimarron County', 'OK', 36.8266, -102.4108, ARRAY['Wheat']::text[], 1600, ARRAY['Irrigation Scheduling']::text[], 'Customer', 'Brian Castaneda', 'brian.castaneda28@sudermanag.example.com', '2026-06-10', 'REP-04'),
-('ACC-029', 'Hartman Grain Co.', 'Finney County', 'KS', 38.1568, -100.6852, ARRAY['Corn','Sorghum']::text[], 800, ARRAY[]::text[], 'Prospect', 'Kevin Alvarado', 'kevin.alvarado29@hartmanag.example.com', '2026-07-27', 'REP-01'),
-('ACC-030', 'Friesen Farms', 'Cheyenne County', 'NE', 41.1362, -103.0871, ARRAY['Wheat','Corn']::text[], 1200, ARRAY[]::text[], 'Prospect', 'Robert Ehler', 'robert.ehler30@friesenag.example.com', '2026-07-27', 'REP-06'),
-('ACC-031', 'Duerksen Family Farm', 'Deaf Smith County', 'TX', 34.8529, -102.5007, ARRAY['Corn','Wheat']::text[], 800, ARRAY[]::text[], 'Prospect', 'Sandra Brandt', 'sandra.brandt31@duerksenag.example.com', '2026-07-19', 'REP-05'),
-('ACC-032', 'Carver Agri-Services', 'Dundy County', 'NE', 40.1277, -101.7963, ARRAY['Wheat']::text[], 2800, ARRAY['Field-Work Planner','Irrigation Scheduling']::text[], 'Customer', 'Daniel Duerksen', 'daniel.duerksen32@carverag.example.com', '2026-06-22', 'REP-03'),
-('ACC-033', 'Unruh Land & Cattle Co.', 'Beaver County', 'OK', 36.7764, -100.5344, ARRAY['Wheat','Sorghum']::text[], 3500, ARRAY[]::text[], 'Prospect', 'Robert Miller', 'robert.miller33@unruhag.example.com', '2026-05-16', 'REP-04'),
-('ACC-034', 'Lindqvist Bros. Farms', 'Seward County', 'KS', 37.2981, -100.8035, ARRAY['Corn']::text[], 1200, ARRAY['Field-Work Planner','Irrigation Scheduling']::text[], 'Customer', 'Carol Voss', 'carol.voss34@lindqvistag.example.com', '2026-09-11', 'REP-01'),
-('ACC-035', 'Weber Grain Co.', 'Keith County', 'NE', 41.1896, -101.5487, ARRAY['Corn','Soybeans']::text[], 1600, ARRAY['Yield & Insurance Records','Field-Work Planner']::text[], 'Customer', 'Sharon Alvarado', 'sharon.alvarado35@weberag.example.com', '2026-06-16', 'REP-06'),
-('ACC-036', 'Miller Agri-Services', 'Keith County', 'NE', 41.1755, -101.6918, ARRAY['Corn']::text[], 1200, ARRAY[]::text[], 'Prospect', 'Michael Krueger', 'michael.krueger36@millerag.example.com', '2026-06-14', 'REP-06'),
-('ACC-037', 'Reimer Family Farm', 'Dallam County', 'TX', 36.1749, -102.7298, ARRAY['Corn','Wheat']::text[], 6500, ARRAY['Yield & Insurance Records']::text[], 'Customer', 'David Peters', 'david.peters37@reimerag.example.com', '2026-06-04', 'REP-05'),
-('ACC-038', 'Yoder Land & Cattle Co.', 'Perkins County', 'NE', 40.769, -101.698, ARRAY['Corn','Wheat']::text[], 2800, ARRAY[]::text[], 'Prospect', 'Mary Klein', 'mary.klein38@yoderag.example.com', '2026-08-29', 'REP-03'),
-('ACC-039', 'Suderman Land & Cattle Co.', 'Moore County', 'TX', 35.7201, -101.9946, ARRAY['Corn','Wheat']::text[], 800, ARRAY['Yield & Insurance Records']::text[], 'Customer', 'Daniel Friesen', 'daniel.friesen39@sudermanag.example.com', '2026-06-23', 'REP-05'),
-('ACC-040', 'Goertzen Agri-Services', 'Seward County', 'KS', 37.2173, -100.9789, ARRAY['Corn','Wheat']::text[], 6500, ARRAY['Yield & Insurance Records']::text[], 'Customer', 'Michael Castaneda', 'michael.castaneda40@goertzenag.example.com', '2026-06-20', 'REP-01'),
-('ACC-041', 'Becker Grain Co.', 'Sherman County', 'KS', 39.2657, -101.7943, ARRAY['Wheat','Sunflowers']::text[], 6500, ARRAY['Irrigation Scheduling']::text[], 'Customer', 'Nancy Neufeld', 'nancy.neufeld41@beckerag.example.com', '2026-06-23', 'REP-02'),
-('ACC-042', 'Yoder Ag Partners', 'Ford County', 'KS', 37.6838, -100.0054, ARRAY['Wheat','Corn']::text[], 1200, ARRAY['Field-Work Planner','Irrigation Scheduling']::text[], 'Customer', 'Susan Friesen', 'susan.friesen42@yoderag.example.com', '2026-05-28', 'REP-02'),
-('ACC-043', 'Kaufman Ranch', 'Chase County', 'NE', 40.5153, -101.7564, ARRAY['Corn','Wheat']::text[], 1600, ARRAY[]::text[], 'Prospect', 'Paul Ratzlaff', 'paul.ratzlaff43@kaufmanag.example.com', '2026-08-29', 'REP-03'),
-('ACC-044', 'Friesen Family Farm', 'Deaf Smith County', 'TX', 35.0299, -102.5279, ARRAY['Corn','Silage']::text[], 800, ARRAY[]::text[], 'Prospect', 'Susan Bontrager', 'susan.bontrager44@friesenag.example.com', '2026-08-14', 'REP-05'),
-('ACC-045', 'Lindqvist Grain Co.', 'Box Butte County', 'NE', 42.2239, -103.1784, ARRAY['Wheat','Corn']::text[], 2200, ARRAY['Irrigation Scheduling','Field-Work Planner']::text[], 'Customer', 'Paul Haas', 'paul.haas45@lindqvistag.example.com', '2026-06-24', 'REP-06'),
-('ACC-046', 'Voss Land & Cattle Co.', 'Perkins County', 'NE', 40.7652, -101.637, ARRAY['Corn','Wheat']::text[], 6500, ARRAY['Field-Work Planner','Irrigation Scheduling']::text[], 'Customer', 'Linda Krueger', 'linda.krueger46@vossag.example.com', '2026-05-12', 'REP-03'),
-('ACC-047', 'Kaufman Bros. Farms', 'Dundy County', 'NE', 40.1315, -101.6471, ARRAY['Corn','Wheat']::text[], 800, ARRAY['Field-Work Planner']::text[], 'Customer', 'Paul Suderman', 'paul.suderman47@kaufmanag.example.com', '2026-07-20', 'REP-03'),
-('ACC-048', 'Ehler Agri-Services', 'Keith County', 'NE', 41.2044, -101.5375, ARRAY['Corn']::text[], 4200, ARRAY[]::text[], 'Prospect', 'David Krueger', 'david.krueger48@ehlerag.example.com', '2026-07-29', 'REP-06'),
-('ACC-049', 'Becker Ranch', 'Moore County', 'TX', 35.8478, -101.8063, ARRAY['Cotton','Corn']::text[], 6500, ARRAY[]::text[], 'Prospect', 'Ruth Bontrager', 'ruth.bontrager49@beckerag.example.com', '2026-07-29', 'REP-05'),
-('ACC-050', 'Neufeld Ranch', 'Cheyenne County', 'NE', 41.2472, -102.9035, ARRAY['Wheat','Corn']::text[], 3500, ARRAY[]::text[], 'Prospect', 'Linda Toews', 'linda.toews50@neufeldag.example.com', '2026-07-25', 'REP-06');
+INSERT INTO accounts (id, name, county, state, lat, lng, crops, acres, modules_owned, customer_status, contact_name, contact_email, contact_role, notes, last_contact, rep_id) VALUES
+('ACC-001', 'Whitfield Land & Cattle Co.', 'Grant County', 'KS', 37.5486, -101.2921, ARRAY['Wheat','Sorghum']::text[], 2200, ARRAY[]::text[], 'Prospect', 'Mary Esch', 'mary.esch1@whitfieldag.example.com', 'Agronomist', 'Expanding acreage; bought a second pivot this spring.', '2026-06-01', 'REP-01'),
+('ACC-002', 'Wiens Family Farm', 'Grant County', 'KS', 37.4856, -101.2188, ARRAY['Wheat','Sorghum']::text[], 1200, ARRAY['Yield & Insurance Records']::text[], 'Customer', 'Carol Friesen', 'carol.friesen2@wiensag.example.com', 'Owner', 'Board decides on spend in the fall; Carol runs operations day to day.', '2026-08-08', 'REP-01'),
+('ACC-003', 'Neufeld Grain Co.', 'Dundy County', 'NE', 40.1328, -101.8128, ARRAY['Wheat']::text[], 2800, ARRAY[]::text[], 'Prospect', 'Robert Ehler', 'robert.ehler3@neufeldag.example.com', 'Agronomist', 'Uses spreadsheets and a paper calendar; skeptical of software, trusts the agronomist.', '2026-09-14', 'REP-03'),
+('ACC-004', 'Friesen Agri-Services', 'Beaver County', 'OK', 36.8615, -100.4338, ARRAY['Sorghum','Wheat']::text[], 1600, ARRAY['Yield & Insurance Records','Irrigation Scheduling']::text[], 'Customer', 'Ruth Esch', 'ruth.esch4@friesenag.example.com', 'Agronomist', 'Renewed in spring without a call; Ruth reads the monthly usage report and asks good questions.', '2026-08-15', 'REP-04'),
+('ACC-005', 'Regier Farms', 'Ford County', 'KS', 37.7696, -100.0211, ARRAY['Wheat','Sorghum']::text[], 800, ARRAY[]::text[], 'Prospect', 'Mark Haas', 'mark.haas5@regierag.example.com', 'Owner-operator', 'Expanding acreage; bought a second pivot this spring.', '2026-08-07', 'REP-02'),
+('ACC-006', 'Voss Ag Partners', 'Beaver County', 'OK', 36.6372, -100.4908, ARRAY['Wheat']::text[], 2200, ARRAY['Irrigation Scheduling']::text[], 'Prospect', 'Mark Lindqvist', 'mark.lindqvist6@vossag.example.com', 'Agronomist', 'Mark asked for pricing at a field day in 2025 and went quiet. Price-sensitive.', '2026-08-05', 'REP-04'),
+('ACC-007', 'Janzen Land & Cattle Co.', 'Deaf Smith County', 'TX', 35.0037, -102.6001, ARRAY['Cotton','Wheat']::text[], 2200, ARRAY[]::text[], 'Prospect', 'Ruth Krueger', 'ruth.krueger7@janzenag.example.com', 'Farm manager', 'Sent a brochure in July; no reply. Prefers text to email, per the neighbor.', '2026-09-03', 'REP-05'),
+('ACC-008', 'Brandt Ranch', 'Dallam County', 'TX', 36.2268, -102.4507, ARRAY['Corn','Wheat']::text[], 4200, ARRAY['Yield & Insurance Records']::text[], 'Customer', 'Donna Klein', 'donna.klein8@brandtag.example.com', 'Operations manager', 'Met Donna at the Dallam co-op meeting in June. Happy with the module they own; wants proof before adding another.', '2026-07-21', 'REP-05'),
+('ACC-009', 'Hartman Family Farm', 'Cimarron County', 'OK', 36.7531, -102.6611, ARRAY['Corn','Wheat']::text[], 1600, ARRAY['Irrigation Scheduling']::text[], 'Prospect', 'Sandra Ehler', 'sandra.ehler9@hartmanag.example.com', 'Farm manager', 'Cold. Name came from the Cimarron FSA list; no prior contact.', '2026-08-28', 'REP-04'),
+('ACC-010', 'Voss Ranch', 'Sherman County', 'KS', 39.4332, -101.754, ARRAY['Wheat','Corn']::text[], 5000, ARRAY['Irrigation Scheduling','Yield & Insurance Records']::text[], 'Customer', 'Ruth Haas', 'ruth.haas10@vossag.example.com', 'Owner-operator', 'Met Ruth at the Sherman co-op meeting in June. Happy with the module they own; wants proof before adding another.', '2026-09-24', 'REP-02'),
+('ACC-011', 'Peters Family Farm', 'Texas County', 'OK', 36.8525, -101.6243, ARRAY['Corn','Sorghum']::text[], 4200, ARRAY['Yield & Insurance Records']::text[], 'Customer', 'Daniel Reyes', 'daniel.reyes11@petersag.example.com', 'Farm manager', 'Renewed in spring without a call; Daniel reads the monthly usage report and asks good questions.', '2026-06-15', 'REP-04'),
+('ACC-012', 'Kaufman Agri-Services', 'Chase County', 'NE', 40.5359, -101.7905, ARRAY['Corn','Soybeans']::text[], 2800, ARRAY[]::text[], 'Prospect', 'Kevin Ehler', 'kevin.ehler12@kaufmanag.example.com', 'Operations manager', 'Cold. Name came from the Chase FSA list; no prior contact.', '2026-07-17', 'REP-03'),
+('ACC-013', 'Bontrager Farming LLC', 'Texas County', 'OK', 36.7047, -101.6355, ARRAY['Corn','Sorghum']::text[], 1600, ARRAY['Irrigation Scheduling','Field-Work Planner']::text[], 'Customer', 'Donna Schmidt', 'donna.schmidt13@bontragerag.example.com', 'Owner-operator', 'Met Donna at the Texas co-op meeting in June. Happy with the module they own; wants proof before adding another.', '2026-08-25', 'REP-04'),
+('ACC-014', 'Reimer Grain Co.', 'Dallam County', 'TX', 36.3297, -102.7467, ARRAY['Corn']::text[], 2200, ARRAY['Irrigation Scheduling','Yield & Insurance Records']::text[], 'Customer', 'Donna Voss', 'donna.voss14@reimerag.example.com', 'Owner-operator', 'Donna runs the pivots himself and will ask about per-inch return numbers.', '2026-05-23', 'REP-05'),
+('ACC-015', 'Castaneda Farming LLC', 'Moore County', 'TX', 35.8542, -101.9058, ARRAY['Corn','Wheat']::text[], 5000, ARRAY[]::text[], 'Prospect', 'Karen Krueger', 'karen.krueger15@castanedaag.example.com', 'Farm manager', 'Sent a brochure in July; no reply. Prefers text to email, per the neighbor.', '2026-08-22', 'REP-05'),
+('ACC-016', 'Alvarado Bros. Farms', 'Grant County', 'KS', 37.5321, -101.3415, ARRAY['Corn','Wheat']::text[], 2200, ARRAY['Yield & Insurance Records']::text[], 'Prospect', 'David Toews', 'david.toews16@alvaradoag.example.com', 'Operations manager', 'Expanding acreage; bought a second pivot this spring.', '2026-09-24', 'REP-01'),
+('ACC-017', 'Duerksen Grain Co.', 'Seward County', 'KS', 37.143, -100.7345, ARRAY['Corn','Wheat']::text[], 6500, ARRAY['Irrigation Scheduling']::text[], 'Customer', 'Robert Peters', 'robert.peters17@duerksenag.example.com', 'Farm manager', 'Had an onboarding hiccup last year; trust was rebuilt by the agronomist visit. Keep it practical.', '2026-08-08', 'REP-01'),
+('ACC-018', 'Schmidt Bros. Farms', 'Sherman County', 'KS', 39.384, -101.8399, ARRAY['Wheat','Corn']::text[], 2200, ARRAY[]::text[], 'Prospect', 'James Voss', 'james.voss18@schmidtag.example.com', 'Farm manager', 'Neighbor of a current customer; has seen the dashboard on their phone.', '2026-08-01', 'REP-02'),
+('ACC-019', 'Hartman Ag Partners', 'Thomas County', 'KS', 39.2323, -101.0269, ARRAY['Wheat','Sunflowers']::text[], 800, ARRAY[]::text[], 'Prospect', 'Robert Reyes', 'robert.reyes19@hartmanag.example.com', 'Owner', 'Cold. Name came from the Thomas FSA list; no prior contact.', '2026-06-18', 'REP-02'),
+('ACC-020', 'Weber Land & Cattle Co.', 'Cheyenne County', 'NE', 41.1216, -102.9652, ARRAY['Wheat','Corn']::text[], 5000, ARRAY['Yield & Insurance Records']::text[], 'Customer', 'Brian Carver', 'brian.carver20@weberag.example.com', 'Agronomist', 'Slow to reply to email; answers the phone on weekday mornings.', '2026-09-21', 'REP-06'),
+('ACC-021', 'Sorensen Ag Partners', 'Cimarron County', 'OK', 36.7192, -102.534, ARRAY['Corn','Wheat']::text[], 4200, ARRAY['Yield & Insurance Records']::text[], 'Customer', 'Sandra Epp', 'sandra.epp21@sorensenag.example.com', 'Agronomist', 'Met Sandra at the Cimarron co-op meeting in June. Happy with the module they own; wants proof before adding another.', '2026-05-24', 'REP-04'),
+('ACC-022', 'Suderman Ranch', 'Finney County', 'KS', 38.128, -100.8352, ARRAY['Corn','Wheat']::text[], 800, ARRAY['Yield & Insurance Records','Irrigation Scheduling']::text[], 'Prospect', 'Linda Hartman', 'linda.hartman22@sudermanag.example.com', 'Owner-operator', 'Expanding acreage; bought a second pivot this spring.', '2026-07-07', 'REP-01'),
+('ACC-023', 'Dietz Ag Partners', 'Thomas County', 'KS', 39.2899, -101.1531, ARRAY['Corn','Wheat']::text[], 2200, ARRAY['Field-Work Planner']::text[], 'Customer', 'Karen Haas', 'karen.haas23@dietzag.example.com', 'General manager', 'Board decides on spend in the fall; Karen runs operations day to day.', '2026-08-05', 'REP-02'),
+('ACC-024', 'Lindqvist Ag Partners', 'Chase County', 'NE', 40.6117, -101.6689, ARRAY['Corn']::text[], 5000, ARRAY[]::text[], 'Prospect', 'Ruth Dietz', 'ruth.dietz24@lindqvistag.example.com', 'Owner', 'Cold. Name came from the Chase FSA list; no prior contact.', '2026-09-12', 'REP-03'),
+('ACC-025', 'Hartman Agri-Services', 'Perkins County', 'NE', 40.7393, -101.5112, ARRAY['Corn','Wheat']::text[], 1200, ARRAY[]::text[], 'Prospect', 'Susan Friesen', 'susan.friesen25@hartmanag.example.com', 'Operations manager', 'Uses spreadsheets and a paper calendar; skeptical of software, trusts the agronomist.', '2026-06-16', 'REP-03'),
+('ACC-026', 'Ratzlaff Farms & Feedlot', 'Finney County', 'KS', 38.1177, -100.7111, ARRAY['Corn','Sorghum']::text[], 2200, ARRAY[]::text[], 'Prospect', 'Mary Friesen', 'mary.friesen26@ratzlaffag.example.com', 'Owner-operator', 'Sent a brochure in July; no reply. Prefers text to email, per the neighbor.', '2026-05-14', 'REP-01'),
+('ACC-027', 'Thiessen Farms', 'Box Butte County', 'NE', 42.3345, -103.2021, ARRAY['Dry beans','Wheat']::text[], 2800, ARRAY['Irrigation Scheduling']::text[], 'Prospect', 'Steven Wiens', 'steven.wiens27@thiessenag.example.com', 'Operations manager', 'Steven asked for pricing at a field day in 2025 and went quiet. Price-sensitive.', '2026-09-06', 'REP-06'),
+('ACC-028', 'Suderman Agri-Services', 'Cimarron County', 'OK', 36.8502, -102.6088, ARRAY['Wheat','Sorghum']::text[], 1600, ARRAY['Irrigation Scheduling']::text[], 'Customer', 'Brian Castaneda', 'brian.castaneda28@sudermanag.example.com', 'Operations manager', 'Board decides on spend in the fall; Brian runs operations day to day.', '2026-09-07', 'REP-04'),
+('ACC-029', 'Hartman Grain Co.', 'Finney County', 'KS', 38.027, -100.8719, ARRAY['Corn','Wheat']::text[], 800, ARRAY[]::text[], 'Prospect', 'Kevin Alvarado', 'kevin.alvarado29@hartmanag.example.com', 'Operations manager', 'Expanding acreage; bought a second pivot this spring.', '2026-07-14', 'REP-01'),
+('ACC-030', 'Friesen Farms', 'Cheyenne County', 'NE', 41.2373, -103.1005, ARRAY['Wheat']::text[], 1200, ARRAY[]::text[], 'Prospect', 'Robert Ehler', 'robert.ehler30@friesenag.example.com', 'Farm manager', 'Neighbor of a current customer; has seen the dashboard on their phone.', '2026-08-20', 'REP-06'),
+('ACC-031', 'Duerksen Family Farm', 'Deaf Smith County', 'TX', 35.0077, -102.5426, ARRAY['Cotton','Wheat']::text[], 800, ARRAY[]::text[], 'Prospect', 'Sandra Brandt', 'sandra.brandt31@duerksenag.example.com', 'Agronomist', 'Cold. Name came from the Deaf Smith FSA list; no prior contact.', '2026-08-20', 'REP-05'),
+('ACC-032', 'Carver Agri-Services', 'Dundy County', 'NE', 40.2817, -101.6976, ARRAY['Corn']::text[], 2800, ARRAY['Field-Work Planner','Irrigation Scheduling']::text[], 'Customer', 'Daniel Duerksen', 'daniel.duerksen32@carverag.example.com', 'Owner', 'Renewed in spring without a call; Daniel reads the monthly usage report and asks good questions.', '2026-07-07', 'REP-03'),
+('ACC-033', 'Unruh Land & Cattle Co.', 'Beaver County', 'OK', 36.7736, -100.6075, ARRAY['Wheat','Sorghum']::text[], 3500, ARRAY[]::text[], 'Prospect', 'Robert Miller', 'robert.miller33@unruhag.example.com', 'Operations manager', 'Robert asked for pricing at a field day in 2025 and went quiet. Price-sensitive.', '2026-07-07', 'REP-04'),
+('ACC-034', 'Lindqvist Bros. Farms', 'Seward County', 'KS', 37.3098, -100.9774, ARRAY['Corn']::text[], 1200, ARRAY['Field-Work Planner','Irrigation Scheduling']::text[], 'Customer', 'Carol Voss', 'carol.voss34@lindqvistag.example.com', 'General manager', 'Renewed in spring without a call; Carol reads the monthly usage report and asks good questions.', '2026-06-22', 'REP-01'),
+('ACC-035', 'Weber Grain Co.', 'Keith County', 'NE', 41.296, -101.5889, ARRAY['Corn','Soybeans']::text[], 1600, ARRAY['Yield & Insurance Records','Field-Work Planner']::text[], 'Customer', 'Sharon Alvarado', 'sharon.alvarado35@weberag.example.com', 'Operations manager', 'Slow to reply to email; answers the phone on weekday mornings.', '2026-08-22', 'REP-06'),
+('ACC-036', 'Miller Agri-Services', 'Keith County', 'NE', 41.1004, -101.668, ARRAY['Corn','Wheat']::text[], 1200, ARRAY['Field-Work Planner']::text[], 'Prospect', 'Michael Krueger', 'michael.krueger36@millerag.example.com', 'Owner', 'Uses spreadsheets and a paper calendar; skeptical of software, trusts the agronomist.', '2026-06-10', 'REP-06'),
+('ACC-037', 'Reimer Family Farm', 'Dallam County', 'TX', 36.2975, -102.5625, ARRAY['Corn']::text[], 6500, ARRAY['Yield & Insurance Records']::text[], 'Customer', 'David Peters', 'david.peters37@reimerag.example.com', 'Agronomist', 'Renewed in spring without a call; David reads the monthly usage report and asks good questions.', '2026-06-19', 'REP-05'),
+('ACC-038', 'Yoder Land & Cattle Co.', 'Perkins County', 'NE', 40.8761, -101.7759, ARRAY['Wheat','Corn']::text[], 2800, ARRAY[]::text[], 'Prospect', 'Mary Klein', 'mary.klein38@yoderag.example.com', 'Operations manager', 'Uses spreadsheets and a paper calendar; skeptical of software, trusts the agronomist.', '2026-08-26', 'REP-03'),
+('ACC-039', 'Suderman Land & Cattle Co.', 'Moore County', 'TX', 35.8948, -101.9235, ARRAY['Wheat']::text[], 800, ARRAY['Yield & Insurance Records']::text[], 'Customer', 'Daniel Friesen', 'daniel.friesen39@sudermanag.example.com', 'Farm manager', 'Board decides on spend in the fall; Daniel runs operations day to day.', '2026-05-30', 'REP-05'),
+('ACC-040', 'Goertzen Agri-Services', 'Seward County', 'KS', 37.2712, -100.9749, ARRAY['Corn']::text[], 6500, ARRAY['Yield & Insurance Records']::text[], 'Customer', 'Michael Castaneda', 'michael.castaneda40@goertzenag.example.com', 'Operations manager', 'Had an onboarding hiccup last year; trust was rebuilt by the agronomist visit. Keep it practical.', '2026-09-17', 'REP-01'),
+('ACC-041', 'Becker Grain Co.', 'Sherman County', 'KS', 39.2511, -101.8633, ARRAY['Corn']::text[], 6500, ARRAY['Irrigation Scheduling']::text[], 'Customer', 'Nancy Neufeld', 'nancy.neufeld41@beckerag.example.com', 'Farm manager', 'Had an onboarding hiccup last year; trust was rebuilt by the agronomist visit. Keep it practical.', '2026-08-27', 'REP-02'),
+('ACC-042', 'Yoder Ag Partners', 'Ford County', 'KS', 37.7284, -99.8941, ARRAY['Wheat','Sorghum']::text[], 1200, ARRAY['Field-Work Planner','Irrigation Scheduling']::text[], 'Customer', 'Susan Friesen', 'susan.friesen42@yoderag.example.com', 'Operations manager', 'Met Susan at the Ford co-op meeting in June. Happy with the module they own; wants proof before adding another.', '2026-06-22', 'REP-02'),
+('ACC-043', 'Kaufman Ranch', 'Chase County', 'NE', 40.5628, -101.7892, ARRAY['Corn','Wheat']::text[], 1600, ARRAY[]::text[], 'Prospect', 'Paul Ratzlaff', 'paul.ratzlaff43@kaufmanag.example.com', 'General manager', 'Uses spreadsheets and a paper calendar; skeptical of software, trusts the agronomist.', '2026-06-29', 'REP-03'),
+('ACC-044', 'Friesen Family Farm', 'Deaf Smith County', 'TX', 34.9696, -102.6776, ARRAY['Corn','Silage']::text[], 800, ARRAY[]::text[], 'Prospect', 'Susan Bontrager', 'susan.bontrager44@friesenag.example.com', 'Owner-operator', 'Sent a brochure in July; no reply. Prefers text to email, per the neighbor.', '2026-07-22', 'REP-05'),
+('ACC-045', 'Lindqvist Grain Co.', 'Box Butte County', 'NE', 42.2034, -102.9982, ARRAY['Wheat','Sugar beets']::text[], 2200, ARRAY['Irrigation Scheduling','Field-Work Planner']::text[], 'Customer', 'Paul Haas', 'paul.haas45@lindqvistag.example.com', 'Farm manager', 'Met Paul at the Box Butte co-op meeting in June. Happy with the module they own; wants proof before adding another.', '2026-08-01', 'REP-06'),
+('ACC-046', 'Voss Land & Cattle Co.', 'Perkins County', 'NE', 40.8699, -101.7051, ARRAY['Corn','Wheat']::text[], 6500, ARRAY['Field-Work Planner','Irrigation Scheduling']::text[], 'Customer', 'Linda Krueger', 'linda.krueger46@vossag.example.com', 'Farm manager', 'Slow to reply to email; answers the phone on weekday mornings.', '2026-08-21', 'REP-03'),
+('ACC-047', 'Kaufman Bros. Farms', 'Dundy County', 'NE', 40.2609, -101.5854, ARRAY['Wheat']::text[], 800, ARRAY['Field-Work Planner']::text[], 'Customer', 'Paul Suderman', 'paul.suderman47@kaufmanag.example.com', 'Operations manager', 'Met Paul at the Dundy co-op meeting in June. Happy with the module they own; wants proof before adding another.', '2026-09-08', 'REP-03'),
+('ACC-048', 'Ehler Agri-Services', 'Keith County', 'NE', 41.1071, -101.6686, ARRAY['Corn','Wheat']::text[], 4200, ARRAY[]::text[], 'Prospect', 'David Krueger', 'david.krueger48@ehlerag.example.com', 'Farm manager', 'Sent a brochure in July; no reply. Prefers text to email, per the neighbor.', '2026-06-11', 'REP-06'),
+('ACC-049', 'Becker Ranch', 'Moore County', 'TX', 35.8448, -101.8384, ARRAY['Wheat']::text[], 6500, ARRAY[]::text[], 'Prospect', 'Ruth Bontrager', 'ruth.bontrager49@beckerag.example.com', 'Operations manager', 'Cold. Name came from the Moore FSA list; no prior contact.', '2026-06-01', 'REP-05'),
+('ACC-050', 'Neufeld Ranch', 'Cheyenne County', 'NE', 41.2989, -103.0566, ARRAY['Corn','Wheat']::text[], 3500, ARRAY[]::text[], 'Prospect', 'Linda Toews', 'linda.toews50@neufeldag.example.com', 'General manager', 'Sent a brochure in July; no reply. Prefers text to email, per the neighbor.', '2026-09-14', 'REP-06');
 
 INSERT INTO signals (id, week_of, county, state, lat, lng, type, severity, headline, detail, source, target_module, status, rep_id) VALUES
 ('SIG-0001', '2026-08-31', 'Sherman County', 'KS', 39.35, -101.72, 'heat', 'High', 'Sherman, KS: highs above 98°F with overnight lows above 75°F during grain fill', 'Sherman County, KS forecast shows highs above 98°F with overnight lows above 75°F during grain fill and harvest dry-down (NOAA).', 'NOAA', 'Yield & Insurance Records', 'processed', 'REP-02'),
@@ -88,12 +88,28 @@ INSERT INTO signals (id, week_of, county, state, lat, lng, type, severity, headl
 ('SIG-0020', '2026-09-28', 'Cimarron County', 'OK', 36.75, -102.52, 'drought', 'High', 'Cimarron, OK moved D3 → D4 (Exceptional Drought)', 'Cimarron County, OK drought category worsened to D4 (Exceptional Drought) this week (US Drought Monitor).', 'US Drought Monitor', 'Irrigation Scheduling', 'new', 'REP-04'),
 ('SIG-0021', '2026-09-28', 'Sherman County', 'KS', 39.35, -101.72, 'drought', 'Medium', 'Sherman, KS moved D1 → D2 (Severe Drought)', 'Sherman County, KS drought category worsened to D2 (Severe Drought) this week (US Drought Monitor).', 'US Drought Monitor', 'Irrigation Scheduling', 'new', 'REP-02'),
 ('SIG-0022', '2026-09-28', 'Grant County', 'KS', 37.56, -101.31, 'heat', 'High', 'Grant, KS: a hail warning alongside extreme heat during grain fill', 'Grant County, KS forecast shows a hail warning alongside extreme heat during grain fill and harvest dry-down (NOAA).', 'NOAA', 'Yield & Insurance Records', 'new', 'REP-01'),
+('SIG-0101', '2026-07-06', 'Dallam County', 'TX', 36.28, -102.6, 'heat', 'High', 'Dallam, TX: highs above 98°F for 4 days during pollination', 'Dallam County, TX forecast shows highs above 98°F with overnight lows above 75°F during the corn pollination window (NOAA).', 'NOAA', 'Yield & Insurance Records', 'processed', 'REP-05'),
+('SIG-0102', '2026-07-06', 'Perkins County', 'NE', 40.85, -101.65, 'heat', 'Medium', 'Perkins, NE: highs above 95°F for 3 days during pollination', 'Perkins County, NE forecast shows highs above 95°F for 3+ consecutive days during the corn pollination window (NOAA).', 'NOAA', 'Yield & Insurance Records', 'processed', 'REP-03'),
+('SIG-0103', '2026-07-13', 'Finney County', 'KS', 38.04, -100.74, 'heat', 'High', 'Finney, KS: highs above 100°F for 5 days during pollination', 'Finney County, KS forecast shows highs above 100°F for 5 consecutive days during the corn pollination window (NOAA).', 'NOAA', 'Yield & Insurance Records', 'processed', 'REP-01'),
+('SIG-0104', '2026-07-13', 'Moore County', 'TX', 35.84, -101.89, 'drought', 'Medium', 'Moore, TX moved D0 → D1 (Moderate Drought)', 'Moore County, TX drought category worsened to D1 (Moderate Drought) this week (US Drought Monitor).', 'US Drought Monitor', 'Irrigation Scheduling', 'processed', 'REP-05'),
+('SIG-0105', '2026-07-20', 'Keith County', 'NE', 41.2, -101.66, 'rain', 'High', 'Keith, NE: 3.3in of rain over 3 days with hail', 'Keith County, NE 7-day forecast shows 3.3in of rain over 3 days with a hail warning, closing multiple field-work days (NOAA).', 'NOAA', 'Field-Work Planner', 'processed', 'REP-06'),
+('SIG-0106', '2026-07-20', 'Texas County', 'OK', 36.75, -101.49, 'drought', 'Medium', 'Texas Co., OK moved D0 → D1 (Moderate Drought)', 'Texas County, OK drought category worsened to D1 (Moderate Drought) this week (US Drought Monitor).', 'US Drought Monitor', 'Irrigation Scheduling', 'processed', 'REP-04'),
+('SIG-0107', '2026-07-27', 'Grant County', 'KS', 37.56, -101.31, 'heat', 'Medium', 'Grant, KS: highs above 95°F for 3 days during grain fill', 'Grant County, KS forecast shows highs above 95°F for 3+ consecutive days during grain fill (NOAA).', 'NOAA', 'Yield & Insurance Records', 'processed', 'REP-01'),
+('SIG-0108', '2026-07-27', 'Cheyenne County', 'NE', 41.22, -102.99, 'drought', 'Medium', 'Cheyenne, NE moved D1 → D2 (Severe Drought)', 'Cheyenne County, NE drought category worsened to D2 (Severe Drought) this week (US Drought Monitor).', 'US Drought Monitor', 'Irrigation Scheduling', 'processed', 'REP-06'),
+('SIG-0109', '2026-08-03', 'Seward County', 'KS', 37.19, -100.85, 'drought', 'Medium', 'Seward, KS moved D0 → D1 (Moderate Drought)', 'Seward County, KS drought category worsened to D1 (Moderate Drought) this week (US Drought Monitor).', 'US Drought Monitor', 'Irrigation Scheduling', 'processed', 'REP-01'),
+('SIG-0110', '2026-08-03', 'Deaf Smith County', 'TX', 34.97, -102.6, 'heat', 'High', 'Deaf Smith, TX: highs above 98°F for 4 days during grain fill', 'Deaf Smith County, TX forecast shows highs above 98°F for 4 consecutive days during grain fill (NOAA).', 'NOAA', 'Yield & Insurance Records', 'processed', 'REP-05'),
+('SIG-0111', '2026-08-10', 'Thomas County', 'KS', 39.35, -101.06, 'rain', 'Medium', 'Thomas, KS: 2.2in of rain over 4 days', 'Thomas County, KS 7-day forecast shows 2.2in of rain over 4 days, closing multiple field-work days (NOAA).', 'NOAA', 'Field-Work Planner', 'processed', 'REP-02'),
+('SIG-0112', '2026-08-10', 'Cimarron County', 'OK', 36.75, -102.52, 'drought', 'High', 'Cimarron, OK moved D2 → D3 (Extreme Drought)', 'Cimarron County, OK drought category worsened to D3 (Extreme Drought) this week (US Drought Monitor).', 'US Drought Monitor', 'Irrigation Scheduling', 'processed', 'REP-04'),
+('SIG-0113', '2026-08-17', 'Finney County', 'KS', 38.04, -100.74, 'drought', 'Medium', 'Finney, KS moved D1 → D2 (Severe Drought)', 'Finney County, KS drought category worsened to D2 (Severe Drought) this week (US Drought Monitor).', 'US Drought Monitor', 'Irrigation Scheduling', 'processed', 'REP-01'),
+('SIG-0114', '2026-08-17', 'Box Butte County', 'NE', 42.22, -103.09, 'drought', 'High', 'Box Butte, NE moved D2 → D3 (Extreme Drought)', 'Box Butte County, NE drought category worsened to D3 (Extreme Drought) this week (US Drought Monitor).', 'US Drought Monitor', 'Irrigation Scheduling', 'processed', 'REP-06'),
+('SIG-0115', '2026-08-24', 'Beaver County', 'OK', 36.75, -100.48, 'drought', 'Medium', 'Beaver, OK moved D1 → D2 (Severe Drought)', 'Beaver County, OK drought category worsened to D2 (Severe Drought) this week (US Drought Monitor).', 'US Drought Monitor', 'Irrigation Scheduling', 'processed', 'REP-04'),
+('SIG-0116', '2026-08-24', 'Chase County', 'NE', 40.52, -101.7, 'rain', 'Medium', 'Chase, NE: 2.6in of rain over 5 days', 'Chase County, NE 7-day forecast shows 2.6in of rain over 5 days, closing multiple field-work days (NOAA).', 'NOAA', 'Field-Work Planner', 'processed', 'REP-03'),
 ('SIG-0023', '2026-09-28', 'Finney County', 'KS', 38.04, -100.74, 'drought', 'High', 'Finney, KS moved D2 → D3 (Extreme Drought)', 'Finney County, KS drought category worsened from D2 to D3 (Extreme Drought) this week; third consecutive week of decline. Irrigated corn and sorghum are past silking and district water allocation decisions are being made now (US Drought Monitor, released Sep 25).', 'US Drought Monitor', 'Irrigation Scheduling', 'new', 'REP-01');
 
 INSERT INTO opportunities (id, signal_id, account_id, rep_id, score, lead_with, why_now, email_subject, email_body, amount, stage, ai_offline, is_signal_driven, is_off_territory, sf_opportunity_id, sf_error, created_at, pushed_at, sent_at) VALUES
-('OPP-0001', 'SIG-0011', 'ACC-007', 'REP-05', 36, 'Yield & Insurance Records', 'Janzen Land & Cattle Co. has 2,200 acres of corn in Deaf Smith County under highs above 95°F for 3+ consecutive days; yield loss documentation starts now if a claim follows.', 'Deaf Smith County heat during grain fill — getting your yield records in order now', 'Hi Ruth,
+('OPP-0001', 'SIG-0011', 'ACC-007', 'REP-05', 36, 'Yield & Insurance Records', 'Janzen Land & Cattle Co. has 2,200 acres of cotton in Deaf Smith County under highs above 95°F for 3+ consecutive days; yield loss documentation starts now if a claim follows.', 'Deaf Smith County heat during grain fill — getting your yield records in order now', 'Hi Ruth,
 
-Deaf Smith County, TX forecast shows highs above 95°F for 3+ consecutive days during grain fill and harvest dry-down (NOAA). With 2,200 acres of corn, FieldSense Yield & Insurance Records can tell you which fields matter most this week and keep the records straight if it turns into a claim.
+Deaf Smith County, TX forecast shows highs above 95°F for 3+ consecutive days during grain fill and harvest dry-down (NOAA). With 2,200 acres of cotton, FieldSense Yield & Insurance Records can tell you which fields matter most this week and keep the records straight if it turns into a claim.
 
 Fifteen minutes Thursday?
 
@@ -105,30 +121,30 @@ Chase County, NE drought category worsened to D3 (Extreme Drought) this week (US
 Fifteen minutes Thursday?
 
 Marcus Deleon', 22500, 'sent', false, true, false, NULL, NULL, '2026-09-07T14:00:00Z', '2026-09-09T15:00:00Z', '2026-09-20T16:30:00Z'),
-('OPP-0003', 'SIG-0001', 'ACC-041', 'REP-05', 0, 'Yield & Insurance Records', 'Becker Grain Co. has 6,500 acres of wheat in Sherman County under highs above 98°F with overnight lows above 75°F; yield loss documentation starts now if a claim follows.', 'Sherman County heat during grain fill — getting your yield records in order now', 'Hi Nancy,
+('OPP-0003', 'SIG-0001', 'ACC-041', 'REP-05', 0, 'Yield & Insurance Records', 'Becker Grain Co. has 6,500 acres of corn in Sherman County under highs above 98°F with overnight lows above 75°F; yield loss documentation starts now if a claim follows.', 'Sherman County heat during grain fill — getting your yield records in order now', 'Hi Nancy,
 
-Sherman County, KS forecast shows highs above 98°F with overnight lows above 75°F during grain fill and harvest dry-down (NOAA). With 6,500 acres of wheat, FieldSense Yield & Insurance Records can tell you which fields matter most this week and keep the records straight if it turns into a claim.
+Sherman County, KS forecast shows highs above 98°F with overnight lows above 75°F during grain fill and harvest dry-down (NOAA). With 6,500 acres of corn, FieldSense Yield & Insurance Records can tell you which fields matter most this week and keep the records straight if it turns into a claim.
 
 Fifteen minutes Thursday?
 
-Tyler Bramlett', 12200, 'lost', false, true, true, NULL, NULL, '2026-09-01T14:00:00Z', '2026-09-01T15:00:00Z', '2026-09-12T16:30:00Z'),
+Tyler Bramlett', 12200, 'lost', false, true, true, NULL, NULL, '2026-09-01T14:00:00Z', '2026-09-02T15:00:00Z', '2026-09-12T16:30:00Z'),
 ('OPP-0004', 'SIG-0017', 'ACC-040', 'REP-01', 36, 'Field-Work Planner', 'Goertzen Agri-Services has 6,500 acres in Seward County facing 3.1in of rain with flooding risk; field-work windows are the constraint this week.', 'Seward County: 3.1in of rain with flooding risk — planning the field days you have left', 'Hi Michael,
 
 Seward County, KS 7-day forecast shows 3.1in of rain with flooding risk, closing multiple field-work days (NOAA). With 6,500 acres of corn, FieldSense Field-Work Planner can tell you which fields matter most this week and keep the records straight if it turns into a claim.
 
 Fifteen minutes Thursday?
 
-Jordan Ellsworth', 18800, 'pushed', false, true, false, NULL, NULL, '2026-09-29T14:00:00Z', '2026-09-29T19:00:00Z', NULL),
-('OPP-0005', 'SIG-0004', 'ACC-038', 'REP-01', 20, 'Yield & Insurance Records', 'Yoder Land & Cattle Co. has 2,800 acres of corn in Perkins County under highs above 98°F with overnight lows above 75°F; yield loss documentation starts now if a claim follows.', 'Perkins County heat during grain fill — getting your yield records in order now', 'Hi Mary,
+Jordan Ellsworth', 18800, 'pushed', false, true, false, NULL, NULL, '2026-09-29T14:00:00Z', '2026-09-29T13:00:00Z', NULL),
+('OPP-0005', 'SIG-0004', 'ACC-038', 'REP-01', 20, 'Yield & Insurance Records', 'Yoder Land & Cattle Co. has 2,800 acres of wheat in Perkins County under highs above 98°F with overnight lows above 75°F; yield loss documentation starts now if a claim follows.', 'Perkins County heat during grain fill — getting your yield records in order now', 'Hi Mary,
 
-Perkins County, NE forecast shows highs above 98°F with overnight lows above 75°F during grain fill and harvest dry-down (NOAA). With 2,800 acres of corn, FieldSense Yield & Insurance Records can tell you which fields matter most this week and keep the records straight if it turns into a claim.
+Perkins County, NE forecast shows highs above 98°F with overnight lows above 75°F during grain fill and harvest dry-down (NOAA). With 2,800 acres of wheat, FieldSense Yield & Insurance Records can tell you which fields matter most this week and keep the records straight if it turns into a claim.
 
 Fifteen minutes Thursday?
 
 Jordan Ellsworth', 6700, 'draft', false, true, true, NULL, NULL, '2026-09-01T14:00:00Z', NULL, NULL),
-('OPP-0006', 'SIG-0022', 'ACC-016', 'REP-03', 17, 'Yield & Insurance Records', 'Alvarado Bros. Farms has 2,200 acres of wheat in Grant County under a hail warning alongside extreme heat; yield loss documentation starts now if a claim follows.', 'Grant County heat during grain fill — getting your yield records in order now', 'Hi David,
+('OPP-0006', 'SIG-0022', 'ACC-016', 'REP-03', 17, 'Yield & Insurance Records', 'Alvarado Bros. Farms has 2,200 acres of corn in Grant County under a hail warning alongside extreme heat; yield loss documentation starts now if a claim follows.', 'Grant County heat during grain fill — getting your yield records in order now', 'Hi David,
 
-Grant County, KS forecast shows a hail warning alongside extreme heat during grain fill and harvest dry-down (NOAA). With 2,200 acres of wheat, FieldSense Yield & Insurance Records can tell you which fields matter most this week and keep the records straight if it turns into a claim.
+Grant County, KS forecast shows a hail warning alongside extreme heat during grain fill and harvest dry-down (NOAA). With 2,200 acres of corn, FieldSense Yield & Insurance Records can tell you which fields matter most this week and keep the records straight if it turns into a claim.
 
 Fifteen minutes Thursday?
 
@@ -139,28 +155,28 @@ Cimarron County, OK drought category worsened to D1 (Moderate Drought) this week
 
 Fifteen minutes Thursday?
 
-Renee Okafor', 19300, 'pushed', false, true, false, NULL, NULL, '2026-09-26T14:00:00Z', '2026-09-21T08:00:00Z', NULL),
+Renee Okafor', 19300, 'pushed', false, true, false, NULL, NULL, '2026-09-26T14:00:00Z', '2026-09-21T05:00:00Z', NULL),
 ('OPP-0008', 'SIG-0011', 'ACC-044', 'REP-01', 51, 'Yield & Insurance Records', 'Friesen Family Farm has 800 acres of corn in Deaf Smith County under highs above 95°F for 3+ consecutive days; yield loss documentation starts now if a claim follows.', 'Deaf Smith County heat during grain fill — getting your yield records in order now', 'Hi Susan,
 
 Deaf Smith County, TX forecast shows highs above 95°F for 3+ consecutive days during grain fill and harvest dry-down (NOAA). With 800 acres of corn, FieldSense Yield & Insurance Records can tell you which fields matter most this week and keep the records straight if it turns into a claim.
 
 Fifteen minutes Thursday?
 
-Jordan Ellsworth', 3700, 'sent', false, true, true, NULL, NULL, '2026-09-17T14:00:00Z', '2026-09-15T15:00:00Z', '2026-09-17T03:00:00Z'),
+Jordan Ellsworth', 3700, 'sent', false, true, true, NULL, NULL, '2026-09-17T14:00:00Z', '2026-09-15T15:00:00Z', '2026-09-16T09:00:00Z'),
 ('OPP-0009', 'SIG-0006', 'ACC-018', 'REP-02', 0, 'Field-Work Planner', 'Schmidt Bros. Farms has 2,200 acres in Sherman County facing 2.5in of rain over 4 days; field-work windows are the constraint this week.', 'Sherman County: 2.5in of rain over 4 days — planning the field days you have left', 'Hi James,
 
 Sherman County, KS 7-day forecast shows 2.5in of rain over 4 days, closing multiple field-work days (NOAA). With 2,200 acres of wheat, FieldSense Field-Work Planner can tell you which fields matter most this week and keep the records straight if it turns into a claim.
 
 Fifteen minutes Thursday?
 
-Priya Nathan', 8000, 'lost', false, true, false, NULL, NULL, '2026-09-13T14:00:00Z', '2026-09-14T15:00:00Z', '2026-09-29T16:30:00Z'),
-('OPP-0010', 'SIG-0008', 'ACC-003', 'REP-03', 0, 'Yield & Insurance Records', 'Neufeld Grain Co. has 2,800 acres of corn in Dundy County under a hail warning alongside extreme heat; yield loss documentation starts now if a claim follows.', 'Dundy County heat during grain fill — getting your yield records in order now', 'Hi Robert,
+Priya Nathan', 8000, 'lost', false, true, false, NULL, NULL, '2026-09-13T14:00:00Z', '2026-09-15T15:00:00Z', '2026-09-29T16:30:00Z'),
+('OPP-0010', 'SIG-0008', 'ACC-003', 'REP-03', 0, 'Yield & Insurance Records', 'Neufeld Grain Co. has 2,800 acres of wheat in Dundy County under a hail warning alongside extreme heat; yield loss documentation starts now if a claim follows.', 'Dundy County heat during grain fill — getting your yield records in order now', 'Hi Robert,
 
-Dundy County, NE forecast shows a hail warning alongside extreme heat during grain fill and harvest dry-down (NOAA). With 2,800 acres of corn, FieldSense Yield & Insurance Records can tell you which fields matter most this week and keep the records straight if it turns into a claim.
+Dundy County, NE forecast shows a hail warning alongside extreme heat during grain fill and harvest dry-down (NOAA). With 2,800 acres of wheat, FieldSense Yield & Insurance Records can tell you which fields matter most this week and keep the records straight if it turns into a claim.
 
 Fifteen minutes Thursday?
 
-Marcus Deleon', 6700, 'lost', false, true, false, NULL, NULL, '2026-09-12T14:00:00Z', '2026-09-13T15:00:00Z', '2026-09-29T16:30:00Z'),
+Marcus Deleon', 6700, 'lost', false, true, false, NULL, NULL, '2026-09-12T14:00:00Z', '2026-09-12T15:00:00Z', '2026-09-29T16:30:00Z'),
 ('OPP-0011', 'SIG-0005', 'ACC-043', 'REP-03', 66, 'Irrigation Scheduling', 'Kaufman Ranch runs 1,600 acres of corn in Chase County, which D2 to D3 this week; a watering plan pays for itself in the week allocations tighten.', 'Chase County just moved to extreme drought — a watering plan for the acres you can still irrigate', 'Hi Paul,
 
 Chase County, NE drought category worsened to D3 (Extreme Drought) this week (US Drought Monitor). With 1,600 acres of corn, FieldSense Irrigation Scheduling can tell you which fields matter most this week and keep the records straight if it turns into a claim.
@@ -168,16 +184,16 @@ Chase County, NE drought category worsened to D3 (Extreme Drought) this week (US
 Fifteen minutes Thursday?
 
 Marcus Deleon', 8900, 'sent', false, true, false, NULL, NULL, '2026-09-10T14:00:00Z', '2026-09-12T15:00:00Z', '2026-09-22T16:30:00Z'),
-('OPP-0012', 'SIG-0011', 'ACC-031', 'REP-05', 89, 'Yield & Insurance Records', 'Duerksen Family Farm has 800 acres of corn in Deaf Smith County under highs above 95°F for 3+ consecutive days; yield loss documentation starts now if a claim follows.', 'Deaf Smith County heat during grain fill — getting your yield records in order now', 'Hi Sandra,
+('OPP-0012', 'SIG-0011', 'ACC-031', 'REP-05', 89, 'Yield & Insurance Records', 'Duerksen Family Farm has 800 acres of cotton in Deaf Smith County under highs above 95°F for 3+ consecutive days; yield loss documentation starts now if a claim follows.', 'Deaf Smith County heat during grain fill — getting your yield records in order now', 'Hi Sandra,
 
-Deaf Smith County, TX forecast shows highs above 95°F for 3+ consecutive days during grain fill and harvest dry-down (NOAA). With 800 acres of corn, FieldSense Yield & Insurance Records can tell you which fields matter most this week and keep the records straight if it turns into a claim.
+Deaf Smith County, TX forecast shows highs above 95°F for 3+ consecutive days during grain fill and harvest dry-down (NOAA). With 800 acres of cotton, FieldSense Yield & Insurance Records can tell you which fields matter most this week and keep the records straight if it turns into a claim.
 
 Fifteen minutes Thursday?
 
-Tyler Bramlett', 3700, 'sent', false, true, false, NULL, NULL, '2026-09-18T14:00:00Z', '2026-09-18T00:00:00Z', '2026-09-22T00:00:00Z'),
-('OPP-0013', 'SIG-0016', 'ACC-049', 'REP-05', 33, 'Yield & Insurance Records', 'Becker Ranch has 6,500 acres of cotton in Moore County under a hail warning alongside extreme heat; yield loss documentation starts now if a claim follows.', 'Moore County heat during grain fill — getting your yield records in order now', 'Hi Ruth,
+Tyler Bramlett', 3700, 'sent', false, true, false, NULL, NULL, '2026-09-18T14:00:00Z', '2026-09-21T00:00:00Z', '2026-09-22T00:00:00Z'),
+('OPP-0013', 'SIG-0016', 'ACC-049', 'REP-05', 33, 'Yield & Insurance Records', 'Becker Ranch has 6,500 acres of wheat in Moore County under a hail warning alongside extreme heat; yield loss documentation starts now if a claim follows.', 'Moore County heat during grain fill — getting your yield records in order now', 'Hi Ruth,
 
-Moore County, TX forecast shows a hail warning alongside extreme heat during grain fill and harvest dry-down (NOAA). With 6,500 acres of cotton, FieldSense Yield & Insurance Records can tell you which fields matter most this week and keep the records straight if it turns into a claim.
+Moore County, TX forecast shows a hail warning alongside extreme heat during grain fill and harvest dry-down (NOAA). With 6,500 acres of wheat, FieldSense Yield & Insurance Records can tell you which fields matter most this week and keep the records straight if it turns into a claim.
 
 Fifteen minutes Thursday?
 
@@ -195,73 +211,73 @@ Keith County, NE 7-day forecast shows 2.5in of rain over 4 days, closing multipl
 
 Fifteen minutes Thursday?
 
-Sofia Marchetti', 5500, 'sent', false, true, false, NULL, NULL, '2026-09-29T14:00:00Z', '2026-09-30T15:00:00Z', '2026-09-30T16:30:00Z'),
+Sofia Marchetti', 5500, 'sent', false, true, false, NULL, NULL, '2026-09-29T14:00:00Z', '2026-09-29T15:00:00Z', '2026-09-30T16:30:00Z'),
 ('OPP-0016', 'SIG-0007', 'ACC-006', 'REP-04', 100, 'Field-Work Planner', 'Voss Ag Partners has 2,200 acres in Beaver County facing 1.8in of rain plus high winds; field-work windows are the constraint this week.', 'Beaver County: 1.8in of rain plus high winds — planning the field days you have left', 'Hi Mark,
 
 Beaver County, OK 7-day forecast shows 1.8in of rain plus high winds, closing multiple field-work days (NOAA). With 2,200 acres of wheat, FieldSense Field-Work Planner can tell you which fields matter most this week and keep the records straight if it turns into a claim.
 
 Fifteen minutes Thursday?
 
-Renee Okafor', 8000, 'won', false, true, false, NULL, NULL, '2026-09-12T14:00:00Z', '2026-09-07T09:00:00Z', '2026-09-07T16:00:00Z'),
+Renee Okafor', 8000, 'won', false, true, false, NULL, NULL, '2026-09-12T14:00:00Z', '2026-09-07T08:00:00Z', '2026-09-08T04:00:00Z'),
 ('OPP-0017', 'SIG-0006', 'ACC-010', 'REP-03', 52, 'Field-Work Planner', 'Voss Ranch has 5,000 acres in Sherman County facing 2.5in of rain over 4 days; field-work windows are the constraint this week.', 'Sherman County: 2.5in of rain over 4 days — planning the field days you have left', 'Hi Ruth,
 
-Sherman County, KS 7-day forecast shows 2.5in of rain over 4 days, closing multiple field-work days (NOAA). With 5,000 acres of corn, FieldSense Field-Work Planner can tell you which fields matter most this week and keep the records straight if it turns into a claim.
+Sherman County, KS 7-day forecast shows 2.5in of rain over 4 days, closing multiple field-work days (NOAA). With 5,000 acres of wheat, FieldSense Field-Work Planner can tell you which fields matter most this week and keep the records straight if it turns into a claim.
 
 Fifteen minutes Thursday?
 
-Marcus Deleon', 15000, 'sent', false, true, true, NULL, NULL, '2026-09-11T14:00:00Z', '2026-09-11T15:00:00Z', '2026-09-21T16:30:00Z'),
+Marcus Deleon', 15000, 'sent', false, true, true, NULL, NULL, '2026-09-11T14:00:00Z', '2026-09-12T15:00:00Z', '2026-09-21T16:30:00Z'),
 ('OPP-0018', 'SIG-0009', 'ACC-036', 'REP-06', 31, 'Yield & Insurance Records', 'Miller Agri-Services has 1,200 acres of corn in Keith County under highs above 95°F for 3+ consecutive days; yield loss documentation starts now if a claim follows.', 'Keith County heat during grain fill — getting your yield records in order now', 'Hi Michael,
 
 Keith County, NE forecast shows highs above 95°F for 3+ consecutive days during grain fill and harvest dry-down (NOAA). With 1,200 acres of corn, FieldSense Yield & Insurance Records can tell you which fields matter most this week and keep the records straight if it turns into a claim.
 
 Fifteen minutes Thursday?
 
-Sofia Marchetti', 4300, 'pushed', false, true, false, NULL, NULL, '2026-09-19T14:00:00Z', '2026-09-21T15:00:00Z', NULL),
+Sofia Marchetti', 4300, 'pushed', false, true, false, NULL, NULL, '2026-09-19T14:00:00Z', '2026-09-19T15:00:00Z', NULL),
 ('OPP-0019', 'SIG-0007', 'ACC-004', 'REP-04', 49, 'Field-Work Planner', 'Friesen Agri-Services has 1,600 acres in Beaver County facing 1.8in of rain plus high winds; field-work windows are the constraint this week.', 'Beaver County: 1.8in of rain plus high winds — planning the field days you have left', 'Hi Ruth,
 
 Beaver County, OK 7-day forecast shows 1.8in of rain plus high winds, closing multiple field-work days (NOAA). With 1,600 acres of sorghum, FieldSense Field-Work Planner can tell you which fields matter most this week and keep the records straight if it turns into a claim.
 
 Fifteen minutes Thursday?
 
-Renee Okafor', 6500, 'sent', false, true, false, NULL, NULL, '2026-09-12T14:00:00Z', '2026-09-07T06:00:00Z', '2026-09-07T15:00:00Z'),
+Renee Okafor', 6500, 'sent', false, true, false, NULL, NULL, '2026-09-12T14:00:00Z', '2026-09-07T03:00:00Z', '2026-09-08T02:00:00Z'),
 ('OPP-0020', 'SIG-0015', 'ACC-005', 'REP-02', 35, 'Irrigation Scheduling', 'Regier Farms runs 800 acres of wheat in Ford County, which D1 to D2 this week; a watering plan pays for itself in the week allocations tighten.', 'Ford County just moved to severe drought — a watering plan for the acres you can still irrigate', 'Hi Mark,
 
 Ford County, KS drought category worsened to D2 (Severe Drought) this week (US Drought Monitor). With 800 acres of wheat, FieldSense Irrigation Scheduling can tell you which fields matter most this week and keep the records straight if it turns into a claim.
 
 Fifteen minutes Thursday?
 
-Priya Nathan', 5700, 'pushed', false, true, false, NULL, NULL, '2026-09-22T14:00:00Z', '2026-09-23T15:00:00Z', NULL),
+Priya Nathan', 5700, 'pushed', false, true, false, NULL, NULL, '2026-09-22T14:00:00Z', '2026-09-22T15:00:00Z', NULL),
 ('OPP-0021', 'SIG-0004', 'ACC-046', 'REP-01', 47, 'Yield & Insurance Records', 'Voss Land & Cattle Co. has 6,500 acres of corn in Perkins County under highs above 98°F with overnight lows above 75°F; yield loss documentation starts now if a claim follows.', 'Perkins County heat during grain fill — getting your yield records in order now', 'Hi Linda,
 
 Perkins County, NE forecast shows highs above 98°F with overnight lows above 75°F during grain fill and harvest dry-down (NOAA). With 6,500 acres of corn, FieldSense Yield & Insurance Records can tell you which fields matter most this week and keep the records straight if it turns into a claim.
 
 Fifteen minutes Thursday?
 
-Jordan Ellsworth', 12200, 'sent', false, true, true, NULL, NULL, '2026-09-05T14:00:00Z', '2026-09-01T17:00:00Z', '2026-09-03T03:00:00Z'),
+Jordan Ellsworth', 12200, 'sent', false, true, true, NULL, NULL, '2026-09-05T14:00:00Z', '2026-09-01T12:00:00Z', '2026-09-03T00:00:00Z'),
 ('OPP-0022', 'SIG-0012', 'ACC-040', 'REP-01', 32, 'Irrigation Scheduling', 'Goertzen Agri-Services runs 6,500 acres of corn in Seward County, which D2 to D3 this week; a watering plan pays for itself in the week allocations tighten.', 'Seward County just moved to extreme drought — a watering plan for the acres you can still irrigate', 'Hi Michael,
 
 Seward County, KS drought category worsened to D3 (Extreme Drought) this week (US Drought Monitor). With 6,500 acres of corn, FieldSense Irrigation Scheduling can tell you which fields matter most this week and keep the records straight if it turns into a claim.
 
 Fifteen minutes Thursday?
 
-Jordan Ellsworth', 28500, 'pushed', false, true, false, NULL, NULL, '2026-09-21T14:00:00Z', '2026-09-22T14:00:00Z', NULL),
-('OPP-0023', 'SIG-0010', 'ACC-050', 'REP-04', 100, 'Yield & Insurance Records', 'Neufeld Ranch has 3,500 acres of wheat in Cheyenne County under highs above 98°F with overnight lows above 75°F; yield loss documentation starts now if a claim follows.', 'Cheyenne County heat during grain fill — getting your yield records in order now', 'Hi Linda,
+Jordan Ellsworth', 28500, 'pushed', false, true, false, NULL, NULL, '2026-09-21T14:00:00Z', '2026-09-22T10:00:00Z', NULL),
+('OPP-0023', 'SIG-0010', 'ACC-050', 'REP-04', 100, 'Yield & Insurance Records', 'Neufeld Ranch has 3,500 acres of corn in Cheyenne County under highs above 98°F with overnight lows above 75°F; yield loss documentation starts now if a claim follows.', 'Cheyenne County heat during grain fill — getting your yield records in order now', 'Hi Linda,
 
-Cheyenne County, NE forecast shows highs above 98°F with overnight lows above 75°F during grain fill and harvest dry-down (NOAA). With 3,500 acres of wheat, FieldSense Yield & Insurance Records can tell you which fields matter most this week and keep the records straight if it turns into a claim.
+Cheyenne County, NE forecast shows highs above 98°F with overnight lows above 75°F during grain fill and harvest dry-down (NOAA). With 3,500 acres of corn, FieldSense Yield & Insurance Records can tell you which fields matter most this week and keep the records straight if it turns into a claim.
 
 Fifteen minutes Thursday?
 
-Renee Okafor', 7800, 'won', false, true, true, NULL, NULL, '2026-09-15T14:00:00Z', '2026-09-14T03:00:00Z', '2026-09-14T22:00:00Z'),
+Renee Okafor', 7800, 'won', false, true, true, NULL, NULL, '2026-09-15T14:00:00Z', '2026-09-14T08:00:00Z', '2026-09-15T02:00:00Z'),
 ('OPP-0024', NULL, 'ACC-020', 'REP-06', 0, 'Irrigation Scheduling', 'List-based prospecting: Weber Land & Cattle Co. was called as part of the quarterly territory sweep, not in response to a weather event.', 'FieldSense Irrigation Scheduling for Weber Land & Cattle Co.', 'Hi Brian,
 
 Checking in on Irrigation Scheduling for your 5,000 acres. Happy to walk through it when you have fifteen minutes.
 
-Sofia Marchetti', 22500, 'lost', false, false, false, NULL, NULL, '2026-08-15T14:00:00Z', '2026-08-16T15:00:00Z', '2026-09-13T16:30:00Z'),
+Sofia Marchetti', 22500, 'lost', false, false, false, NULL, NULL, '2026-08-15T14:00:00Z', '2026-08-15T15:00:00Z', '2026-09-13T16:30:00Z'),
 ('OPP-0025', NULL, 'ACC-015', 'REP-05', 29, 'Yield & Insurance Records', 'List-based prospecting: Castaneda Farming LLC was called as part of the quarterly territory sweep, not in response to a weather event.', 'FieldSense Yield & Insurance Records for Castaneda Farming LLC', 'Hi Karen,
 
 Checking in on Yield & Insurance Records for your 5,000 acres. Happy to walk through it when you have fifteen minutes.
 
-Tyler Bramlett', 10000, 'pushed', false, false, false, NULL, NULL, '2026-08-26T14:00:00Z', '2026-08-26T15:00:00Z', NULL),
+Tyler Bramlett', 10000, 'pushed', false, false, false, NULL, NULL, '2026-08-26T14:00:00Z', '2026-08-28T15:00:00Z', NULL),
 ('OPP-0026', NULL, 'ACC-048', 'REP-06', 15, 'Irrigation Scheduling', 'List-based prospecting: Ehler Agri-Services was called as part of the quarterly territory sweep, not in response to a weather event.', 'FieldSense Irrigation Scheduling for Ehler Agri-Services', 'Hi David,
 
 Checking in on Irrigation Scheduling for your 4,200 acres. Happy to walk through it when you have fifteen minutes.
@@ -271,17 +287,17 @@ Sofia Marchetti', 19300, 'draft', false, false, false, NULL, NULL, '2026-09-17T1
 
 Checking in on Field-Work Planner for your 2,200 acres. Happy to walk through it when you have fifteen minutes.
 
-Jordan Ellsworth', 8000, 'pushed', false, false, false, NULL, NULL, '2026-09-04T14:00:00Z', '2026-09-04T15:00:00Z', NULL),
+Jordan Ellsworth', 8000, 'pushed', false, false, false, NULL, NULL, '2026-09-04T14:00:00Z', '2026-09-06T15:00:00Z', NULL),
 ('OPP-0028', NULL, 'ACC-015', 'REP-05', 38, 'Field-Work Planner', 'List-based prospecting: Castaneda Farming LLC was called as part of the quarterly territory sweep, not in response to a weather event.', 'FieldSense Field-Work Planner for Castaneda Farming LLC', 'Hi Karen,
 
 Checking in on Field-Work Planner for your 5,000 acres. Happy to walk through it when you have fifteen minutes.
 
-Tyler Bramlett', 15000, 'sent', false, false, false, NULL, NULL, '2026-08-26T14:00:00Z', '2026-08-26T15:00:00Z', '2026-09-19T16:30:00Z'),
+Tyler Bramlett', 15000, 'sent', false, false, false, NULL, NULL, '2026-08-26T14:00:00Z', '2026-08-28T15:00:00Z', '2026-09-19T16:30:00Z'),
 ('OPP-0029', NULL, 'ACC-018', 'REP-03', 44, 'Irrigation Scheduling', 'List-based prospecting: Schmidt Bros. Farms was called as part of the quarterly territory sweep, not in response to a weather event.', 'FieldSense Irrigation Scheduling for Schmidt Bros. Farms', 'Hi James,
 
 Checking in on Irrigation Scheduling for your 2,200 acres. Happy to walk through it when you have fifteen minutes.
 
-Marcus Deleon', 11300, 'sent', false, false, true, NULL, NULL, '2026-09-04T14:00:00Z', '2026-09-04T15:00:00Z', '2026-09-05T16:30:00Z'),
+Marcus Deleon', 11300, 'sent', false, false, true, NULL, NULL, '2026-09-04T14:00:00Z', '2026-09-06T15:00:00Z', '2026-09-05T16:30:00Z'),
 ('OPP-0030', NULL, 'ACC-035', 'REP-06', 60, 'Irrigation Scheduling', 'List-based prospecting: Weber Grain Co. was called as part of the quarterly territory sweep, not in response to a weather event.', 'FieldSense Irrigation Scheduling for Weber Grain Co.', 'Hi Sharon,
 
 Checking in on Irrigation Scheduling for your 1,600 acres. Happy to walk through it when you have fifteen minutes.
@@ -301,7 +317,7 @@ Marcus Deleon', 9500, 'draft', false, false, false, NULL, NULL, '2026-08-27T14:0
 
 Checking in on Field-Work Planner for your 800 acres. Happy to walk through it when you have fifteen minutes.
 
-Jordan Ellsworth', 4500, 'sent', false, false, false, NULL, NULL, '2026-09-20T14:00:00Z', '2026-09-21T15:00:00Z', '2026-09-21T16:30:00Z'),
+Jordan Ellsworth', 4500, 'sent', false, false, false, NULL, NULL, '2026-09-20T14:00:00Z', '2026-09-22T15:00:00Z', '2026-09-21T16:30:00Z'),
 ('OPP-0034', NULL, 'ACC-050', 'REP-06', 13, 'Field-Work Planner', 'List-based prospecting: Neufeld Ranch was called as part of the quarterly territory sweep, not in response to a weather event.', 'FieldSense Field-Work Planner for Neufeld Ranch', 'Hi Linda,
 
 Checking in on Field-Work Planner for your 3,500 acres. Happy to walk through it when you have fifteen minutes.
@@ -326,27 +342,167 @@ Tyler Bramlett', 19300, 'sent', false, false, false, NULL, NULL, '2026-08-27T14:
 
 Checking in on Yield & Insurance Records for your 1,600 acres. Happy to walk through it when you have fifteen minutes.
 
-Renee Okafor', 4900, 'sent', false, false, false, NULL, NULL, '2026-09-01T14:00:00Z', '2026-09-01T20:00:00Z', '2026-09-02T12:00:00Z'),
-('OPP-0039', 'SIG-0020', 'ACC-009', 'REP-04', 82, 'Irrigation Scheduling', 'Hartman Family Farm runs 1,600 acres of wheat in Cimarron County, which D3 to D4 this week; a watering plan pays for itself in the week allocations tighten.', 'Cimarron County just moved to exceptional drought — a watering plan for the acres you can still irrigate', 'Hi Sandra,
+Renee Okafor', 4900, 'sent', false, false, false, NULL, NULL, '2026-09-01T14:00:00Z', '2026-09-01T20:00:00Z', '2026-09-02T00:00:00Z'),
+('OPP-0200', 'SIG-0103', 'ACC-029', 'REP-01', 0, 'Yield & Insurance Records', 'Hartman Grain Co. has 800 acres of corn in Finney County under highs above 100°F for 5 consecutive days; yield loss documentation starts now if a claim follows.', 'Finney County heat during grain fill — getting your yield records in order now', 'Hi Kevin,
 
-Cimarron County, OK drought category worsened to D4 (Exceptional Drought) this week (US Drought Monitor). With 1,600 acres of wheat, FieldSense Irrigation Scheduling can tell you which fields matter most this week and keep the records straight if it turns into a claim.
+Finney County, KS forecast shows highs above 100°F for 5 consecutive days during the corn pollination window (NOAA). With 800 acres of corn, FieldSense Yield & Insurance Records can tell you which fields matter most this week and keep the records straight if it turns into a claim.
 
 Fifteen minutes Thursday?
 
-Renee Okafor', 8900, 'sent', false, true, false, NULL, NULL, '2026-09-28T09:00:00Z', '2026-09-28T12:00:00Z', '2026-09-29T12:00:00Z'),
-('OPP-0040', 'SIG-0020', 'ACC-021', 'REP-04', 73, 'Irrigation Scheduling', 'Sorensen Ag Partners runs 4,200 acres of corn in Cimarron County, which D3 to D4 this week; a watering plan pays for itself in the week allocations tighten.', 'Cimarron County just moved to exceptional drought — a watering plan for the acres you can still irrigate', 'Hi Sandra,
+Jordan Ellsworth', 3700, 'lost', false, true, false, NULL, NULL, '2026-07-13T09:00:00Z', '2026-07-14T16:00:00Z', '2026-07-15T22:00:00Z'),
+('OPP-0201', 'SIG-0103', 'ACC-022', 'REP-01', 100, 'Yield & Insurance Records', 'Suderman Ranch has 800 acres of corn in Finney County under highs above 100°F for 5 consecutive days; yield loss documentation starts now if a claim follows.', 'Finney County heat during grain fill — getting your yield records in order now', 'Hi Linda,
+
+Finney County, KS forecast shows highs above 100°F for 5 consecutive days during the corn pollination window (NOAA). With 800 acres of corn, FieldSense Yield & Insurance Records can tell you which fields matter most this week and keep the records straight if it turns into a claim.
+
+Fifteen minutes Thursday?
+
+Jordan Ellsworth', 3700, 'won', false, true, false, NULL, NULL, '2026-07-13T09:00:00Z', '2026-07-14T17:00:00Z', '2026-07-16T04:00:00Z'),
+('OPP-0202', 'SIG-0104', 'ACC-039', 'REP-05', 0, 'Irrigation Scheduling', 'Suderman Land & Cattle Co. runs 800 acres of wheat in Moore County, which D0 to D1 this week; a watering plan pays for itself in the week allocations tighten.', 'Moore County just moved to moderate drought — a watering plan for the acres you can still irrigate', 'Hi Daniel,
+
+Moore County, TX drought category worsened to D1 (Moderate Drought) this week (US Drought Monitor). With 800 acres of wheat, FieldSense Irrigation Scheduling can tell you which fields matter most this week and keep the records straight if it turns into a claim.
+
+Fifteen minutes Thursday?
+
+Tyler Bramlett', 5700, 'lost', false, true, false, NULL, NULL, '2026-07-13T09:00:00Z', '2026-07-18T09:00:00Z', '2026-07-20T10:00:00Z'),
+('OPP-0203', 'SIG-0105', 'ACC-048', 'REP-06', 79, 'Field-Work Planner', 'Ehler Agri-Services has 4,200 acres in Keith County facing 3.3in of rain over 3 days with a hail warning; field-work windows are the constraint this week.', 'Keith County: 3.3in of rain over 3 days with a hail warning — planning the field days you have left', 'Hi David,
+
+Keith County, NE 7-day forecast shows 3.3in of rain over 3 days with a hail warning, closing multiple field-work days (NOAA). With 4,200 acres of corn, FieldSense Field-Work Planner can tell you which fields matter most this week and keep the records straight if it turns into a claim.
+
+Fifteen minutes Thursday?
+
+Sofia Marchetti', 13000, 'sent', false, true, false, NULL, NULL, '2026-07-20T09:00:00Z', '2026-07-27T10:00:00Z', '2026-07-29T14:00:00Z'),
+('OPP-0204', 'SIG-0105', 'ACC-036', 'REP-06', 100, 'Field-Work Planner', 'Miller Agri-Services has 1,200 acres in Keith County facing 3.3in of rain over 3 days with a hail warning; field-work windows are the constraint this week.', 'Keith County: 3.3in of rain over 3 days with a hail warning — planning the field days you have left', 'Hi Michael,
+
+Keith County, NE 7-day forecast shows 3.3in of rain over 3 days with a hail warning, closing multiple field-work days (NOAA). With 1,200 acres of corn, FieldSense Field-Work Planner can tell you which fields matter most this week and keep the records straight if it turns into a claim.
+
+Fifteen minutes Thursday?
+
+Sofia Marchetti', 5500, 'won', false, true, false, NULL, NULL, '2026-07-20T09:00:00Z', '2026-07-26T23:00:00Z', '2026-07-28T08:00:00Z'),
+('OPP-0205', 'SIG-0106', 'ACC-011', 'REP-04', 62, 'Irrigation Scheduling', 'Peters Family Farm runs 4,200 acres of corn in Texas County, which D0 to D1 this week; a watering plan pays for itself in the week allocations tighten.', 'Texas County just moved to moderate drought — a watering plan for the acres you can still irrigate', 'Hi Daniel,
+
+Texas County, OK drought category worsened to D1 (Moderate Drought) this week (US Drought Monitor). With 4,200 acres of corn, FieldSense Irrigation Scheduling can tell you which fields matter most this week and keep the records straight if it turns into a claim.
+
+Fifteen minutes Thursday?
+
+Renee Okafor', 19300, 'sent', false, true, false, NULL, NULL, '2026-07-20T09:00:00Z', '2026-07-20T07:00:00Z', '2026-07-21T05:00:00Z'),
+('OPP-0206', 'SIG-0107', 'ACC-001', 'REP-01', 71, 'Yield & Insurance Records', 'Whitfield Land & Cattle Co. has 2,200 acres of wheat in Grant County under highs above 95°F for 3+ consecutive days; yield loss documentation starts now if a claim follows.', 'Grant County heat during grain fill — getting your yield records in order now', 'Hi Mary,
+
+Grant County, KS forecast shows highs above 95°F for 3+ consecutive days during grain fill (NOAA). With 2,200 acres of wheat, FieldSense Yield & Insurance Records can tell you which fields matter most this week and keep the records straight if it turns into a claim.
+
+Fifteen minutes Thursday?
+
+Jordan Ellsworth', 5800, 'pushed', false, true, false, NULL, NULL, '2026-07-27T09:00:00Z', '2026-07-28T09:00:00Z', NULL),
+('OPP-0207', 'SIG-0107', 'ACC-016', 'REP-01', 100, 'Yield & Insurance Records', 'Alvarado Bros. Farms has 2,200 acres of corn in Grant County under highs above 95°F for 3+ consecutive days; yield loss documentation starts now if a claim follows.', 'Grant County heat during grain fill — getting your yield records in order now', 'Hi David,
+
+Grant County, KS forecast shows highs above 95°F for 3+ consecutive days during grain fill (NOAA). With 2,200 acres of corn, FieldSense Yield & Insurance Records can tell you which fields matter most this week and keep the records straight if it turns into a claim.
+
+Fifteen minutes Thursday?
+
+Jordan Ellsworth', 5800, 'won', false, true, false, NULL, NULL, '2026-07-27T09:00:00Z', '2026-07-28T10:00:00Z', '2026-07-30T05:00:00Z'),
+('OPP-0208', 'SIG-0108', 'ACC-020', 'REP-06', 56, 'Irrigation Scheduling', 'Weber Land & Cattle Co. runs 5,000 acres of wheat in Cheyenne County, which D1 to D2 this week; a watering plan pays for itself in the week allocations tighten.', 'Cheyenne County just moved to severe drought — a watering plan for the acres you can still irrigate', 'Hi Brian,
+
+Cheyenne County, NE drought category worsened to D2 (Severe Drought) this week (US Drought Monitor). With 5,000 acres of wheat, FieldSense Irrigation Scheduling can tell you which fields matter most this week and keep the records straight if it turns into a claim.
+
+Fifteen minutes Thursday?
+
+Sofia Marchetti', 22500, 'pushed', false, true, false, NULL, NULL, '2026-07-27T09:00:00Z', '2026-08-01T15:00:00Z', NULL),
+('OPP-0209', 'SIG-0108', 'ACC-050', 'REP-06', 59, 'Irrigation Scheduling', 'Neufeld Ranch runs 3,500 acres of corn in Cheyenne County, which D1 to D2 this week; a watering plan pays for itself in the week allocations tighten.', 'Cheyenne County just moved to severe drought — a watering plan for the acres you can still irrigate', 'Hi Linda,
+
+Cheyenne County, NE drought category worsened to D2 (Severe Drought) this week (US Drought Monitor). With 3,500 acres of corn, FieldSense Irrigation Scheduling can tell you which fields matter most this week and keep the records straight if it turns into a claim.
+
+Fifteen minutes Thursday?
+
+Sofia Marchetti', 16500, 'pushed', false, true, false, NULL, NULL, '2026-07-27T09:00:00Z', '2026-08-02T18:00:00Z', NULL),
+('OPP-0210', 'SIG-0109', 'ACC-040', 'REP-01', 0, 'Irrigation Scheduling', 'Goertzen Agri-Services runs 6,500 acres of corn in Seward County, which D0 to D1 this week; a watering plan pays for itself in the week allocations tighten.', 'Seward County just moved to moderate drought — a watering plan for the acres you can still irrigate', 'Hi Michael,
+
+Seward County, KS drought category worsened to D1 (Moderate Drought) this week (US Drought Monitor). With 6,500 acres of corn, FieldSense Irrigation Scheduling can tell you which fields matter most this week and keep the records straight if it turns into a claim.
+
+Fifteen minutes Thursday?
+
+Jordan Ellsworth', 28500, 'lost', false, true, false, NULL, NULL, '2026-08-03T09:00:00Z', '2026-08-04T10:00:00Z', '2026-08-05T18:00:00Z'),
+('OPP-0211', 'SIG-0110', 'ACC-007', 'REP-05', 86, 'Yield & Insurance Records', 'Janzen Land & Cattle Co. has 2,200 acres of cotton in Deaf Smith County under highs above 98°F for 4 consecutive days; yield loss documentation starts now if a claim follows.', 'Deaf Smith County heat during grain fill — getting your yield records in order now', 'Hi Ruth,
+
+Deaf Smith County, TX forecast shows highs above 98°F for 4 consecutive days during grain fill (NOAA). With 2,200 acres of cotton, FieldSense Yield & Insurance Records can tell you which fields matter most this week and keep the records straight if it turns into a claim.
+
+Fifteen minutes Thursday?
+
+Tyler Bramlett', 5800, 'pushed', false, true, false, NULL, NULL, '2026-08-03T09:00:00Z', '2026-08-08T00:00:00Z', NULL),
+('OPP-0212', 'SIG-0112', 'ACC-009', 'REP-04', 100, 'Irrigation Scheduling', 'Hartman Family Farm runs 1,600 acres of corn in Cimarron County, which D2 to D3 this week; a watering plan pays for itself in the week allocations tighten.', 'Cimarron County just moved to extreme drought — a watering plan for the acres you can still irrigate', 'Hi Sandra,
+
+Cimarron County, OK drought category worsened to D3 (Extreme Drought) this week (US Drought Monitor). With 1,600 acres of corn, FieldSense Irrigation Scheduling can tell you which fields matter most this week and keep the records straight if it turns into a claim.
+
+Fifteen minutes Thursday?
+
+Renee Okafor', 8900, 'won', false, true, false, NULL, NULL, '2026-08-10T09:00:00Z', '2026-08-10T09:00:00Z', '2026-08-11T03:00:00Z'),
+('OPP-0213', 'SIG-0112', 'ACC-021', 'REP-04', 79, 'Irrigation Scheduling', 'Sorensen Ag Partners runs 4,200 acres of corn in Cimarron County, which D2 to D3 this week; a watering plan pays for itself in the week allocations tighten.', 'Cimarron County just moved to extreme drought — a watering plan for the acres you can still irrigate', 'Hi Sandra,
+
+Cimarron County, OK drought category worsened to D3 (Extreme Drought) this week (US Drought Monitor). With 4,200 acres of corn, FieldSense Irrigation Scheduling can tell you which fields matter most this week and keep the records straight if it turns into a claim.
+
+Fifteen minutes Thursday?
+
+Renee Okafor', 19300, 'sent', false, true, false, NULL, NULL, '2026-08-10T09:00:00Z', '2026-08-10T07:00:00Z', '2026-08-11T04:00:00Z'),
+('OPP-0214', 'SIG-0113', 'ACC-022', 'REP-01', 100, 'Irrigation Scheduling', 'Suderman Ranch runs 800 acres of corn in Finney County, which D1 to D2 this week; a watering plan pays for itself in the week allocations tighten.', 'Finney County just moved to severe drought — a watering plan for the acres you can still irrigate', 'Hi Linda,
+
+Finney County, KS drought category worsened to D2 (Severe Drought) this week (US Drought Monitor). With 800 acres of corn, FieldSense Irrigation Scheduling can tell you which fields matter most this week and keep the records straight if it turns into a claim.
+
+Fifteen minutes Thursday?
+
+Jordan Ellsworth', 5700, 'won', false, true, false, NULL, NULL, '2026-08-17T09:00:00Z', '2026-08-18T08:00:00Z', '2026-08-19T09:00:00Z'),
+('OPP-0215', 'SIG-0113', 'ACC-026', 'REP-01', 0, 'Irrigation Scheduling', 'Ratzlaff Farms & Feedlot runs 2,200 acres of corn in Finney County, which D1 to D2 this week; a watering plan pays for itself in the week allocations tighten.', 'Finney County just moved to severe drought — a watering plan for the acres you can still irrigate', 'Hi Mary,
+
+Finney County, KS drought category worsened to D2 (Severe Drought) this week (US Drought Monitor). With 2,200 acres of corn, FieldSense Irrigation Scheduling can tell you which fields matter most this week and keep the records straight if it turns into a claim.
+
+Fifteen minutes Thursday?
+
+Jordan Ellsworth', 11300, 'lost', false, true, false, NULL, NULL, '2026-08-17T09:00:00Z', '2026-08-18T15:00:00Z', '2026-08-20T06:00:00Z'),
+('OPP-0216', 'SIG-0114', 'ACC-027', 'REP-06', 100, 'Irrigation Scheduling', 'Thiessen Farms runs 2,800 acres of dry beans in Box Butte County, which D2 to D3 this week; a watering plan pays for itself in the week allocations tighten.', 'Box Butte County just moved to extreme drought — a watering plan for the acres you can still irrigate', 'Hi Steven,
+
+Box Butte County, NE drought category worsened to D3 (Extreme Drought) this week (US Drought Monitor). With 2,800 acres of dry beans, FieldSense Irrigation Scheduling can tell you which fields matter most this week and keep the records straight if it turns into a claim.
+
+Fifteen minutes Thursday?
+
+Sofia Marchetti', 13700, 'won', false, true, false, NULL, NULL, '2026-08-17T09:00:00Z', '2026-08-22T03:00:00Z', '2026-08-23T09:00:00Z'),
+('OPP-0217', 'SIG-0115', 'ACC-004', 'REP-04', 100, 'Irrigation Scheduling', 'Friesen Agri-Services runs 1,600 acres of sorghum in Beaver County, which D1 to D2 this week; a watering plan pays for itself in the week allocations tighten.', 'Beaver County just moved to severe drought — a watering plan for the acres you can still irrigate', 'Hi Ruth,
+
+Beaver County, OK drought category worsened to D2 (Severe Drought) this week (US Drought Monitor). With 1,600 acres of sorghum, FieldSense Irrigation Scheduling can tell you which fields matter most this week and keep the records straight if it turns into a claim.
+
+Fifteen minutes Thursday?
+
+Renee Okafor', 8900, 'won', false, true, false, NULL, NULL, '2026-08-24T09:00:00Z', '2026-08-24T04:00:00Z', '2026-08-24T20:00:00Z'),
+('OPP-0218', 'SIG-0115', 'ACC-033', 'REP-04', 85, 'Irrigation Scheduling', 'Unruh Land & Cattle Co. runs 3,500 acres of wheat in Beaver County, which D1 to D2 this week; a watering plan pays for itself in the week allocations tighten.', 'Beaver County just moved to severe drought — a watering plan for the acres you can still irrigate', 'Hi Robert,
+
+Beaver County, OK drought category worsened to D2 (Severe Drought) this week (US Drought Monitor). With 3,500 acres of wheat, FieldSense Irrigation Scheduling can tell you which fields matter most this week and keep the records straight if it turns into a claim.
+
+Fifteen minutes Thursday?
+
+Renee Okafor', 16500, 'sent', false, true, false, NULL, NULL, '2026-08-24T09:00:00Z', '2026-08-24T07:00:00Z', '2026-08-24T20:00:00Z'),
+('OPP-0219', 'SIG-0115', 'ACC-006', 'REP-04', 100, 'Irrigation Scheduling', 'Voss Ag Partners runs 2,200 acres of wheat in Beaver County, which D1 to D2 this week; a watering plan pays for itself in the week allocations tighten.', 'Beaver County just moved to severe drought — a watering plan for the acres you can still irrigate', 'Hi Mark,
+
+Beaver County, OK drought category worsened to D2 (Severe Drought) this week (US Drought Monitor). With 2,200 acres of wheat, FieldSense Irrigation Scheduling can tell you which fields matter most this week and keep the records straight if it turns into a claim.
+
+Fifteen minutes Thursday?
+
+Renee Okafor', 11300, 'won', false, true, false, NULL, NULL, '2026-08-24T09:00:00Z', '2026-08-24T04:00:00Z', '2026-08-24T16:00:00Z'),
+('OPP-0220', 'SIG-0020', 'ACC-009', 'REP-04', 82, 'Field-Work Planner', 'Hartman Family Farm runs 1,600 acres of corn in Cimarron County, which D3 to D4 this week; a watering plan pays for itself in the week allocations tighten.', 'Cimarron County just moved to exceptional drought — a watering plan for the acres you can still irrigate', 'Hi Sandra,
+
+Cimarron County, OK drought category worsened to D4 (Exceptional Drought) this week (US Drought Monitor). With 1,600 acres of corn, FieldSense Field-Work Planner can tell you which fields matter most this week and keep the records straight if it turns into a claim.
+
+Fifteen minutes Thursday?
+
+Renee Okafor', 6500, 'sent', false, true, false, NULL, NULL, '2026-09-28T09:00:00Z', '2026-09-28T12:00:00Z', '2026-09-29T12:00:00Z'),
+('OPP-0221', 'SIG-0020', 'ACC-021', 'REP-04', 73, 'Irrigation Scheduling', 'Sorensen Ag Partners runs 4,200 acres of corn in Cimarron County, which D3 to D4 this week; a watering plan pays for itself in the week allocations tighten.', 'Cimarron County just moved to exceptional drought — a watering plan for the acres you can still irrigate', 'Hi Sandra,
 
 Cimarron County, OK drought category worsened to D4 (Exceptional Drought) this week (US Drought Monitor). With 4,200 acres of corn, FieldSense Irrigation Scheduling can tell you which fields matter most this week and keep the records straight if it turns into a claim.
 
 Fifteen minutes Thursday?
 
 Renee Okafor', 19300, 'pushed', false, true, false, NULL, NULL, '2026-09-28T09:00:00Z', '2026-09-28T14:00:00Z', NULL),
-('OPP-0041', NULL, 'ACC-001', 'REP-05', 9, 'Irrigation Scheduling', 'List-based prospecting: Whitfield Land & Cattle Co. was called from a purchased list; no weather event in play.', 'FieldSense Irrigation Scheduling for Whitfield Land & Cattle Co.', 'Hi Mary,
+('OPP-0222', NULL, 'ACC-001', 'REP-05', 11, 'Irrigation Scheduling', 'List-based prospecting: Whitfield Land & Cattle Co. was called from a purchased list; no weather event in play.', 'FieldSense Irrigation Scheduling for Whitfield Land & Cattle Co.', 'Hi Mary,
 
 Reaching out about FieldSense Irrigation Scheduling. Let me know if there is a good time to talk.
 
 Tyler Bramlett', 11300, 'pushed', false, false, true, NULL, NULL, '2026-08-18T14:00:00Z', '2026-08-25T15:00:00Z', NULL),
-('OPP-0042', NULL, 'ACC-003', 'REP-05', 10, 'Irrigation Scheduling', 'List-based prospecting: Neufeld Grain Co. was called from a purchased list; no weather event in play.', 'FieldSense Irrigation Scheduling for Neufeld Grain Co.', 'Hi Robert,
+('OPP-0223', NULL, 'ACC-003', 'REP-05', 9, 'Irrigation Scheduling', 'List-based prospecting: Neufeld Grain Co. was called from a purchased list; no weather event in play.', 'FieldSense Irrigation Scheduling for Neufeld Grain Co.', 'Hi Robert,
 
 Reaching out about FieldSense Irrigation Scheduling. Let me know if there is a good time to talk.
 

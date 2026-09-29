@@ -2,11 +2,10 @@
 
 import { revalidatePath } from "next/cache";
 import { rewriteEmail, type RewriteRequest } from "@/lib/claude";
-import { eventLine } from "@/lib/format";
-import { demoOpportunityId, pushToSalesforce, salesforceConfigured } from "@/lib/salesforce";
+import { buildSequence } from "@/lib/sequence";
 import { refreshSignals, type RefreshResult } from "@/lib/signals-refresh";
 import { getSupabase } from "@/lib/supabase";
-import type { Account, Opportunity, Rep, Signal, Stage } from "@/lib/types";
+import { SEQUENCE_DAYS, type Account, type Opportunity, type OutreachStep, type Rep, type Signal, type Stage } from "@/lib/types";
 
 // The dataset is small and every page reads all of it, so any write
 // revalidates the whole app.
@@ -141,59 +140,100 @@ export async function resetEmailAction(oppId: string): Promise<RewriteActionResu
 
 // ---------------------------------------------------------------- stages
 
-export type PushActionResult =
-  | { ok: true; outcome: "salesforce"; url: string }
-  | { ok: true; outcome: "demo"; url: string }
-  | { ok: true; outcome: "queued"; reason: string }
-  | { ok: false; error: string };
-
-export async function pushToCrmAction(oppId: string): Promise<PushActionResult> {
+// VS-7: Signal Desk is standalone. Accepting a lead moves it into the rep's
+// pipeline (internal stage "pushed", shown as "Accepted") and starts the clock
+// for the outreach sequence. Nothing leaves the app.
+export async function acceptLeadAction(oppId: string): Promise<{ ok: boolean; error?: string }> {
   try {
-    const { opp, account, signal } = await loadOpp(oppId);
-    const now = new Date().toISOString();
-    const db = getSupabase();
-    const moved = { stage: opp.stage === "draft" ? "pushed" : opp.stage, pushed_at: opp.pushed_at ?? now };
-
-    // No org connected: demo mode. The push succeeds with a DEMO- id and a mock record page.
-    if (!salesforceConfigured()) {
-      const { error } = await db
-        .from("opportunities")
-        .update({ ...moved, sf_opportunity_id: opp.sf_opportunity_id ?? demoOpportunityId(), sf_error: null })
-        .eq("id", oppId);
-      if (error) return { ok: false, error: `Could not save the push (${error.message}).` };
-      revalidateAll();
-      return { ok: true, outcome: "demo", url: `/crm/${oppId}` };
-    }
-
-    // Org connected: a real push. A real failure is queued and can be retried.
-    const event = signal ? eventLine(signal) : "list prospecting";
-    const sf = await pushToSalesforce({
-      accountName: account.name,
-      opportunityName: `${account.name} — ${opp.lead_with} — ${event}`,
-      amount: opp.amount,
-      description: `${opp.why_now}\n\nSubject: ${opp.email_subject}\n\n${opp.email_body}`,
-    });
-    const { error } = await db
+    const { opp } = await loadOpp(oppId);
+    if (opp.stage !== "draft") return { ok: true };
+    const { error } = await getSupabase()
       .from("opportunities")
-      .update({
-        ...moved,
-        sf_opportunity_id: sf.ok ? sf.opportunityId : opp.sf_opportunity_id,
-        sf_error: sf.ok ? null : sf.error,
-      })
+      .update({ stage: "pushed", pushed_at: opp.pushed_at ?? new Date().toISOString() })
       .eq("id", oppId);
-    if (error) return { ok: false, error: `Could not save the push (${error.message}).` };
+    if (error) return { ok: false, error: error.message };
     revalidateAll();
-    return sf.ok ? { ok: true, outcome: "salesforce", url: sf.url } : { ok: true, outcome: "queued", reason: sf.error };
+    return { ok: true };
   } catch (e) {
     return { ok: false, error: message(e) };
   }
 }
 
+// "sent" from a closed stage is the Reopen correction; it keeps the original sent_at.
 export async function setStageAction(oppId: string, stage: Extract<Stage, "sent" | "won" | "lost">): Promise<{ ok: boolean; error?: string }> {
   if (!OPP_ID.test(oppId)) return { ok: false, error: "Unknown opportunity." };
   const update: Record<string, unknown> = { stage };
-  if (stage === "sent") update.sent_at = new Date().toISOString();
+  if (stage === "sent") {
+    const { data } = await getSupabase().from("opportunities").select("sent_at").eq("id", oppId).maybeSingle();
+    if (!data?.sent_at) update.sent_at = new Date().toISOString();
+  }
   const { error } = await getSupabase().from("opportunities").update(update).eq("id", oppId);
+  if (error) return { ok: false, error: error.message };
+  revalidateAll();
+  return { ok: true };
+}
+
+// ---------------------------------------------------------------- sequence
+
+const STEP_ID = /^[0-9a-f-]{36}$/i;
+
+export type SequenceResult = { ok: true; aiOffline: boolean } | { ok: false; error: string };
+
+// Build the sequence, or Rebuild it: regenerates every step not yet done and
+// leaves done steps (and their status) alone.
+export async function buildSequenceAction(oppId: string): Promise<SequenceResult> {
+  try {
+    const { opp, account, signal, rep } = await loadOpp(oppId);
+    if (opp.stage === "won" || opp.stage === "lost") return { ok: false, error: "This opportunity is closed." };
+    const db = getSupabase();
+    const { data: existing, error: readErr } = await db.from("outreach_steps").select("*").eq("opportunity_id", oppId);
+    if (readErr) return { ok: false, error: `Sequences are not available yet (${readErr.message}).` };
+    const byDay = new Map(((existing ?? []) as OutreachStep[]).map((s) => [s.day, s]));
+    if (SEQUENCE_DAYS.every((d) => byDay.get(d)?.status === "done")) return { ok: true, aiOffline: false };
+
+    const draft = await buildSequence(account, signal, opp, { name: rep?.name ?? "Your rep", voice_note: rep?.voice_note ?? null });
+    for (const step of draft.steps) {
+      const prev = byDay.get(step.day);
+      if (prev?.status === "done") continue;
+      const row = { title: step.title, body: step.body, channel: step.channel, ai_offline: draft.ai_offline };
+      const { error } = prev
+        ? await db.from("outreach_steps").update(row).eq("id", prev.id)
+        : await db.from("outreach_steps").insert({ opportunity_id: oppId, day: step.day, status: "planned", ...row });
+      if (error) return { ok: false, error: error.message };
+    }
+    revalidateAll();
+    return { ok: true, aiOffline: draft.ai_offline };
+  } catch (e) {
+    return { ok: false, error: message(e) };
+  }
+}
+
+export async function scheduleAllAction(oppId: string): Promise<{ ok: boolean; error?: string }> {
+  if (!OPP_ID.test(oppId)) return { ok: false, error: "Unknown opportunity." };
+  const { error } = await getSupabase()
+    .from("outreach_steps")
+    .update({ status: "scheduled" })
+    .eq("opportunity_id", oppId)
+    .eq("status", "planned");
+  if (error) return { ok: false, error: error.message };
+  revalidateAll();
+  return { ok: true };
+}
+
+export async function setStepDoneAction(stepId: string, done: boolean): Promise<{ ok: boolean; error?: string }> {
+  if (!STEP_ID.test(stepId)) return { ok: false, error: "Unknown step." };
+  const { error } = await getSupabase()
+    .from("outreach_steps")
+    .update(done ? { status: "done", done_at: new Date().toISOString() } : { status: "scheduled", done_at: null })
+    .eq("id", stepId);
+  if (error) return { ok: false, error: error.message };
+  revalidateAll();
+  return { ok: true };
+}
+
+export async function saveStepAction(stepId: string, body: string): Promise<{ ok: boolean; error?: string }> {
+  if (!STEP_ID.test(stepId)) return { ok: false, error: "Unknown step." };
+  const { error } = await getSupabase().from("outreach_steps").update({ body: body.slice(0, 3000) }).eq("id", stepId);
   if (error) return { ok: false, error: error.message };
   revalidateAll();
   return { ok: true };
@@ -214,7 +254,8 @@ export async function saveVoiceNoteAction(repId: string, note: string): Promise<
 
 const DEMO_SIGNAL = "SIG-0023";
 
-// Hackathon only (/about?admin=1): clears the Finney demo so Generate can run live again.
+// Hackathon only (/about?admin=1): clears the Finney demo so Generate can run
+// live again. Its outreach steps go with the opportunities (on delete cascade).
 export async function resetDemoAction(): Promise<{ ok: boolean; message: string }> {
   try {
     const db = getSupabase();

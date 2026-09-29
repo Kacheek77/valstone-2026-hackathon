@@ -2,25 +2,33 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { DraftEditor } from "@/components/DraftEditor";
 import { Header } from "@/components/Header";
-import { OppActions, type CrmState } from "@/components/OppActions";
+import { OppActions, ReopenLink } from "@/components/OppActions";
 import { BackLink, Card, ErrorBox, Page, StageBadge } from "@/components/ui";
 import { loadAll } from "@/lib/data";
 import { dateTime, eventLine, usdExact } from "@/lib/format";
-import { isDemoId, recordUrl } from "@/lib/salesforce";
+import { stepProgress } from "@/lib/steps";
 import { isLead } from "@/lib/types";
 import { getView } from "@/lib/view";
 
 export const dynamic = "force-dynamic";
 
 const OPP_ID = /^OPP-\d{4}$/;
+const SIGNAL_ID = /^SIG-\d{4}$/;
 
 function Label({ children }: { children: React.ReactNode }) {
   return <p className="text-xs font-semibold uppercase tracking-wider text-[#7a8794]">{children}</p>;
 }
 
+function shortDate(iso: string): string {
+  return new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "America/Chicago" });
+}
+
 export default async function OpportunityPage(props: PageProps<"/opportunities/[id]">) {
   const { id } = await props.params;
   if (!OPP_ID.test(id)) notFound();
+  const sp = await props.searchParams;
+  // Tweak 4: "← Pipeline" keeps the signal filter only when the user came from a filtered list.
+  const fromSignal = typeof sp.from === "string" && SIGNAL_ID.test(sp.from) ? sp.from : null;
   const view = await getView();
 
   const loaded = await loadAll();
@@ -34,43 +42,23 @@ export default async function OpportunityPage(props: PageProps<"/opportunities/[
       </>
     );
   }
-  const { reps, accounts, signals, opps } = loaded.data;
+  const { reps, accounts, signals, opps, steps } = loaded.data;
   const opp = opps.find((o) => o.id === id);
   if (!opp) notFound();
   const account = accounts.find((a) => a.id === opp.account_id);
   const signal = signals.find((s) => s.id === opp.signal_id);
   const rep = reps.find((r) => r.id === opp.rep_id);
-  const demo = isDemoId(opp.sf_opportunity_id);
-  const realUrl = opp.sf_opportunity_id && !demo ? recordUrl(opp.sf_opportunity_id) : null;
-  const crm: CrmState = demo
-    ? { kind: "demo", url: `/crm/${opp.id}` }
-    : realUrl
-      ? { kind: "real", url: realUrl }
-      : opp.sf_error
-        ? { kind: "queued" }
-        : { kind: "none" };
-
-  const crmLine =
-    opp.stage === "draft" ? (
-      "Not in the CRM yet. Push creates the Opportunity and a follow-up Task."
-    ) : crm.kind === "demo" || crm.kind === "real" ? (
-      <span className="flex flex-wrap items-center gap-x-2">
-        <span className="font-semibold text-[#1f9d55]">✓ Pushed to Salesforce · Opportunity and Task created</span>
-        {crm.kind === "demo" && <span className="text-xs text-[#7a8794]">(demo mode — no org connected)</span>}
-        {opp.pushed_at && <span className="text-xs text-[#7a8794]">{dateTime(opp.pushed_at)}</span>}
-      </span>
-    ) : crm.kind === "queued" ? (
-      `Queued for CRM sync${opp.pushed_at ? ` since ${dateTime(opp.pushed_at)}` : ""}: ${opp.sf_error}`
-    ) : (
-      "Pushed before Signal Desk recorded CRM ids (seeded history). Create in CRM makes the record now."
-    );
+  const closed = opp.stage === "won" || opp.stage === "lost";
+  const progress = stepProgress(opp, steps);
+  // Closing date: the most recent timestamp we have for the opportunity.
+  const closedOn = opp.sent_at ?? opp.pushed_at ?? opp.created_at;
 
   return (
     <>
       <Header view={view} reps={reps} active="pipeline" />
       <Page>
         <div className="mb-4">
-          <BackLink href={signal ? `/pipeline?signal=${signal.id}` : "/pipeline"} label="Pipeline" />
+          <BackLink href={fromSignal ? `/pipeline?signal=${fromSignal}` : "/pipeline"} label="Pipeline" />
         </div>
         <div className="grid gap-5 lg:grid-cols-[340px_minmax(0,1fr)]">
           <div className="flex min-w-0 flex-col gap-3">
@@ -79,13 +67,15 @@ export default async function OpportunityPage(props: PageProps<"/opportunities/[
               <p className="mt-1 text-lg font-bold">{account?.name ?? "Unknown account"}</p>
               {account && (
                 <div className="text-sm text-[#3f4e5b]">
-                  <p
-                    className="truncate"
-                    title={[account.contact_name, account.contact_email].filter(Boolean).join(" · ")}
-                  >
+                  <p className="truncate" title={[account.contact_name, account.contact_role, account.contact_email].filter(Boolean).join(" · ")}>
                     {account.contact_name}
-                    {account.contact_email ? ` · ${account.contact_email}` : ""}
+                    {account.contact_role ? <span className="text-[#7a8794]"> · {account.contact_role}</span> : null}
                   </p>
+                  {account.contact_email && (
+                    <p className="truncate text-[#5a6975]" title={account.contact_email}>
+                      {account.contact_email}
+                    </p>
+                  )}
                   <p>
                     {account.county}, {account.state} ·{" "}
                     <span className={account.customer_status === "Customer" ? "text-[#1f9d55]" : "text-[#c47d00]"}>
@@ -99,6 +89,7 @@ export default async function OpportunityPage(props: PageProps<"/opportunities/[
                     <span className="font-semibold">Owns:</span>{" "}
                     {account.modules_owned.length ? account.modules_owned.join(", ") : "no FieldSense modules yet"}
                   </p>
+                  {account.notes && <p className="mt-2 text-[#7a8794]">Rep&apos;s note: {account.notes}</p>}
                 </div>
               )}
             </Card>
@@ -134,33 +125,69 @@ export default async function OpportunityPage(props: PageProps<"/opportunities/[
           </div>
 
           <div className="flex min-w-0 flex-col gap-3">
+            {closed && (
+              <div
+                className={`flex flex-wrap items-center justify-between gap-2 rounded-xl px-5 py-3 font-semibold ${
+                  opp.stage === "won" ? "bg-[#e6f4ec] text-[#14693a]" : "bg-[#eef0f2] text-[#3f4e5b]"
+                }`}
+              >
+                <span>
+                  Closed · {opp.stage === "won" ? "Won" : "Lost"} on {shortDate(closedOn)}
+                </span>
+                <ReopenLink oppId={opp.id} />
+              </div>
+            )}
             <Card className="px-5 py-4">
               <Label>Why now</Label>
               <p className="mt-1 leading-relaxed">{opp.why_now}</p>
             </Card>
             <Card className="px-5 py-4">
               <div className="mb-3 flex items-center justify-between">
-                <Label>Draft email</Label>
-                {rep?.voice_note && (
+                <Label>{closed ? "Email" : "Draft email"}</Label>
+                {!closed && rep?.voice_note && (
                   <p className="text-xs text-[#7a8794]" title={rep.voice_note}>
                     Written in {rep.name.split(" ")[0]}&apos;s voice
                   </p>
                 )}
               </div>
               <DraftEditor
-                // Keyed on the id only: the editor already holds the rewritten text, and
-                // remounting on every refresh would wipe its status line.
-                key={opp.id}
+                // Keyed on the id (and open/closed) only: the editor already holds the
+                // rewritten text, and remounting on every refresh would wipe its status line.
+                key={`${opp.id}-${closed ? "closed" : "open"}`}
                 oppId={opp.id}
                 subject={opp.email_subject}
                 body={opp.email_body}
                 historyLength={opp.email_history?.length ?? 0}
+                readOnly={closed}
               />
             </Card>
-            <Card className="flex flex-col gap-3 px-5 py-4">
-              <OppActions oppId={opp.id} stage={opp.stage} crm={crm} />
-              <div className="text-sm text-[#5a6975]">{crmLine}</div>
-            </Card>
+            {closed ? (
+              <Card className="px-5 py-4 text-sm text-[#5a6975]">
+                <Link href={`/opportunities/${opp.id}/sequence`} className="font-semibold text-[#3a728a] hover:underline">
+                  View outreach sequence →
+                </Link>
+                {progress && <span className="ml-2">{progress.done}/{progress.total} steps done</span>}
+              </Card>
+            ) : (
+              <Card className="flex flex-col gap-3 px-5 py-4">
+                <OppActions oppId={opp.id} stage={opp.stage} />
+                <div className="text-sm text-[#5a6975]">
+                  {opp.stage === "draft" ? (
+                    "Accept the lead to move it into your pipeline and start the outreach sequence."
+                  ) : (
+                    <span className="flex flex-wrap items-center gap-x-2">
+                      <span className="font-semibold text-[#1f9d55]">✓ Accepted into your pipeline</span>
+                      {opp.pushed_at && <span className="text-xs text-[#7a8794]">{dateTime(opp.pushed_at)}</span>}
+                      {progress && (
+                        <span className="text-xs text-[#7a8794]">
+                          · sequence {progress.done}/{progress.total} steps
+                        </span>
+                      )}
+                    </span>
+                  )}
+                </div>
+              </Card>
+            )}
           </div>
         </div>
       </Page>

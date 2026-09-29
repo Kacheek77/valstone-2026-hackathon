@@ -1,8 +1,10 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { CountUp } from "@/components/CountUp";
+import { CardGenerateButton } from "@/components/GenerateButton";
 import { Header } from "@/components/Header";
 import { RefreshButton } from "@/components/RefreshButton";
+import { TaskDoneButton } from "@/components/TaskDoneButton";
 import { Sparkline } from "@/components/Sparkline";
 import { MapLegend, TerritoryMap } from "@/components/TerritoryMap";
 import {
@@ -12,7 +14,6 @@ import {
   InfoTip,
   OutlineButtonLink,
   Page,
-  PrimaryButtonLink,
   SignalIcon,
   Tile,
 } from "@/components/ui";
@@ -20,6 +21,7 @@ import { currentWeek, inWeek, loadAll, type AllData } from "@/lib/data";
 import { eventLine, firstName, usd, weekLabel } from "@/lib/format";
 import { matchAccounts } from "@/lib/match";
 import { captureRate, expectedValue, signalWeeks, sumValues } from "@/lib/metrics";
+import { formatDue, tasksDue } from "@/lib/steps";
 import { isLead, type Opportunity, type Signal } from "@/lib/types";
 import { getView, parseView } from "@/lib/view";
 
@@ -108,6 +110,8 @@ export default async function Dashboard(props: PageProps<"/dashboard">) {
   // The period decides what the map, cards and tiles show.
   const repSignals = repAllSignals.filter((s) => inPeriod(s.week_of, week, period.days));
   const myAccounts = accounts.filter((a) => a.rep_id === rep.id);
+  const tasks = tasksDue(data, rep.id);
+  const accountName = new Map(accounts.map((a) => [a.id, a.name]));
   const now = weekNumbers(repSignals, data);
 
   // Sparklines: the four weeks before this one, from the seeded history, then this week.
@@ -189,8 +193,12 @@ export default async function Dashboard(props: PageProps<"/dashboard">) {
                         {period.key !== "week" && <span className="text-[#7a8794]"> · {weekLabel(s.week_of)}</span>}
                       </p>
                     </div>
-                    {sOpps.length === 0 ? (
-                      <PrimaryButtonLink href={`/signals/${s.id}`}>Generate →</PrimaryButtonLink>
+                    {sOpps.length === 0 && matches.length > 0 ? (
+                      <CardGenerateButton signalId={s.id} pendingAccountIds={matches.map((m) => m.account.id)} />
+                    ) : sOpps.length === 0 ? (
+                      <OutlineButtonLink href={`/signals/${s.id}`} color="#7a8794">
+                        Review
+                      </OutlineButtonLink>
                     ) : leads.length > 0 ? (
                       <OutlineButtonLink href={`/pipeline?signal=${s.id}`}>
                         View {leads.length} lead{leads.length === 1 ? "" : "s"}
@@ -220,7 +228,7 @@ export default async function Dashboard(props: PageProps<"/dashboard">) {
                   <span className="flex items-center gap-1.5">
                     Capture rate
                     <InfoTip label="How capture rate is calculated">
-                      Expected value you pushed, sent or won, divided by the expected value the weather created: every generated
+                      Expected value you accepted, sent or won, divided by the expected value the weather created: every generated
                       opportunity at amount × score, plus, for any signal you have not generated at all, its matched accounts at a
                       score of 50.
                     </InfoTip>
@@ -237,7 +245,7 @@ export default async function Dashboard(props: PageProps<"/dashboard">) {
                   <span className="flex items-center gap-1.5">
                     Hours saved
                     <InfoTip label="How hours saved is estimated" align="right">
-                      Opportunities generated × 20 minutes: the CRM record, note, task and email a rep would otherwise type by hand.
+                      Opportunities generated × 20 minutes: the research, record, note, task and email a rep would otherwise do by hand.
                       The 20 minutes is an estimate, not a measurement.
                     </InfoTip>
                   </span>
@@ -251,6 +259,33 @@ export default async function Dashboard(props: PageProps<"/dashboard">) {
               </Tile>
             </div>
             <p className="text-xs text-[#7a8794]">Sparklines show the four prior weeks of seeded history, then this week.</p>
+
+            <Card className="px-4 py-3">
+              <div className="mb-2 flex items-baseline justify-between">
+                <h2 className="font-semibold">My tasks</h2>
+                <span className="text-xs text-[#7a8794]">Scheduled outreach due in the next 7 days</span>
+              </div>
+              {tasks.length === 0 ? (
+                <p className="text-sm text-[#7a8794]">
+                  Nothing due. Accept a lead, then Build sequence and Schedule all on its sequence page.
+                </p>
+              ) : (
+                <ul className="divide-y divide-[#eef0f2]">
+                  {tasks.map((t) => (
+                    <li key={t.step.id} className="flex items-center gap-3 py-2 text-sm">
+                      <span className={`w-24 shrink-0 whitespace-nowrap ${t.overdue ? "font-semibold text-[#d23b3b]" : "text-[#5a6975]"}`}>
+                        {t.overdue ? "Overdue" : formatDue(t.due)}
+                      </span>
+                      <Link href={`/opportunities/${t.opp.id}/sequence`} className="min-w-0 flex-1 truncate hover:underline">
+                        <span className="font-medium">{accountName.get(t.opp.account_id) ?? "Account"}</span>
+                        <span className="text-[#5a6975]"> · Day {t.step.day} {t.step.channel} · {t.step.title}</span>
+                      </Link>
+                      <TaskDoneButton stepId={t.step.id} />
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </Card>
           </div>
         </div>
       </Page>
