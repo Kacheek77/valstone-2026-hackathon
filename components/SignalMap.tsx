@@ -508,8 +508,15 @@ export default function SignalMap({
         });
 
         const byId = new Map(data.signals.map((s) => [s.id, s]));
+        // A point is "on a signal" only where the signal's own county is; the
+        // spread-to-neighbours tint is context. In manager view a click there
+        // falls through to the territory (rep card).
+        const directSignal = (point: maplibregl.PointLike) =>
+          map!.queryRenderedFeatures(point, { layers: ["sig-fill"] }).find((f) => Number(f.properties?.strength) >= 1);
         map.on("mousemove", "sig-fill", (e) => {
-          const sid = String(e.features?.[0]?.properties?.sid ?? "");
+          const hit = manager ? directSignal(e.point) : e.features?.[0];
+          if (!hit) return;
+          const sid = String(hit.properties?.sid ?? "");
           const s = byId.get(sid);
           if (!s) return;
           map!.getCanvas().style.cursor = "pointer";
@@ -520,13 +527,14 @@ export default function SignalMap({
           untip();
         });
         map.on("click", "sig-fill", (e) => {
-          const sid = String(e.features?.[0]?.properties?.sid ?? "");
+          const hit = manager ? directSignal(e.point) : e.features?.[0];
+          const sid = String(hit?.properties?.sid ?? "");
           if (byId.has(sid)) setSelected({ kind: "signal", id: sid });
         });
 
         if (manager) {
           map.on("mousemove", "terr-fill", (e) => {
-            if (map!.queryRenderedFeatures(e.point, { layers: ["sig-fill"] }).length) return;
+            if (directSignal(e.point)) return;
             const rid = String(e.features?.[0]?.properties?.rep_id ?? "");
             const r = data.reps.find((x) => x.id === rid);
             if (!r) return;
@@ -540,7 +548,7 @@ export default function SignalMap({
             untip();
           });
           map.on("click", "terr-fill", (e) => {
-            if (map!.queryRenderedFeatures(e.point, { layers: ["sig-fill"] }).length) return;
+            if (directSignal(e.point)) return;
             const rid = String(e.features?.[0]?.properties?.rep_id ?? "");
             if (rid) setSelected({ kind: "rep", id: rid });
           });
