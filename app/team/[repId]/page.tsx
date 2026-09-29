@@ -105,7 +105,7 @@ export default async function RepSummary(props: PageProps<"/team/[repId]">) {
           <Tile label="Signal-driven"><p className="text-xl font-bold tabular-nums">{pct(row.signalDriven)}</p></Tile>
         </div>
 
-        <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_320px]">
+        <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_300px]">
           <div className="flex min-w-0 flex-col gap-5">
             {/* 2. Signals in territory: worked or ignored. */}
             <section>
@@ -201,7 +201,7 @@ export default async function RepSummary(props: PageProps<"/team/[repId]">) {
             </section>
           </div>
 
-          <aside className="flex flex-col gap-5">
+          <aside className="grid gap-5 sm:grid-cols-2 xl:flex xl:flex-col">
             {/* 4. Weekly capture across the season. */}
             <Card className="px-4 py-3">
               <h2 className="mb-1 font-semibold text-[#3f4e5b]">Weekly capture · {weekly.length} weeks</h2>
