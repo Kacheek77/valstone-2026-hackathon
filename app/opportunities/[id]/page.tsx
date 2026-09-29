@@ -132,7 +132,9 @@ export default async function OpportunityPage(props: PageProps<"/opportunities/[
                 )}
               </div>
               <DraftEditor
-                key={`${opp.id}-${opp.email_history?.length ?? 0}`}
+                // Keyed on the id only: the editor already holds the rewritten text, and
+                // remounting on every refresh would wipe its status line.
+                key={opp.id}
                 oppId={opp.id}
                 subject={opp.email_subject}
                 body={opp.email_body}

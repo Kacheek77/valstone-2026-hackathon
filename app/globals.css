@@ -8,6 +8,9 @@ body {
   background: #f6f7f8;
   color: #0f1419;
   font-family: var(--font-sans);
+  /* Hidden tooltips and the hotspot pulse can poke a few px past the edge;
+     tables scroll inside their own containers. */
+  overflow-x: clip;
 }
 
 /* Signal hotspot pulse on the dashboard map. */
