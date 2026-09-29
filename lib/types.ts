@@ -24,6 +24,7 @@ export type Rep = {
   counties: string[]; // "Finney County, KS"
   quota_quarterly: number;
   is_manager: boolean;
+  voice_note?: string | null; // VS-5; absent until schema.sql is re-run
 };
 
 export type Account = {
@@ -81,6 +82,8 @@ export type Opportunity = {
   created_at: string;
   pushed_at: string | null;
   sent_at: string | null;
+  email_history?: { subject: string; body: string; at: string; note?: string }[]; // VS-5
+  promoted?: boolean; // VS-5
 };
 
 export type PriceList = Record<Module, number> & { setup: number };
@@ -90,6 +93,13 @@ export type Settings = { price_list: PriceList };
 // Stages that count as "acted on" / "captured", and as open pipeline.
 export const ACTED_STAGES: Stage[] = ["pushed", "sent", "won"];
 export const OPEN_STAGES: Stage[] = ["draft", "pushed", "sent"];
+
+// A lead is an opportunity at or above the threshold, or one a rep promoted.
+export const DEFAULT_THRESHOLD = 50;
+export const THRESHOLDS = [30, 40, 50, 60];
+export function isLead(o: Pick<Opportunity, "score" | "promoted">, threshold = DEFAULT_THRESHOLD): boolean {
+  return o.score >= threshold || o.promoted === true;
+}
 
 // USDM level after the change. The seed leaves drought_level null, so read it
 // from the headline ("Finney, KS moved D2 → D3 (Extreme Drought)").

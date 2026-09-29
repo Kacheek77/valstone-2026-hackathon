@@ -7,7 +7,7 @@ import { loadAll } from "@/lib/data";
 import { usdExact, weekLabel } from "@/lib/format";
 import { matchAccounts } from "@/lib/match";
 import { amountFor } from "@/lib/pricing";
-import type { Account, Opportunity, SignalType } from "@/lib/types";
+import { isLead, type Account, type Opportunity, type SignalType } from "@/lib/types";
 import { DEMO_REP_ID, getView } from "@/lib/view";
 
 export const dynamic = "force-dynamic";
@@ -108,7 +108,7 @@ export default async function SignalDetail(props: PageProps<"/signals/[id]">) {
             <p className="mt-2 text-sm text-[#5a6975]">Source: {signal.source}</p>
           </div>
           <div className="md:pt-2">
-            <GenerateButton signalId={signal.id} pendingAccountIds={pending} total={rows.length} created={sOpps.length} />
+            <GenerateButton signalId={signal.id} pendingAccountIds={pending} total={rows.length} leads={sOpps.filter((o) => isLead(o)).length} />
           </div>
         </div>
 

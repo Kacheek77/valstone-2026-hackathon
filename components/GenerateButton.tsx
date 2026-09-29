@@ -3,22 +3,36 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { finishSignalAction, generateOneAction } from "@/app/actions";
+import { finishSignalAction } from "@/app/actions";
+import type { GenerateResult } from "@/lib/generate";
 
 const CONCURRENCY = 3;
 
-// Generates one account at a time (three in flight), so the ranked table fills
-// in as each score and draft lands instead of waiting for the whole batch.
+async function generate(signalId: string, accountId: string): Promise<GenerateResult> {
+  try {
+    const res = await fetch("/api/generate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ signalId, accountId }),
+    });
+    return (await res.json()) as GenerateResult;
+  } catch {
+    return { ok: false, error: "The server did not answer." };
+  }
+}
+
+// Scores three accounts at a time through /api/generate, so the ranked table
+// fills in row by row instead of waiting for the whole batch.
 export function GenerateButton({
   signalId,
   pendingAccountIds,
   total,
-  created,
+  leads,
 }: {
   signalId: string;
   pendingAccountIds: string[];
   total: number;
-  created: number;
+  leads: number;
 }) {
   const router = useRouter();
   const [running, setRunning] = useState(false);
@@ -28,12 +42,12 @@ export function GenerateButton({
   const [batch, setBatch] = useState(0);
 
   if (!running && pendingAccountIds.length === 0) {
-    return created > 0 ? (
+    return leads > 0 ? (
       <Link
         href={`/pipeline?signal=${signalId}`}
         className="inline-flex whitespace-nowrap rounded-full border-2 border-[#1f9d55] px-5 py-2 text-sm font-semibold text-[#1f9d55] transition-opacity duration-150 hover:opacity-80"
       >
-        View {created} opportunit{created === 1 ? "y" : "ies"} →
+        View {leads} lead{leads === 1 ? "" : "s"} →
       </Link>
     ) : null;
   }
@@ -48,19 +62,19 @@ export function GenerateButton({
     const worker = async () => {
       while (queue.length > 0) {
         const id = queue.shift()!;
-        try {
-          const r = await generateOneAction(signalId, id);
-          if (!r.ok) setFailed((f) => [...f, r.error]);
-          else if (r.aiOffline) setOffline((n) => n + 1);
-        } catch {
-          setFailed((f) => [...f, "The server did not answer."]);
-        }
+        const r = await generate(signalId, id);
+        if (!r.ok) setFailed((f) => [...f, r.error]);
+        else if (r.aiOffline) setOffline((n) => n + 1);
         setDone((n) => n + 1);
         router.refresh();
       }
     };
     await Promise.all(Array.from({ length: Math.min(CONCURRENCY, queue.length) }, worker));
-    await finishSignalAction(signalId);
+    try {
+      await finishSignalAction(signalId);
+    } catch {
+      // Cosmetic status only.
+    }
     setRunning(false);
     router.refresh();
   };
@@ -76,9 +90,7 @@ export function GenerateButton({
       >
         {running ? `Scoring ${done} of ${batch}…` : `Generate leads (${count === total ? total : `${count} of ${total}`})`}
       </button>
-      {offline > 0 && (
-        <p className="text-xs text-[#5a6975]">AI offline for {offline}: rules-based scores used.</p>
-      )}
+      {offline > 0 && <p className="text-xs text-[#5a6975]">AI offline for {offline}: rules-based scores used.</p>}
       {failed.length > 0 && !running && (
         <p className="max-w-xs text-right text-xs text-[#8f2424]">
           {failed.length} could not be saved ({failed[0]}). Click again to retry.

@@ -1,4 +1,4 @@
--- Signal Desk schema (VS-4a). Run this first, then seed.sql, in the Supabase SQL editor.
+-- Signal Desk schema (VS-5). Run this first, then seed.sql, then seed-extras.sql, in the Supabase SQL editor.
 -- Matches the schema in "From LC Claude/data/README-DATA.md", plus the columns the
 -- advisor kept in VS-4a: signals.drought_level, settings.weekly_history and the
 -- unique (signal_id, account_id) on opportunities. Drops and recreates everything.
@@ -26,7 +26,8 @@ create table public.reps (
   territory_name text not null,
   counties text[] not null default '{}',             -- "Finney County, KS"
   quota_quarterly integer not null default 0,
-  is_manager boolean not null default false
+  is_manager boolean not null default false,
+  voice_note text                                    -- VS-5: rep's writing voice for drafts
 );
 
 create table public.accounts (
@@ -85,6 +86,8 @@ create table public.opportunities (
   created_at timestamptz not null default now(),
   pushed_at timestamptz,
   sent_at timestamptz,
+  email_history jsonb not null default '[]',         -- VS-5: earlier drafts, oldest first
+  promoted boolean not null default false,           -- VS-5: below-threshold row promoted to a lead
   unique (signal_id, account_id)                     -- makes Generate idempotent
 );
 
@@ -125,3 +128,8 @@ create policy "anon update settings" on public.settings for update to anon using
 -- these grants this project answers "permission denied for table".
 grant usage on schema public to anon;
 grant select, insert, update on public.reps, public.accounts, public.signals, public.opportunities, public.settings to anon;
+
+-- HACKATHON ONLY: lets the /about?admin=1 "Reset demo" button delete the
+-- Finney demo opportunities. Remove before any real use.
+grant delete on public.opportunities to anon;
+create policy "anon delete opportunities" on public.opportunities for delete to anon using (true);
