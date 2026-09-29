@@ -29,6 +29,7 @@ export default async function OpportunityPage(props: PageProps<"/opportunities/[
   const sp = await props.searchParams;
   // Tweak 4: "← Pipeline" keeps the signal filter only when the user came from a filtered list.
   const fromSignal = typeof sp.from === "string" && SIGNAL_ID.test(sp.from) ? sp.from : null;
+  const fromTeam = typeof sp.from === "string" && /^REP-\d{2}$/.test(sp.from) ? sp.from : null;
   const view = await getView();
 
   const loaded = await loadAll();
@@ -49,6 +50,9 @@ export default async function OpportunityPage(props: PageProps<"/opportunities/[
   const signal = signals.find((s) => s.id === opp.signal_id);
   const rep = reps.find((r) => r.id === opp.rep_id);
   const closed = opp.stage === "won" || opp.stage === "lost";
+  // VS-9: a manager drilling in sees the opportunity read-only (Copy email only).
+  const managerView = view.kind === "manager";
+  const readOnly = closed || managerView;
   const progress = stepProgress(opp, steps);
   // Closing date: the most recent timestamp we have for the opportunity.
   const closedOn = opp.sent_at ?? opp.pushed_at ?? opp.created_at;
@@ -58,7 +62,11 @@ export default async function OpportunityPage(props: PageProps<"/opportunities/[
       <Header view={view} reps={reps} active="pipeline" />
       <Page>
         <div className="mb-4">
-          <BackLink href={fromSignal ? `/pipeline?signal=${fromSignal}` : "/pipeline"} label="Pipeline" />
+          {fromTeam ? (
+            <BackLink href={`/team/${fromTeam}`} label={`${rep?.name ?? "Rep"} summary`} />
+          ) : (
+            <BackLink href={fromSignal ? `/pipeline?signal=${fromSignal}` : "/pipeline"} label="Pipeline" />
+          )}
         </div>
         <div className="grid gap-5 lg:grid-cols-[340px_minmax(0,1fr)]">
           <div className="flex min-w-0 flex-col gap-3">
@@ -125,6 +133,11 @@ export default async function OpportunityPage(props: PageProps<"/opportunities/[
           </div>
 
           <div className="flex min-w-0 flex-col gap-3">
+            {managerView && !closed && (
+              <div className="rounded-xl bg-[#eef0f2] px-5 py-3 text-sm text-[#3f4e5b]">
+                Manager view: read-only. {rep?.name ?? "The rep"} works this opportunity from their own view.
+              </div>
+            )}
             {closed && (
               <div
                 className={`flex flex-wrap items-center justify-between gap-2 rounded-xl px-5 py-3 font-semibold ${
@@ -134,7 +147,7 @@ export default async function OpportunityPage(props: PageProps<"/opportunities/[
                 <span>
                   Closed · {opp.stage === "won" ? "Won" : "Lost"} on {shortDate(closedOn)}
                 </span>
-                <ReopenLink oppId={opp.id} />
+                {!managerView && <ReopenLink oppId={opp.id} />}
               </div>
             )}
             <Card className="px-5 py-4">
@@ -143,8 +156,8 @@ export default async function OpportunityPage(props: PageProps<"/opportunities/[
             </Card>
             <Card className="px-5 py-4">
               <div className="mb-3 flex items-center justify-between">
-                <Label>{closed ? "Email" : "Draft email"}</Label>
-                {!closed && rep?.voice_note && (
+                <Label>{readOnly ? "Email" : "Draft email"}</Label>
+                {!readOnly && rep?.voice_note && (
                   <p className="text-xs text-[#7a8794]" title={rep.voice_note}>
                     Written in {rep.name.split(" ")[0]}&apos;s voice
                   </p>
@@ -153,15 +166,15 @@ export default async function OpportunityPage(props: PageProps<"/opportunities/[
               <DraftEditor
                 // Keyed on the id (and open/closed) only: the editor already holds the
                 // rewritten text, and remounting on every refresh would wipe its status line.
-                key={`${opp.id}-${closed ? "closed" : "open"}`}
+                key={`${opp.id}-${readOnly ? "ro" : "rw"}`}
                 oppId={opp.id}
                 subject={opp.email_subject}
                 body={opp.email_body}
                 historyLength={opp.email_history?.length ?? 0}
-                readOnly={closed}
+                readOnly={readOnly}
               />
             </Card>
-            {closed ? (
+            {readOnly ? (
               <Card className="px-5 py-4 text-sm text-[#5a6975]">
                 <Link href={`/opportunities/${opp.id}/sequence`} className="font-semibold text-[#3a728a] hover:underline">
                   View outreach sequence →

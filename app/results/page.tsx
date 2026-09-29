@@ -75,7 +75,9 @@ export default async function Results(props: PageProps<"/results">) {
   // ---------------------------------------------------------------- rep view
   if (repId !== null) {
     const rep = salesReps.find((r) => r.id === repId);
-    const header = <Header view={view} reps={data.reps} active="results" selected={repId} />;
+    // VS-9: a manager drilling in via ?rep= stays the manager.
+    const managerView = view.kind === "manager";
+    const header = <Header view={view} reps={data.reps} active="results" selected={managerView ? "manager" : repId} />;
     if (!rep) {
       return (
         <>
@@ -92,6 +94,14 @@ export default async function Results(props: PageProps<"/results">) {
       <>
         {header}
         <Page>
+          {managerView && (
+            <nav className="mb-3 text-sm text-[#5a6975]" aria-label="Breadcrumb">
+              <Link href="/results" className="text-[#3a728a] hover:underline">
+                Results
+              </Link>{" "}
+              › <span className="text-[#0f1419]">{rep.name}</span>
+            </nav>
+          )}
           <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
             <div>
               <h1 className="text-2xl font-bold">{QUARTER.label} to date · closed against what the weather created</h1>
@@ -176,10 +186,10 @@ export default async function Results(props: PageProps<"/results">) {
           <Card className="px-5 py-4">
             <div className="flex flex-col gap-1">
               {repRows.map(({ rep, b }) => (
-                <a
+                <Link
                   key={rep.id}
-                  // Plain <a>: /view sets the rep view cookie, then lands on their results.
-                  href={`/view?as=${rep.id}&to=results`}
+                  // VS-9: drill in as the manager (no view switch).
+                  href={`/results?rep=${rep.id}`}
                   className="grid grid-cols-[150px_minmax(0,1fr)_150px] items-center gap-3 rounded-lg px-2 py-2 text-sm transition-colors duration-150 hover:bg-[#f6f7f8]"
                 >
                   <span className="truncate font-semibold text-[#3a728a]">{rep.name}</span>
@@ -188,7 +198,7 @@ export default async function Results(props: PageProps<"/results">) {
                     <span className="text-[#5a6975]">{usd(b.available)}</span> ·{" "}
                     <b className={wonColor(b.wonPct)}>Won {b.wonPct === null ? "—" : `${Math.round(b.wonPct)}%`}</b>
                   </span>
-                </a>
+                </Link>
               ))}
             </div>
           </Card>

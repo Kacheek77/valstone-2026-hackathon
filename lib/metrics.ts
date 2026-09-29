@@ -229,3 +229,60 @@ export function totalBreakdown(rows: WeekRow[]): Breakdown {
   t.wonPct = t.available > 0 ? (t.segments.won.value / t.available) * 100 : null;
   return t;
 }
+
+// ---------------------------------------------------------------- periods and team rows (VS-9)
+// Composition only: these call the functions above, so /team and /team/[repId]
+// can never disagree.
+
+export const PERIODS = [
+  { key: "week", label: "This week", days: 7, phrase: "this week" },
+  { key: "4w", label: "4 weeks", days: 28, phrase: "in the last 4 weeks" },
+  { key: "season", label: "Season", days: Infinity, phrase: "this season" },
+] as const;
+export type Period = (typeof PERIODS)[number];
+
+export function periodFor(key: unknown): Period {
+  return PERIODS.find((p) => p.key === key) ?? PERIODS[0];
+}
+
+// Signals whose week falls in the period ending at the newest signal's week.
+export function periodSignals(signals: Signal[], period: Period): Signal[] {
+  const current = signals.reduce<string | null>((max, s) => (max && max > s.week_of ? max : s.week_of), null);
+  if (!current) return [];
+  return signals.filter((s) => {
+    const diff = (Date.parse(current) - Date.parse(s.week_of)) / 86_400_000;
+    return diff >= 0 && diff < period.days;
+  });
+}
+
+export type TeamRow = {
+  signals: Signal[];
+  value: SignalValue;
+  capture: number | null;
+  tta: number | null;
+  offTerritory: number;
+  signalDriven: number | null;
+};
+
+// One rep's numbers for a period: the same six columns as /team plus
+// Off-territory and Signal-driven (those two, and time to act, span all weeks).
+export function teamRow(repId: string, data: AllData, period: Period): TeamRow {
+  const signals = periodSignals(data.signals, period).filter((s) => s.rep_id === repId);
+  const value = sumValues(signals, data);
+  return {
+    signals,
+    value,
+    capture: captureRate(value),
+    tta: timeToAct(repId, data),
+    offTerritory: offTerritoryCount(repId, data),
+    signalDriven: signalDrivenShare(repId, data),
+  };
+}
+
+// Capture rate per signal week for one rep, oldest first (null = no signals that week).
+export function weeklyCapture(repId: string, data: AllData): { week: string; capture: number | null }[] {
+  return signalWeeks(data.signals).map((week) => {
+    const signals = data.signals.filter((s) => s.rep_id === repId && s.week_of === week);
+    return { week, capture: signals.length ? captureRate(sumValues(signals, data)) : null };
+  });
+}

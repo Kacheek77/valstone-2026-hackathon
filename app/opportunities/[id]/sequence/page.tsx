@@ -32,6 +32,7 @@ export default async function SequencePage(props: PageProps<"/opportunities/[id]
   if (!opp) notFound();
   const account = accounts.find((a) => a.id === opp.account_id);
   const closed = opp.stage === "won" || opp.stage === "lost";
+  const readOnly = closed || view.kind === "manager";
   const mine = stepsFor(opp.id, steps);
   const accepted = opp.stage !== "draft";
 
@@ -78,8 +79,8 @@ export default async function SequencePage(props: PageProps<"/opportunities/[id]
           <EmptyState>Accept the lead on the opportunity page first; the sequence runs from the day it is accepted.</EmptyState>
         ) : (
           <>
-            <SequenceTable oppId={opp.id} rows={rows} built={mine.length > 0} readOnly={closed} />
-            {mine.length === 0 && !closed && (
+            <SequenceTable oppId={opp.id} rows={rows} built={mine.length > 0} readOnly={readOnly} />
+            {mine.length === 0 && !readOnly && (
               <p className="mt-3 text-sm text-[#5a6975]">
                 Build sequence writes the Day 3 call script, the Day 7 follow-up email and the Day 14 text in one step, in the
                 rep&apos;s voice. Day 0 is the opening email above.
