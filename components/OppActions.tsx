@@ -5,6 +5,7 @@ import { useTransition } from "react";
 import { acceptLeadAction, setStageAction } from "@/app/actions";
 import type { Stage } from "@/lib/types";
 import { useToast } from "./Toast";
+import { useHydrated } from "@/lib/useHydrated";
 
 const primary =
   "rounded-full bg-[#f55a00] px-5 py-2 text-sm font-semibold text-white transition-colors duration-150 hover:bg-[#d94f00] disabled:cursor-wait disabled:opacity-60";
@@ -15,6 +16,7 @@ const outline =
 // Mark won / lost. Closed opportunities show a banner instead (see the page).
 export function OppActions({ oppId, stage }: { oppId: string; stage: Stage }) {
   const [busy, startTransition] = useTransition();
+  const hydrated = useHydrated();
   const [toast, show] = useToast();
 
   const accept = () =>
@@ -38,7 +40,7 @@ export function OppActions({ oppId, stage }: { oppId: string; stage: Stage }) {
   return (
     <div className="flex flex-wrap items-center gap-3">
       {stage === "draft" ? (
-        <button type="button" onClick={accept} disabled={busy} className={primary}>
+        <button type="button" onClick={accept} disabled={!hydrated || busy} className={primary}>
           {busy ? "Accepting…" : "Accept lead"}
         </button>
       ) : (
@@ -51,7 +53,7 @@ export function OppActions({ oppId, stage }: { oppId: string; stage: Stage }) {
         <button
           type="button"
           onClick={() => setStage("sent")}
-          disabled={busy || stage === "draft"}
+          disabled={!hydrated || busy || stage === "draft"}
           title={stage === "draft" ? "Accept the lead first" : undefined}
           className={`${outline} border-[#2a6fb5] text-[#2a6fb5]`}
         >
@@ -61,10 +63,10 @@ export function OppActions({ oppId, stage }: { oppId: string; stage: Stage }) {
 
       {stage === "sent" && (
         <>
-          <button type="button" onClick={() => setStage("won")} disabled={busy} className={`${outline} border-[#1f9d55] text-[#1f9d55]`}>
+          <button type="button" onClick={() => setStage("won")} disabled={!hydrated || busy} className={`${outline} border-[#1f9d55] text-[#1f9d55]`}>
             Mark won
           </button>
-          <button type="button" onClick={() => setStage("lost")} disabled={busy} className={`${outline} border-[#7a8794] text-[#5a6975]`}>
+          <button type="button" onClick={() => setStage("lost")} disabled={!hydrated || busy} className={`${outline} border-[#7a8794] text-[#5a6975]`}>
             Mark lost
           </button>
         </>
@@ -77,10 +79,11 @@ export function OppActions({ oppId, stage }: { oppId: string; stage: Stage }) {
 // Tweak 6: Reopen a closed opportunity (back to Sent) for corrections.
 export function ReopenLink({ oppId }: { oppId: string }) {
   const [busy, startTransition] = useTransition();
+  const hydrated = useHydrated();
   return (
     <button
       type="button"
-      disabled={busy}
+      disabled={!hydrated || busy}
       onClick={() => startTransition(async () => void (await setStageAction(oppId, "sent")))}
       className="text-sm underline underline-offset-2 opacity-80 hover:opacity-100 disabled:opacity-50"
     >

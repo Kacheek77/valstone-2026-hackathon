@@ -79,6 +79,16 @@ async function loadStyle(basemap: Basemap, forceOffline: boolean): Promise<{ sty
   }
 }
 
+// One fetch per basemap per page: started on mount alongside the GeoJSON, then
+// awaited (already done, usually) when the map is created.
+const styleCache = new Map<string, Promise<{ style: StyleSpecification; offline: boolean }>>();
+function styleFor(basemap: Basemap, forceOffline: boolean) {
+  const key = `${basemap}:${forceOffline}`;
+  if (!styleCache.has(key)) styleCache.set(key, loadStyle(basemap, forceOffline));
+  return styleCache.get(key)!;
+}
+const offlineTest = () => new URLSearchParams(window.location.search).get("map") === "offline-test";
+
 function webglAvailable(): boolean {
   try {
     const c = document.createElement("canvas");
@@ -432,6 +442,11 @@ export default function SignalMap({
   const [geo, setGeo] = useState<{ counties: FC; states: FC; usdm: FC; region: FC } | null>(null);
   const [geoError, setGeoError] = useState(false);
   const [selected, setSelected] = useState<Selection>(null);
+  const [layersReady, setLayersReady] = useState(false);
+
+  useEffect(() => {
+    void styleFor(basemap, offlineTest());
+  }, [basemap]);
 
   useEffect(() => {
     let cancelled = false;
@@ -459,12 +474,15 @@ export default function SignalMap({
     const markers: maplibregl.Marker[] = [];
     const t0 = performance.now();
     const manager = mode === "manager";
-    const forceOffline = new URLSearchParams(window.location.search).get("map") === "offline-test";
+    const forceOffline = offlineTest();
+    // Manager view: fit the 18 territory counties tightly (VS-11 item 3).
+    const pad = manager ? 40 : 50;
 
     (async () => {
-      const { style, offline: off } = await loadStyle(basemap, forceOffline);
+      const { style, offline: off } = await styleFor(basemap, forceOffline);
       if (cancelled || !container.current) return;
       setOffline(off);
+      setLayersReady(false);
       const focus = manager ? geo.counties.features : geo.counties.features.filter((f) => f.properties.rep_id === repId);
       const bounds = bbox(focus.length ? focus : geo.counties.features);
       try {
@@ -472,7 +490,7 @@ export default function SignalMap({
           container: container.current,
           style,
           bounds,
-          fitBoundsOptions: { padding: 50 },
+          fitBoundsOptions: { padding: pad },
           // The drought and county layers cover this box (scripts/build-usdm.mjs).
           maxBounds: [[-112, 31.5], [-90, 45.5]],
           attributionControl: { compact: true },
@@ -492,20 +510,34 @@ export default function SignalMap({
       const zoomClass = () => container.current?.classList.toggle("sd-zoomed-out", map!.getZoom() < MANAGER_PIN_ZOOM);
       map.on("zoom", zoomClass);
 
+      // Diagnostics: ms since the data arrived (t0) and since navigation (At).
+      const timing: Record<string, number | string> = { basemap: off ? "blank (offline)" : basemap, dataAtMs: Math.round(t0) };
+      (window as unknown as { __mapTiming?: object }).__mapTiming = timing;
       map.once("idle", () => {
-        (window as unknown as { __mapTiming?: object }).__mapTiming = {
-          basemap: off ? "blank (offline)" : basemap,
-          idleMs: Math.round(performance.now() - t0),
-        };
+        timing.idleMs = Math.round(performance.now() - t0);
+        timing.idleAtMs = Math.round(performance.now());
       });
 
-      map.on("load", () => {
+      // Fit to the focus counties once the container has its real size (it can
+      // still be settling when the map is created, which leaves the view zoomed
+      // out). Manager view: zoom-out limit one level wider than the fit.
+      const fit = () => {
         if (!map) return;
-        // Re-fit once the container has its real size (it can still be settling
-        // when the map is created, which leaves the view zoomed out).
         map.resize();
-        map.fitBounds(bounds, { padding: 50, duration: 0 });
+        map.setMinZoom(null);
+        map.fitBounds(bounds, { padding: pad, duration: 0 });
+        if (manager) map.setMinZoom(map.getZoom() - 1);
         zoomClass();
+      };
+      map.on("load", fit);
+
+      // VS-11: the layers go on as soon as the style is parsed. MapLibre's
+      // "load" also waits for the basemap tiles, which held them back seconds.
+      let layersAdded = false;
+      const addLayers = () => {
+        if (!map || layersAdded) return;
+        layersAdded = true;
+        fit();
         map.addSource("region", { type: "geojson", data: geo.region as never });
         map.addSource("usdm", { type: "geojson", data: geo.usdm as never });
         map.addSource("states", { type: "geojson", data: geo.states as never });
@@ -607,9 +639,11 @@ export default function SignalMap({
           });
         }
 
-        // Markers go on once the layers have drawn, so pins and counties appear together.
-        map.once("idle", () => { if (map) addMarkers(map); });
-      });
+        addMarkers(map);
+        timing.layersMs = Math.round(performance.now() - t0);
+        timing.layersAtMs = Math.round(performance.now());
+        setLayersReady(true);
+      };
 
       const addMarkers = (map: maplibregl.Map) => {
         // Account pins: tractor = customer, seedling = prospect.
@@ -660,6 +694,9 @@ export default function SignalMap({
           markers.push(new maplibregl.Marker({ element: el }).setLngLat([s.lng, s.lat]).addTo(map));
         }
       };
+
+      if (map.isStyleLoaded()) addLayers();
+      else map.once("style.load", addLayers);
     })();
 
     return () => {
@@ -748,6 +785,11 @@ export default function SignalMap({
               </button>
             ))}
           </div>
+          {!layersReady && !noWebgl && !geoError && (
+            <span className="absolute left-1/2 top-3 z-10 -translate-x-1/2 rounded-full bg-white/90 px-3 py-0.5 text-xs text-[#5a6975] shadow-sm">
+              Loading drought map…
+            </span>
+          )}
           {(offline || noWebgl) && (
             <span className="absolute bottom-3 left-3 z-10 rounded bg-[#eef0f2] px-2 py-0.5 text-xs text-[#5a6975]">offline map</span>
           )}

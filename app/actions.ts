@@ -337,9 +337,9 @@ export async function resetDemoAction(): Promise<{ ok: boolean; message: string 
       `${steps.count ?? 0} outreach step${steps.count === 1 ? "" : "s"} cleared`,
       extraSignals.length
         ? retired
-          ? `${retired} extra signal${retired === 1 ? "" : "s"} retired (delete not granted; run supabase/migrations/vs10.sql to allow a true delete)`
-          : `${extraSignals.length} extra signal${extraSignals.length === 1 ? "" : "s"} deleted`
-        : "no extra signals",
+          ? `${retired} extra signal${retired === 1 ? "" : "s"} retired (fallback path: the database refused the delete)`
+          : `${extraSignals.length} extra signal${extraSignals.length === 1 ? "" : "s"} deleted (delete path)`
+        : "no extra signals to delete",
       `${SEED.opportunities.length} seed opportunities and ${SEED.signals.length} signals restored`,
     ];
     if (restoreErrors) parts.push(`${restoreErrors} rows could not be restored`);

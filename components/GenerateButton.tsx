@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { finishSignalAction } from "@/app/actions";
 import { runGenerate } from "./runGenerate";
+import { useHydrated } from "@/lib/useHydrated";
 
 const primaryClass =
   "whitespace-nowrap rounded-full bg-[#f55a00] px-5 py-2 text-sm font-semibold text-white transition-colors duration-150 hover:bg-[#d94f00] disabled:cursor-wait disabled:opacity-70";
@@ -24,6 +25,7 @@ export function GenerateButton({
 }) {
   const router = useRouter();
   const [running, setRunning] = useState(false);
+  const hydrated = useHydrated();
   const [done, setDone] = useState(0);
   const [failed, setFailed] = useState<string[]>([]);
   const [offline, setOffline] = useState(0);
@@ -64,7 +66,7 @@ export function GenerateButton({
   const count = pendingAccountIds.length;
   return (
     <div className="flex flex-col items-end gap-1">
-      <button type="button" onClick={run} disabled={running} className={primaryClass}>
+      <button type="button" onClick={run} disabled={!hydrated || running} className={primaryClass}>
         {running ? `Scoring ${done} of ${batch}…` : `Score & generate leads (${count === total ? total : `${count} of ${total}`})`}
       </button>
       {offline > 0 && <p className="text-xs text-[#5a6975]">AI offline for {offline}: rules-based scores used.</p>}
@@ -82,6 +84,7 @@ export function GenerateButton({
 export function CardGenerateButton({ signalId, pendingAccountIds }: { signalId: string; pendingAccountIds: string[] }) {
   const router = useRouter();
   const [running, setRunning] = useState(false);
+  const hydrated = useHydrated();
   const [done, setDone] = useState(0);
   const [error, setError] = useState<string | null>(null);
 
@@ -104,7 +107,7 @@ export function CardGenerateButton({ signalId, pendingAccountIds }: { signalId: 
 
   return (
     <div className="flex flex-col items-end gap-1">
-      <button type="button" onClick={run} disabled={running} className={primaryClass}>
+      <button type="button" onClick={run} disabled={!hydrated || running} className={primaryClass}>
         {running ? `Scoring ${done} of ${pendingAccountIds.length}…` : `Score & generate leads (${pendingAccountIds.length})`}
       </button>
       {error && <p className="max-w-[220px] text-right text-xs text-[#8f2424]">{error}</p>}

@@ -3,9 +3,9 @@ import type { Rep } from "@/lib/types";
 import type { View } from "@/lib/view";
 import { ViewSwitcher } from "./ViewSwitcher";
 
-export function BrandMark({ className = "h-6 w-6" }: { className?: string }) {
+export function BrandMark({ className = "h-6 w-6", color = "#f55a00" }: { className?: string; color?: string }) {
   return (
-    <svg viewBox="0 0 24 24" className={className} fill="none" stroke="#f55a00" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+    <svg viewBox="0 0 24 24" className={className} fill="none" stroke={color} strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
       <path d="M2 12h4l3-8 6 16 3-8h4" />
     </svg>
   );

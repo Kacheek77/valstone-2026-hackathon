@@ -3,10 +3,12 @@
 import { useTransition } from "react";
 import { refreshAction } from "@/app/actions";
 import { useToast } from "./Toast";
+import { useHydrated } from "@/lib/useHydrated";
 
 // Three outcomes: new signals (green), nothing new (neutral), source failed (red).
 export function RefreshButton({ demo }: { demo: boolean }) {
   const [pending, startTransition] = useTransition();
+  const hydrated = useHydrated();
   const [toast, show] = useToast();
 
   const onClick = () =>
@@ -25,7 +27,7 @@ export function RefreshButton({ demo }: { demo: boolean }) {
       <button
         type="button"
         onClick={onClick}
-        disabled={pending}
+        disabled={!hydrated || pending}
         className="rounded-full bg-[#f55a00] px-5 py-2 text-sm font-semibold text-white transition-colors duration-150 hover:bg-[#d94f00] disabled:cursor-wait disabled:opacity-60"
       >
         {pending ? "Checking the weather…" : "Refresh signals"}

@@ -2,10 +2,12 @@
 
 import { useState, useTransition } from "react";
 import { promoteAction } from "@/app/actions";
+import { useHydrated } from "@/lib/useHydrated";
 
 // Promote a below-threshold opportunity to a lead, or undo it.
 export function PromoteButton({ oppId, promoted }: { oppId: string; promoted: boolean }) {
   const [busy, startTransition] = useTransition();
+  const hydrated = useHydrated();
   const [error, setError] = useState<string | null>(null);
   const toggle = () =>
     startTransition(async () => {
@@ -18,7 +20,7 @@ export function PromoteButton({ oppId, promoted }: { oppId: string; promoted: bo
       <button
         type="button"
         onClick={toggle}
-        disabled={busy}
+        disabled={!hydrated || busy}
         className={`rounded-full px-2.5 py-0.5 text-xs font-semibold transition-colors duration-150 disabled:opacity-50 ${
           promoted ? "bg-[#e6f4ec] text-[#14693a] hover:bg-[#d3ecdd]" : "border border-[#3a728a] text-[#3a728a] hover:bg-[#3a728a] hover:text-white"
         }`}

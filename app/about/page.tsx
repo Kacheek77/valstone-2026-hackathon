@@ -57,8 +57,8 @@ export default async function About(props: PageProps<"/about">) {
           <Card className="mt-4 flex flex-col gap-2 border-[#d23b3b] px-5 py-4 text-sm text-[#3f4e5b]">
             <b>Admin: reset the demo.</b>
             <p>
-              Deletes every opportunity on the Finney signal (SIG-0023), with their outreach steps, and sets it back to new, so
-              Score &amp; generate leads can run live again.
+              Restores all seed data and removes generated leads, outreach sequences and any refreshed signals. Finney (SIG-0023)
+              goes back to new, so Score &amp; generate leads can run live again.
             </p>
             <ResetDemoButton />
           </Card>

@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { buildSequenceAction, saveStepAction, scheduleAllAction, setStepDoneAction } from "@/app/actions";
 import { useToast } from "./Toast";
+import { useHydrated } from "@/lib/useHydrated";
 
 export type SequenceRow = {
   id: string | null; // null for Day 0, which is the opportunity's own email
@@ -67,6 +68,7 @@ export function SequenceTable({
 }) {
   const [open, setOpen] = useState<number | null>(null);
   const [busy, startTransition] = useTransition();
+  const hydrated = useHydrated();
   const [toast, show] = useToast();
 
   const build = () =>
@@ -102,7 +104,7 @@ export function SequenceTable({
           <button
             type="button"
             onClick={build}
-            disabled={busy}
+            disabled={!hydrated || busy}
             className={
               built
                 ? "rounded-full border-2 border-[#3a728a] px-4 py-1.5 text-sm font-semibold text-[#3a728a] transition-opacity duration-150 hover:opacity-80 disabled:opacity-50"
@@ -115,7 +117,7 @@ export function SequenceTable({
             <button
               type="button"
               onClick={scheduleAll}
-              disabled={busy || !hasPlanned}
+              disabled={!hydrated || busy || !hasPlanned}
               title={hasPlanned ? undefined : "Every step is already scheduled or done"}
               className="rounded-full bg-[#f55a00] px-5 py-2 text-sm font-semibold text-white transition-colors duration-150 hover:bg-[#d94f00] disabled:cursor-not-allowed disabled:opacity-40"
             >
@@ -165,7 +167,7 @@ export function SequenceTable({
                       <button
                         type="button"
                         onClick={() => toggleDone(r.id!, r.status !== "Done ✓")}
-                        disabled={busy}
+                        disabled={!hydrated || busy}
                         className="ml-3 text-xs text-[#3a728a] underline underline-offset-2 disabled:opacity-50"
                       >
                         {r.status === "Done ✓" ? "Undo" : "Mark done"}

@@ -2,6 +2,7 @@
 
 import { useRef, useState, useTransition } from "react";
 import { resetEmailAction, rewriteEmailAction, saveDraftAction } from "@/app/actions";
+import { useHydrated } from "@/lib/useHydrated";
 
 const TONES = ["Direct", "Warm", "Technical", "Shorter"] as const;
 
@@ -26,6 +27,7 @@ export function DraftEditor({
   const [status, setStatus] = useState<{ tone: "ok" | "warn" | "error"; text: string } | null>(null);
   const [offline, setOffline] = useState(false);
   const [busy, startTransition] = useTransition();
+  const hydrated = useHydrated();
   const saved = useRef({ subject: initialSubject, body: initialBody });
 
   const save = async () => {
@@ -113,7 +115,7 @@ export function DraftEditor({
           <button
             key={t}
             type="button"
-            disabled={busy}
+            disabled={!hydrated || busy}
             onClick={() => apply({ tone: t })}
             className="rounded-full border border-[#bcc4cb] px-3 py-1 text-sm text-[#3f4e5b] transition-colors duration-150 hover:border-[#3a728a] hover:text-[#3a728a] disabled:opacity-50"
           >
@@ -140,7 +142,7 @@ export function DraftEditor({
         />
         <button
           type="submit"
-          disabled={busy || !instruction.trim()}
+          disabled={!hydrated || busy || !instruction.trim()}
           className="rounded-full bg-[#3a728a] px-4 py-1.5 text-sm font-semibold text-white transition-colors duration-150 hover:bg-[#142e3a] disabled:opacity-50"
         >
           {busy ? "Working…" : "Apply"}
@@ -152,7 +154,7 @@ export function DraftEditor({
         onChange={(e) => setSubject(e.target.value)}
         onBlur={save}
         aria-label="Email subject"
-        disabled={busy}
+        disabled={!hydrated || busy}
         className="rounded-lg border border-[#d9dee3] px-3 py-2 font-semibold outline-none focus:border-[#3a728a] disabled:bg-[#f6f7f8]"
       />
       <textarea
@@ -161,7 +163,7 @@ export function DraftEditor({
         onBlur={save}
         aria-label="Email body"
         rows={12}
-        disabled={busy}
+        disabled={!hydrated || busy}
         className="rounded-lg border border-[#d9dee3] px-3 py-2 leading-relaxed text-[#3f4e5b] outline-none focus:border-[#3a728a] disabled:bg-[#f6f7f8]"
       />
 
@@ -174,7 +176,7 @@ export function DraftEditor({
           Copy email
         </button>
         {history > 0 && (
-          <button type="button" onClick={reset} disabled={busy} className="text-[#3a728a] underline underline-offset-2 hover:text-[#142e3a]">
+          <button type="button" onClick={reset} disabled={!hydrated || busy} className="text-[#3a728a] underline underline-offset-2 hover:text-[#142e3a]">
             Reset to original
           </button>
         )}
