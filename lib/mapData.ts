@@ -53,6 +53,8 @@ export type MapRep = { id: string; name: string; territory: string; counties: st
 
 export type MapData = { signals: MapSignal[]; accounts: MapAccount[]; reps: MapRep[] };
 
+export type SeasonData = { weeks: string[]; signals: MapSignal[] };
+
 const OPEN = new Set(["draft", "pushed", "sent"]);
 
 export function buildMapData(data: AllData, periodSignals: Signal[]): MapData {
@@ -117,4 +119,14 @@ export function buildMapData(data: AllData, periodSignals: Signal[]): MapData {
     .map((r) => ({ id: r.id, name: r.name, territory: r.territory_name, counties: r.counties }));
 
   return { signals, accounts, reps };
+}
+
+// VS-12 T15: the quarter's weeks to date (oldest first) and its seed signals,
+// for the map's season playback. Refreshed (non-seed) signals are left out.
+export function buildSeason(data: AllData, weeks: string[], seedIds: Set<string>, repId: string | null): SeasonData {
+  const inSeason = new Set(weeks);
+  const signals = data.signals.filter(
+    (s) => seedIds.has(s.id) && inSeason.has(s.week_of) && (repId === null || s.rep_id === repId),
+  );
+  return { weeks, signals: buildMapData(data, signals).signals };
 }

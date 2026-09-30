@@ -4,10 +4,11 @@ import "maplibre-gl/dist/maplibre-gl.css";
 import * as maplibregl from "maplibre-gl";
 import type { StyleSpecification } from "maplibre-gl";
 import Link from "next/link";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { MapAccount, MapData, MapRep, MapSignal } from "@/lib/mapData";
 import { faSvg } from "./faIcons";
 import { GEO_FILES, geoJson } from "@/lib/mapGeo";
+import { fadeInUsdm, startWeatherMotion, type MotionArea, type MotionController } from "./mapMotion";
 
 // VS-8: MapLibre map with county boundaries, signal areas, account and signal
 // markers, hover popups and a click drawer. Approved from the mockup
@@ -408,20 +409,134 @@ function SvgFallback({ counties, states, data, mode, repId }: { counties: FC; st
 
 // ---------------------------------------------------------------- map
 
+
+// ---------------------------------------------------------------- season playback (VS-12 T15)
+
+export type Season = { weeks: string[]; signals: MapSignal[] }; // weeks oldest first
+
+const weekName = (w: string) =>
+  new Date(`${w}T12:00:00Z`).toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "UTC" });
+
+// Steps through the season's weeks (0.8 s each): that week's seed signals pop
+// in and fade when the week passes. The Drought Monitor layer stays on its one
+// week and is dimmed meanwhile. Stops on the current week.
+function SeasonPlayback({
+  map,
+  season,
+  manager,
+  onActive,
+}: {
+  map: maplibregl.Map;
+  season: Season;
+  manager: boolean;
+  onActive: (on: boolean) => void;
+}) {
+  const [state, setState] = useState<"idle" | "playing" | "paused">("idle");
+  const [idx, setIdx] = useState(0);
+  const shown = useRef<maplibregl.Marker[]>([]);
+  const last = season.weeks.length - 1;
+  const active = state !== "idle";
+
+  useEffect(() => onActive(active), [active, onActive]);
+
+  // One step every 0.8 s; after the last (current) week, back to the live view.
+  useEffect(() => {
+    if (state !== "playing") return;
+    const t = setTimeout(() => (idx >= last ? setState("idle") : setIdx(idx + 1)), 800);
+    return () => clearTimeout(t);
+  }, [state, idx, last]);
+
+  // Markers for the week on screen; the previous week's fade out.
+  useEffect(() => {
+    const old = shown.current;
+    old.forEach((m) => m.getElement().firstElementChild?.classList.add("sd-fade-out"));
+    const t = setTimeout(() => old.forEach((m) => m.remove()), 300);
+    shown.current = [];
+    if (active) {
+      const week = season.weeks[idx];
+      for (const s of season.signals.filter((x) => x.week === week)) {
+        const wrap = document.createElement("div");
+        const el = document.createElement("div");
+        el.className = `sd-sig sd-play sd-pop ${s.severity}`;
+        el.style.background = signalColor(s);
+        el.style.color = signalColor(s);
+        el.title = s.headline;
+        el.innerHTML = faSvg(FA_TYPE[s.type], manager ? 13 : 16, "#fff");
+        wrap.appendChild(el);
+        shown.current.push(new maplibregl.Marker({ element: wrap }).setLngLat([s.lng, s.lat]).addTo(map));
+      }
+    }
+    return () => clearTimeout(t);
+  }, [active, idx, map, season, manager]);
+
+  // Leaving the map (or a basemap switch) clears the playback markers.
+  useEffect(() => () => shown.current.forEach((m) => m.remove()), []);
+
+  if (season.weeks.length < 2) return null;
+  const play = () => {
+    if (state === "playing") return setState("paused");
+    if (state === "idle" || idx >= last) setIdx(0);
+    setState("playing");
+  };
+  const count = season.signals.filter((x) => x.week === season.weeks[idx]).length;
+
+  return (
+    <div className="absolute bottom-3 left-3 z-10 flex max-w-[calc(100%-1.5rem)] flex-wrap items-center gap-2 rounded-full border border-[#bcc4cb] bg-white/95 px-2 py-1 text-xs shadow-sm">
+      <button
+        type="button"
+        onClick={play}
+        aria-label={state === "playing" ? "Pause season playback" : "Play the season week by week"}
+        className="flex h-6 min-w-6 items-center justify-center rounded-full bg-[#3a728a] px-2 font-bold text-white hover:bg-[#142e3a]"
+      >
+        {state === "playing" ? "❚❚" : active ? "▶" : "▶ Season"}
+      </button>
+      {active && (
+        <>
+          <input
+            type="range"
+            min={0}
+            max={last}
+            value={idx}
+            onChange={(e) => {
+              setState("paused");
+              setIdx(Number(e.target.value));
+            }}
+            aria-label="Week"
+            className="w-28 accent-[#3a728a] sm:w-40"
+          />
+          <span className="whitespace-nowrap font-semibold text-[#142e3a]">
+            Week of {weekName(season.weeks[idx])} · {count} signal{count === 1 ? "" : "s"}
+          </span>
+          <span className="whitespace-nowrap text-[#7a8794]">Drought Monitor layer: {USDM_LABEL}</span>
+          <button type="button" onClick={() => setState("idle")} className="px-1 text-[#5a6975] hover:text-[#142e3a]" aria-label="Stop playback">
+            ✕
+          </button>
+        </>
+      )}
+    </div>
+  );
+}
+
 export default function SignalMap({
   data,
   mode,
   repId,
   layout,
   height = 480,
+  season,
 }: {
   data: MapData;
   mode: MapMode;
   repId: string | null;
   layout: "beside" | "under";
   height?: number;
+  // VS-12 T15: the season's weeks and seed signals, for playback.
+  season?: Season;
 }) {
   const container = useRef<HTMLDivElement>(null);
+  const mapRef = useRef<maplibregl.Map | null>(null);
+  const motionRef = useRef<MotionController | null>(null);
+  const [liveMap, setLiveMap] = useState<maplibregl.Map | null>(null);
   // Client-only component (loaded with ssr: false), so browser APIs are safe in
   // the initial state: the remembered basemap and the WebGL check.
   const [basemap, setBasemap] = useState<Basemap>(() => {
@@ -643,6 +758,24 @@ export default function SignalMap({
         }
 
         addMarkers(map);
+        // VS-12 T12: Drought Monitor fades in by category; rain and heat move.
+        fadeInUsdm(map);
+        const kinds = new Map(data.signals.map((s) => [s.id, s.type]));
+        const motionAreas: MotionArea[] = [];
+        for (const f of areas.features) {
+          const kind = kinds.get(String(f.properties.sid));
+          if (kind !== "rain" && kind !== "heat") continue;
+          const g = f.geometry as { type: string; coordinates: unknown };
+          const polys = (g.type === "MultiPolygon" ? g.coordinates : [g.coordinates]) as [number, number][][][];
+          motionAreas.push({ kind, rings: polys.flat() });
+        }
+        motionRef.current = startWeatherMotion(map, motionAreas);
+        setTimeout(() => {
+          const st = motionRef.current?.stats();
+          if (st) Object.assign(timing, { motionAvgMs: Math.round(st.avgMs * 100) / 100, motionDropped: st.dropped });
+        }, 5000);
+        mapRef.current = map;
+        setLiveMap(map);
         timing.layersMs = Math.round(performance.now() - t0);
         timing.layersAtMs = Math.round(performance.now());
         setLayersReady(true);
@@ -705,10 +838,23 @@ export default function SignalMap({
 
     return () => {
       cancelled = true;
+      motionRef.current?.stop();
+      motionRef.current = null;
+      mapRef.current = null;
       markers.forEach((m) => m.remove());
       map?.remove();
     };
   }, [geo, areas, basemap, data, mode, repId, noWebgl]);
+
+  // VS-12 T15: during playback the live signals step aside and the USDM layer dims.
+  const setPlayback = useCallback((on: boolean) => {
+    const m = mapRef.current;
+    if (!m) return;
+    for (const id of ["sig-fill", "sig-glow", "sig-line"]) if (m.getLayer(id)) m.setLayoutProperty(id, "visibility", on ? "none" : "visible");
+    if (m.getLayer("usdm-fill")) m.setPaintProperty("usdm-fill", "fill-opacity", on ? 0.12 : 0.35);
+    motionRef.current?.setEnabled(!on);
+    container.current?.classList.toggle("sd-playing", on);
+  }, []);
 
   const chooseBasemap = (b: Basemap) => {
     setBasemap(b);
@@ -794,8 +940,11 @@ export default function SignalMap({
               Loading drought map…
             </span>
           )}
+          {season && liveMap && !noWebgl && !geoError && (
+            <SeasonPlayback key={basemap} map={liveMap} season={season} manager={mode === "manager"} onActive={setPlayback} />
+          )}
           {(offline || noWebgl) && (
-            <span className="absolute bottom-3 left-3 z-10 rounded bg-[#eef0f2] px-2 py-0.5 text-xs text-[#5a6975]">offline map</span>
+            <span className="absolute bottom-12 left-3 z-10 rounded bg-[#eef0f2] px-2 py-0.5 text-xs text-[#5a6975]">offline map</span>
           )}
         </div>
         {drawer}

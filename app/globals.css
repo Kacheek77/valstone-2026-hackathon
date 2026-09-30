@@ -113,3 +113,12 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .sd-grow-x, .sd-bar-grow, .sd-sunrays, .sd-rain, .sd-haze { animation: none; }
 }
+
+/* VS-12 T15: season playback markers (an inner element, so MapLibre's own
+   transform on the marker is left alone). */
+.sd-playing .sd-sig:not(.sd-play) { display: none; }
+@keyframes sd-pop { from { transform: scale(0.2); opacity: 0; } 70% { transform: scale(1.12); opacity: 1; } to { transform: scale(1); } }
+.sd-pop { animation: sd-pop 320ms ease-out; }
+.sd-play { transition: opacity 300ms ease; }
+.sd-fade-out { opacity: 0; }
+@media (prefers-reduced-motion: reduce) { .sd-pop { animation: none; } .sd-play { transition: none; } }

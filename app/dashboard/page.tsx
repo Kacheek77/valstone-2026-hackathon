@@ -19,9 +19,10 @@ import {
 } from "@/components/ui";
 import { currentWeek, inWeek, loadAll, type AllData } from "@/lib/data";
 import { eventLine, firstName, usd, weekLabel } from "@/lib/format";
-import { buildMapData } from "@/lib/mapData";
+import { buildMapData, buildSeason } from "@/lib/mapData";
+import SEED from "@/lib/seed-snapshot.json";
 import { matchAccounts } from "@/lib/match";
-import { captureRate, expectedValue, inPeriod, periodFor, signalWeeks, sumValues, type PeriodKey } from "@/lib/metrics";
+import { captureRate, expectedValue, inPeriod, mondaysBetween, periodFor, periodRange, signalWeeks, sumValues, weekStart, type PeriodKey } from "@/lib/metrics";
 import { formatDue, tasksDue } from "@/lib/steps";
 import { isLead, type Opportunity, type Signal } from "@/lib/types";
 import { getView, parseView } from "@/lib/view";
@@ -139,7 +140,18 @@ export default async function Dashboard(props: PageProps<"/dashboard">) {
 
         {/* VS-8: MapLibre map with the click drawer beside it. */}
         <div className="mb-5">
-          <SignalMapLoader data={buildMapData(data, repSignals)} mode="rep" repId={rep.id} layout="beside" height={560} />
+          <SignalMapLoader
+            data={buildMapData(data, repSignals)}
+            mode="rep"
+            repId={rep.id}
+            layout="beside"
+            height={560}
+            season={
+              week
+                ? buildSeason(data, mondaysBetween(periodRange(week, periodFor("quarter")).from, weekStart(week)).reverse(), new Set(SEED.signals.map((x) => x.id)), rep.id)
+                : undefined
+            }
+          />
         </div>
 
         <div>

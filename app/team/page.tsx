@@ -5,10 +5,11 @@ import { SignalMapLoader } from "@/components/SignalMapLoader";
 import { hoursLabel } from "@/components/hoursLabel";
 import { Card, ErrorBox, Page, Tile } from "@/components/ui";
 import { currentWeek, loadAll } from "@/lib/data";
-import { buildMapData } from "@/lib/mapData";
+import { buildMapData, buildSeason } from "@/lib/mapData";
+import SEED from "@/lib/seed-snapshot.json";
 import { captureColor, pct, usd, weekLabel } from "@/lib/format";
 import { PeriodPills } from "@/components/PeriodPills";
-import { captureRate, periodFor, periodRange, periodSignals, sumValues, teamRow } from "@/lib/metrics";
+import { captureRate, mondaysBetween, periodFor, periodRange, periodSignals, sumValues, teamRow, weekStart } from "@/lib/metrics";
 import { tasksDue } from "@/lib/steps";
 import { getView } from "@/lib/view";
 
@@ -75,7 +76,18 @@ export default async function Team(props: PageProps<"/team">) {
 
         {/* VS-8: all six territories; the click drawer opens under the map. */}
         <div className="mb-5">
-          <SignalMapLoader data={buildMapData(data, allSignals)} mode="manager" repId={null} layout="beside" height={560} />
+          <SignalMapLoader
+            data={buildMapData(data, allSignals)}
+            mode="manager"
+            repId={null}
+            layout="beside"
+            height={560}
+            season={
+              week
+                ? buildSeason(data, mondaysBetween(periodRange(week, periodFor("quarter")).from, weekStart(week)).reverse(), new Set(SEED.signals.map((x) => x.id)), null)
+                : undefined
+            }
+          />
         </div>
 
         <Card className="overflow-x-auto">
