@@ -224,7 +224,8 @@ export function SequenceTable({
                     {r.aiOffline && <span className="ml-2 rounded bg-[#fcf1d9] px-1.5 py-0.5 text-xs text-[#8a5a00]">AI offline</span>}
                     {expanded && (
                       <div className="mt-2">
-                        <StepBody row={r} readOnly={readOnly} />
+                        {/* Keyed on the text so a Rebuild or tone change shows the new step. */}
+                        <StepBody key={r.body} row={r} readOnly={readOnly} />
                       </div>
                     )}
                   </td>

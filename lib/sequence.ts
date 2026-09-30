@@ -1,4 +1,5 @@
-import { accountFacts, callJson, FIELDSENSE, firstName, MODULE_CAPABILITY, TONE_GUIDE, type RepVoice } from "./claude";
+import { accountFacts, callJson, FIELDSENSE, firstName, MODULE_CAPABILITY, TONE_GUIDE, TONE_RANGE, type RepVoice } from "./claude";
+import { wordCount } from "./format";
 import type { Account, Opportunity, Signal, StepChannel } from "./types";
 
 export type StepDraft = { day: number; channel: StepChannel; title: string; body: string };
@@ -75,18 +76,27 @@ export async function buildSequence(
   rep: RepVoice,
   tone?: string | null,
 ): Promise<SequenceDraft> {
-  const parsed = await callJson<{ day3_call: string; day7_subject: string; day7_email: string; day14_text: string }>(
-    SYSTEM,
-    {
-      account: accountFacts(account),
-      signal: signal ? { headline: signal.headline, detail: signal.detail, week_of: signal.week_of, type: signal.type } : null,
-      lead_with: opp.lead_with,
-      opening_email: { subject: opp.email_subject, body: opp.email_body },
-      rep: { name: rep.name, voice_note: rep.voice_note ?? null },
-      tone: tone ? TONE_GUIDE[tone] ?? tone : null,
-    },
-    SCHEMA,
-  );
+  type Parsed = { day3_call: string; day7_subject: string; day7_email: string; day14_text: string };
+  const input = {
+    account: accountFacts(account),
+    signal: signal ? { headline: signal.headline, detail: signal.detail, week_of: signal.week_of, type: signal.type } : null,
+    lead_with: opp.lead_with,
+    opening_email: { subject: opp.email_subject, body: opp.email_body },
+    rep: { name: rep.name, voice_note: rep.voice_note ?? null },
+    tone: tone ? TONE_GUIDE[tone] ?? tone : null,
+  };
+  let parsed = await callJson<Parsed>(SYSTEM, input, SCHEMA);
+  // One corrective retry when the Day 7 email misses the tone's word range.
+  const range = tone ? TONE_RANGE[tone] : undefined;
+  const n = parsed?.day7_email ? wordCount(parsed.day7_email) : 0;
+  if (parsed && range && (n < range[0] || n > range[1])) {
+    const retry = await callJson<Parsed>(
+      SYSTEM,
+      { ...input, correction: `day7_email had ${n} words; the ${tone} rule requires ${range[0]}-${range[1]} words. Keep the other touches, fix day7_email.` },
+      SCHEMA,
+    );
+    if (retry?.day3_call && retry.day7_email && retry.day14_text) parsed = retry;
+  }
   if (!parsed?.day3_call || !parsed.day7_email || !parsed.day14_text) return templateSequence(account, signal, opp, rep);
   const contact = firstName(account.contact_name, "there");
   return {
