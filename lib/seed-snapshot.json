@@ -1,0 +1,688 @@
+{
+"reps": [
+{
+"id": "REP-01",
+"voice_note": "Plain and neighborly. Mention the county by name. One idea per paragraph. Sign off 'Jordan'."
+},
+{
+"id": "REP-02",
+"voice_note": "Precise, numbers first. No exclamation marks. Lead with the acreage and the dollar figure. Sign off 'Priya Nathan'."
+},
+{
+"id": "REP-03",
+"voice_note": "Easygoing, a little dry. Short sentences. Reference the last conversation if there was one. Sign off 'Marcus'."
+},
+{
+"id": "REP-04",
+"voice_note": "Short sentences. No exclamation marks. Say what changed, say what to do, ask for the meeting. Sign off 'Talk soon, Renee.'"
+},
+{
+"id": "REP-05",
+"voice_note": "Friendly and a bit long. Likes a warm opener about the weather. Sign off 'Best, Tyler Bramlett'."
+},
+{
+"id": "REP-06",
+"voice_note": "Direct and technical. Use the module's actual capability, not benefits language. Sign off 'Sofia'."
+},
+{
+"id": "MGR-01",
+"voice_note": null
+}
+],
+"signals": [
+{
+"id": "SIG-0001",
+"status": "processed"
+},
+{
+"id": "SIG-0002",
+"status": "processed"
+},
+{
+"id": "SIG-0003",
+"status": "processed"
+},
+{
+"id": "SIG-0004",
+"status": "processed"
+},
+{
+"id": "SIG-0005",
+"status": "processed"
+},
+{
+"id": "SIG-0006",
+"status": "processed"
+},
+{
+"id": "SIG-0007",
+"status": "processed"
+},
+{
+"id": "SIG-0008",
+"status": "processed"
+},
+{
+"id": "SIG-0009",
+"status": "processed"
+},
+{
+"id": "SIG-0010",
+"status": "processed"
+},
+{
+"id": "SIG-0011",
+"status": "processed"
+},
+{
+"id": "SIG-0012",
+"status": "processed"
+},
+{
+"id": "SIG-0013",
+"status": "processed"
+},
+{
+"id": "SIG-0014",
+"status": "processed"
+},
+{
+"id": "SIG-0015",
+"status": "processed"
+},
+{
+"id": "SIG-0016",
+"status": "new"
+},
+{
+"id": "SIG-0017",
+"status": "new"
+},
+{
+"id": "SIG-0018",
+"status": "new"
+},
+{
+"id": "SIG-0019",
+"status": "new"
+},
+{
+"id": "SIG-0020",
+"status": "new"
+},
+{
+"id": "SIG-0021",
+"status": "new"
+},
+{
+"id": "SIG-0022",
+"status": "new"
+},
+{
+"id": "SIG-0101",
+"status": "processed"
+},
+{
+"id": "SIG-0102",
+"status": "processed"
+},
+{
+"id": "SIG-0103",
+"status": "processed"
+},
+{
+"id": "SIG-0104",
+"status": "processed"
+},
+{
+"id": "SIG-0105",
+"status": "processed"
+},
+{
+"id": "SIG-0106",
+"status": "processed"
+},
+{
+"id": "SIG-0107",
+"status": "processed"
+},
+{
+"id": "SIG-0108",
+"status": "processed"
+},
+{
+"id": "SIG-0109",
+"status": "processed"
+},
+{
+"id": "SIG-0110",
+"status": "processed"
+},
+{
+"id": "SIG-0111",
+"status": "processed"
+},
+{
+"id": "SIG-0112",
+"status": "processed"
+},
+{
+"id": "SIG-0113",
+"status": "processed"
+},
+{
+"id": "SIG-0114",
+"status": "processed"
+},
+{
+"id": "SIG-0115",
+"status": "processed"
+},
+{
+"id": "SIG-0116",
+"status": "processed"
+},
+{
+"id": "SIG-0023",
+"status": "new"
+}
+],
+"opportunities": [
+{
+"id": "OPP-0001",
+"stage": "pushed",
+"pushed_at": "2026-09-18T00:00:00Z",
+"sent_at": null,
+"email_subject": "Deaf Smith County heat during grain fill — getting your yield records in order now",
+"email_body": "Hi Ruth,\n\nDeaf Smith County, TX forecast shows highs above 95°F for 3+ consecutive days during grain fill and harvest dry-down (NOAA). With 2,200 acres of cotton, FieldSense Yield & Insurance Records can tell you which fields matter most this week and keep the records straight if it turns into a claim.\n\nFifteen minutes Thursday?\n\nTyler Bramlett"
+},
+{
+"id": "OPP-0002",
+"stage": "sent",
+"pushed_at": "2026-09-09T15:00:00Z",
+"sent_at": "2026-09-20T16:30:00Z",
+"email_subject": "Chase County just moved to extreme drought — a watering plan for the acres you can still irrigate",
+"email_body": "Hi Ruth,\n\nChase County, NE drought category worsened to D3 (Extreme Drought) this week (US Drought Monitor). With 5,000 acres of corn, FieldSense Irrigation Scheduling can tell you which fields matter most this week and keep the records straight if it turns into a claim.\n\nFifteen minutes Thursday?\n\nMarcus Deleon"
+},
+{
+"id": "OPP-0003",
+"stage": "lost",
+"pushed_at": "2026-09-02T15:00:00Z",
+"sent_at": "2026-09-12T16:30:00Z",
+"email_subject": "Sherman County heat during grain fill — getting your yield records in order now",
+"email_body": "Hi Nancy,\n\nSherman County, KS forecast shows highs above 98°F with overnight lows above 75°F during grain fill and harvest dry-down (NOAA). With 6,500 acres of corn, FieldSense Yield & Insurance Records can tell you which fields matter most this week and keep the records straight if it turns into a claim.\n\nFifteen minutes Thursday?\n\nTyler Bramlett"
+},
+{
+"id": "OPP-0004",
+"stage": "pushed",
+"pushed_at": "2026-09-29T13:00:00Z",
+"sent_at": null,
+"email_subject": "Seward County: 3.1in of rain with flooding risk — planning the field days you have left",
+"email_body": "Hi Michael,\n\nSeward County, KS 7-day forecast shows 3.1in of rain with flooding risk, closing multiple field-work days (NOAA). With 6,500 acres of corn, FieldSense Field-Work Planner can tell you which fields matter most this week and keep the records straight if it turns into a claim.\n\nFifteen minutes Thursday?\n\nJordan Ellsworth"
+},
+{
+"id": "OPP-0005",
+"stage": "draft",
+"pushed_at": null,
+"sent_at": null,
+"email_subject": "Perkins County heat during grain fill — getting your yield records in order now",
+"email_body": "Hi Mary,\n\nPerkins County, NE forecast shows highs above 98°F with overnight lows above 75°F during grain fill and harvest dry-down (NOAA). With 2,800 acres of wheat, FieldSense Yield & Insurance Records can tell you which fields matter most this week and keep the records straight if it turns into a claim.\n\nFifteen minutes Thursday?\n\nJordan Ellsworth"
+},
+{
+"id": "OPP-0006",
+"stage": "draft",
+"pushed_at": null,
+"sent_at": null,
+"email_subject": "Grant County heat during grain fill — getting your yield records in order now",
+"email_body": "Hi David,\n\nGrant County, KS forecast shows a hail warning alongside extreme heat during grain fill and harvest dry-down (NOAA). With 2,200 acres of corn, FieldSense Yield & Insurance Records can tell you which fields matter most this week and keep the records straight if it turns into a claim.\n\nFifteen minutes Thursday?\n\nMarcus Deleon"
+},
+{
+"id": "OPP-0007",
+"stage": "pushed",
+"pushed_at": "2026-09-21T05:00:00Z",
+"sent_at": null,
+"email_subject": "Cimarron County just moved to moderate drought — a watering plan for the acres you can still irrigate",
+"email_body": "Hi Sandra,\n\nCimarron County, OK drought category worsened to D1 (Moderate Drought) this week (US Drought Monitor). With 4,200 acres of corn, FieldSense Irrigation Scheduling can tell you which fields matter most this week and keep the records straight if it turns into a claim.\n\nFifteen minutes Thursday?\n\nRenee Okafor"
+},
+{
+"id": "OPP-0008",
+"stage": "sent",
+"pushed_at": "2026-09-15T15:00:00Z",
+"sent_at": "2026-09-16T09:00:00Z",
+"email_subject": "Deaf Smith County heat during grain fill — getting your yield records in order now",
+"email_body": "Hi Susan,\n\nDeaf Smith County, TX forecast shows highs above 95°F for 3+ consecutive days during grain fill and harvest dry-down (NOAA). With 800 acres of corn, FieldSense Yield & Insurance Records can tell you which fields matter most this week and keep the records straight if it turns into a claim.\n\nFifteen minutes Thursday?\n\nJordan Ellsworth"
+},
+{
+"id": "OPP-0009",
+"stage": "lost",
+"pushed_at": "2026-09-15T15:00:00Z",
+"sent_at": "2026-09-29T16:30:00Z",
+"email_subject": "Sherman County: 2.5in of rain over 4 days — planning the field days you have left",
+"email_body": "Hi James,\n\nSherman County, KS 7-day forecast shows 2.5in of rain over 4 days, closing multiple field-work days (NOAA). With 2,200 acres of wheat, FieldSense Field-Work Planner can tell you which fields matter most this week and keep the records straight if it turns into a claim.\n\nFifteen minutes Thursday?\n\nPriya Nathan"
+},
+{
+"id": "OPP-0010",
+"stage": "lost",
+"pushed_at": "2026-09-12T15:00:00Z",
+"sent_at": "2026-09-29T16:30:00Z",
+"email_subject": "Dundy County heat during grain fill — getting your yield records in order now",
+"email_body": "Hi Robert,\n\nDundy County, NE forecast shows a hail warning alongside extreme heat during grain fill and harvest dry-down (NOAA). With 2,800 acres of wheat, FieldSense Yield & Insurance Records can tell you which fields matter most this week and keep the records straight if it turns into a claim.\n\nFifteen minutes Thursday?\n\nMarcus Deleon"
+},
+{
+"id": "OPP-0011",
+"stage": "sent",
+"pushed_at": "2026-09-12T15:00:00Z",
+"sent_at": "2026-09-22T16:30:00Z",
+"email_subject": "Chase County just moved to extreme drought — a watering plan for the acres you can still irrigate",
+"email_body": "Hi Paul,\n\nChase County, NE drought category worsened to D3 (Extreme Drought) this week (US Drought Monitor). With 1,600 acres of corn, FieldSense Irrigation Scheduling can tell you which fields matter most this week and keep the records straight if it turns into a claim.\n\nFifteen minutes Thursday?\n\nMarcus Deleon"
+},
+{
+"id": "OPP-0012",
+"stage": "sent",
+"pushed_at": "2026-09-21T00:00:00Z",
+"sent_at": "2026-09-22T00:00:00Z",
+"email_subject": "Deaf Smith County heat during grain fill — getting your yield records in order now",
+"email_body": "Hi Sandra,\n\nDeaf Smith County, TX forecast shows highs above 95°F for 3+ consecutive days during grain fill and harvest dry-down (NOAA). With 800 acres of cotton, FieldSense Yield & Insurance Records can tell you which fields matter most this week and keep the records straight if it turns into a claim.\n\nFifteen minutes Thursday?\n\nTyler Bramlett"
+},
+{
+"id": "OPP-0013",
+"stage": "draft",
+"pushed_at": null,
+"sent_at": null,
+"email_subject": "Moore County heat during grain fill — getting your yield records in order now",
+"email_body": "Hi Ruth,\n\nMoore County, TX forecast shows a hail warning alongside extreme heat during grain fill and harvest dry-down (NOAA). With 6,500 acres of wheat, FieldSense Yield & Insurance Records can tell you which fields matter most this week and keep the records straight if it turns into a claim.\n\nFifteen minutes Thursday?\n\nTyler Bramlett"
+},
+{
+"id": "OPP-0014",
+"stage": "pushed",
+"pushed_at": "2026-09-04T15:00:00Z",
+"sent_at": null,
+"email_subject": "Sherman County heat during grain fill — getting your yield records in order now",
+"email_body": "Hi James,\n\nSherman County, KS forecast shows highs above 98°F with overnight lows above 75°F during grain fill and harvest dry-down (NOAA). With 2,200 acres of wheat, FieldSense Yield & Insurance Records can tell you which fields matter most this week and keep the records straight if it turns into a claim.\n\nFifteen minutes Thursday?\n\nPriya Nathan"
+},
+{
+"id": "OPP-0015",
+"stage": "sent",
+"pushed_at": "2026-09-29T15:00:00Z",
+"sent_at": "2026-09-30T16:30:00Z",
+"email_subject": "Keith County: 2.5in of rain over 4 days — planning the field days you have left",
+"email_body": "Hi Michael,\n\nKeith County, NE 7-day forecast shows 2.5in of rain over 4 days, closing multiple field-work days (NOAA). With 1,200 acres of corn, FieldSense Field-Work Planner can tell you which fields matter most this week and keep the records straight if it turns into a claim.\n\nFifteen minutes Thursday?\n\nSofia Marchetti"
+},
+{
+"id": "OPP-0016",
+"stage": "won",
+"pushed_at": "2026-09-07T08:00:00Z",
+"sent_at": "2026-09-08T04:00:00Z",
+"email_subject": "Beaver County: 1.8in of rain plus high winds — planning the field days you have left",
+"email_body": "Hi Mark,\n\nBeaver County, OK 7-day forecast shows 1.8in of rain plus high winds, closing multiple field-work days (NOAA). With 2,200 acres of wheat, FieldSense Field-Work Planner can tell you which fields matter most this week and keep the records straight if it turns into a claim.\n\nFifteen minutes Thursday?\n\nRenee Okafor"
+},
+{
+"id": "OPP-0017",
+"stage": "sent",
+"pushed_at": "2026-09-12T15:00:00Z",
+"sent_at": "2026-09-21T16:30:00Z",
+"email_subject": "Sherman County: 2.5in of rain over 4 days — planning the field days you have left",
+"email_body": "Hi Ruth,\n\nSherman County, KS 7-day forecast shows 2.5in of rain over 4 days, closing multiple field-work days (NOAA). With 5,000 acres of wheat, FieldSense Field-Work Planner can tell you which fields matter most this week and keep the records straight if it turns into a claim.\n\nFifteen minutes Thursday?\n\nMarcus Deleon"
+},
+{
+"id": "OPP-0018",
+"stage": "pushed",
+"pushed_at": "2026-09-19T15:00:00Z",
+"sent_at": null,
+"email_subject": "Keith County heat during grain fill — getting your yield records in order now",
+"email_body": "Hi Michael,\n\nKeith County, NE forecast shows highs above 95°F for 3+ consecutive days during grain fill and harvest dry-down (NOAA). With 1,200 acres of corn, FieldSense Yield & Insurance Records can tell you which fields matter most this week and keep the records straight if it turns into a claim.\n\nFifteen minutes Thursday?\n\nSofia Marchetti"
+},
+{
+"id": "OPP-0019",
+"stage": "sent",
+"pushed_at": "2026-09-07T03:00:00Z",
+"sent_at": "2026-09-08T02:00:00Z",
+"email_subject": "Beaver County: 1.8in of rain plus high winds — planning the field days you have left",
+"email_body": "Hi Ruth,\n\nBeaver County, OK 7-day forecast shows 1.8in of rain plus high winds, closing multiple field-work days (NOAA). With 1,600 acres of sorghum, FieldSense Field-Work Planner can tell you which fields matter most this week and keep the records straight if it turns into a claim.\n\nFifteen minutes Thursday?\n\nRenee Okafor"
+},
+{
+"id": "OPP-0020",
+"stage": "pushed",
+"pushed_at": "2026-09-22T15:00:00Z",
+"sent_at": null,
+"email_subject": "Ford County just moved to severe drought — a watering plan for the acres you can still irrigate",
+"email_body": "Hi Mark,\n\nFord County, KS drought category worsened to D2 (Severe Drought) this week (US Drought Monitor). With 800 acres of wheat, FieldSense Irrigation Scheduling can tell you which fields matter most this week and keep the records straight if it turns into a claim.\n\nFifteen minutes Thursday?\n\nPriya Nathan"
+},
+{
+"id": "OPP-0021",
+"stage": "sent",
+"pushed_at": "2026-09-01T12:00:00Z",
+"sent_at": "2026-09-03T00:00:00Z",
+"email_subject": "Perkins County heat during grain fill — getting your yield records in order now",
+"email_body": "Hi Linda,\n\nPerkins County, NE forecast shows highs above 98°F with overnight lows above 75°F during grain fill and harvest dry-down (NOAA). With 6,500 acres of corn, FieldSense Yield & Insurance Records can tell you which fields matter most this week and keep the records straight if it turns into a claim.\n\nFifteen minutes Thursday?\n\nJordan Ellsworth"
+},
+{
+"id": "OPP-0022",
+"stage": "pushed",
+"pushed_at": "2026-09-22T10:00:00Z",
+"sent_at": null,
+"email_subject": "Seward County just moved to extreme drought — a watering plan for the acres you can still irrigate",
+"email_body": "Hi Michael,\n\nSeward County, KS drought category worsened to D3 (Extreme Drought) this week (US Drought Monitor). With 6,500 acres of corn, FieldSense Irrigation Scheduling can tell you which fields matter most this week and keep the records straight if it turns into a claim.\n\nFifteen minutes Thursday?\n\nJordan Ellsworth"
+},
+{
+"id": "OPP-0023",
+"stage": "won",
+"pushed_at": "2026-09-14T08:00:00Z",
+"sent_at": "2026-09-15T02:00:00Z",
+"email_subject": "Cheyenne County heat during grain fill — getting your yield records in order now",
+"email_body": "Hi Linda,\n\nCheyenne County, NE forecast shows highs above 98°F with overnight lows above 75°F during grain fill and harvest dry-down (NOAA). With 3,500 acres of corn, FieldSense Yield & Insurance Records can tell you which fields matter most this week and keep the records straight if it turns into a claim.\n\nFifteen minutes Thursday?\n\nRenee Okafor"
+},
+{
+"id": "OPP-0024",
+"stage": "lost",
+"pushed_at": "2026-08-15T15:00:00Z",
+"sent_at": "2026-09-13T16:30:00Z",
+"email_subject": "FieldSense Irrigation Scheduling for Weber Land & Cattle Co.",
+"email_body": "Hi Brian,\n\nChecking in on Irrigation Scheduling for your 5,000 acres. Happy to walk through it when you have fifteen minutes.\n\nSofia Marchetti"
+},
+{
+"id": "OPP-0025",
+"stage": "pushed",
+"pushed_at": "2026-08-28T15:00:00Z",
+"sent_at": null,
+"email_subject": "FieldSense Yield & Insurance Records for Castaneda Farming LLC",
+"email_body": "Hi Karen,\n\nChecking in on Yield & Insurance Records for your 5,000 acres. Happy to walk through it when you have fifteen minutes.\n\nTyler Bramlett"
+},
+{
+"id": "OPP-0026",
+"stage": "draft",
+"pushed_at": null,
+"sent_at": null,
+"email_subject": "FieldSense Irrigation Scheduling for Ehler Agri-Services",
+"email_body": "Hi David,\n\nChecking in on Irrigation Scheduling for your 4,200 acres. Happy to walk through it when you have fifteen minutes.\n\nSofia Marchetti"
+},
+{
+"id": "OPP-0027",
+"stage": "pushed",
+"pushed_at": "2026-09-06T15:00:00Z",
+"sent_at": null,
+"email_subject": "FieldSense Field-Work Planner for Whitfield Land & Cattle Co.",
+"email_body": "Hi Mary,\n\nChecking in on Field-Work Planner for your 2,200 acres. Happy to walk through it when you have fifteen minutes.\n\nJordan Ellsworth"
+},
+{
+"id": "OPP-0028",
+"stage": "sent",
+"pushed_at": "2026-08-28T15:00:00Z",
+"sent_at": "2026-09-19T16:30:00Z",
+"email_subject": "FieldSense Field-Work Planner for Castaneda Farming LLC",
+"email_body": "Hi Karen,\n\nChecking in on Field-Work Planner for your 5,000 acres. Happy to walk through it when you have fifteen minutes.\n\nTyler Bramlett"
+},
+{
+"id": "OPP-0029",
+"stage": "sent",
+"pushed_at": "2026-09-06T15:00:00Z",
+"sent_at": "2026-09-05T16:30:00Z",
+"email_subject": "FieldSense Irrigation Scheduling for Schmidt Bros. Farms",
+"email_body": "Hi James,\n\nChecking in on Irrigation Scheduling for your 2,200 acres. Happy to walk through it when you have fifteen minutes.\n\nMarcus Deleon"
+},
+{
+"id": "OPP-0030",
+"stage": "sent",
+"pushed_at": "2026-08-16T15:00:00Z",
+"sent_at": "2026-09-02T16:30:00Z",
+"email_subject": "FieldSense Irrigation Scheduling for Weber Grain Co.",
+"email_body": "Hi Sharon,\n\nChecking in on Irrigation Scheduling for your 1,600 acres. Happy to walk through it when you have fifteen minutes.\n\nSofia Marchetti"
+},
+{
+"id": "OPP-0031",
+"stage": "pushed",
+"pushed_at": "2026-08-05T15:00:00Z",
+"sent_at": null,
+"email_subject": "FieldSense Irrigation Scheduling for Reimer Family Farm",
+"email_body": "Hi David,\n\nChecking in on Irrigation Scheduling for your 6,500 acres. Happy to walk through it when you have fifteen minutes.\n\nTyler Bramlett"
+},
+{
+"id": "OPP-0032",
+"stage": "draft",
+"pushed_at": null,
+"sent_at": null,
+"email_subject": "FieldSense Field-Work Planner for Yoder Land & Cattle Co.",
+"email_body": "Hi Mary,\n\nChecking in on Field-Work Planner for your 2,800 acres. Happy to walk through it when you have fifteen minutes.\n\nMarcus Deleon"
+},
+{
+"id": "OPP-0033",
+"stage": "sent",
+"pushed_at": "2026-09-22T15:00:00Z",
+"sent_at": "2026-09-21T16:30:00Z",
+"email_subject": "FieldSense Field-Work Planner for Suderman Ranch",
+"email_body": "Hi Linda,\n\nChecking in on Field-Work Planner for your 800 acres. Happy to walk through it when you have fifteen minutes.\n\nJordan Ellsworth"
+},
+{
+"id": "OPP-0034",
+"stage": "draft",
+"pushed_at": null,
+"sent_at": null,
+"email_subject": "FieldSense Field-Work Planner for Neufeld Ranch",
+"email_body": "Hi Linda,\n\nChecking in on Field-Work Planner for your 3,500 acres. Happy to walk through it when you have fifteen minutes.\n\nSofia Marchetti"
+},
+{
+"id": "OPP-0035",
+"stage": "draft",
+"pushed_at": null,
+"sent_at": null,
+"email_subject": "FieldSense Field-Work Planner for Becker Ranch",
+"email_body": "Hi Ruth,\n\nChecking in on Field-Work Planner for your 6,500 acres. Happy to walk through it when you have fifteen minutes.\n\nTyler Bramlett"
+},
+{
+"id": "OPP-0036",
+"stage": "draft",
+"pushed_at": null,
+"sent_at": null,
+"email_subject": "FieldSense Field-Work Planner for Becker Grain Co.",
+"email_body": "Hi Nancy,\n\nChecking in on Field-Work Planner for your 6,500 acres. Happy to walk through it when you have fifteen minutes.\n\nPriya Nathan"
+},
+{
+"id": "OPP-0037",
+"stage": "sent",
+"pushed_at": "2026-08-27T15:00:00Z",
+"sent_at": "2026-09-26T16:30:00Z",
+"email_subject": "FieldSense Irrigation Scheduling for Brandt Ranch",
+"email_body": "Hi Donna,\n\nChecking in on Irrigation Scheduling for your 4,200 acres. Happy to walk through it when you have fifteen minutes.\n\nTyler Bramlett"
+},
+{
+"id": "OPP-0038",
+"stage": "sent",
+"pushed_at": "2026-09-01T20:00:00Z",
+"sent_at": "2026-09-02T00:00:00Z",
+"email_subject": "FieldSense Yield & Insurance Records for Bontrager Farming LLC",
+"email_body": "Hi Donna,\n\nChecking in on Yield & Insurance Records for your 1,600 acres. Happy to walk through it when you have fifteen minutes.\n\nRenee Okafor"
+},
+{
+"id": "OPP-0200",
+"stage": "lost",
+"pushed_at": "2026-07-14T16:00:00Z",
+"sent_at": "2026-07-15T22:00:00Z",
+"email_subject": "Finney County heat during grain fill — getting your yield records in order now",
+"email_body": "Hi Kevin,\n\nFinney County, KS forecast shows highs above 100°F for 5 consecutive days during the corn pollination window (NOAA). With 800 acres of corn, FieldSense Yield & Insurance Records can tell you which fields matter most this week and keep the records straight if it turns into a claim.\n\nFifteen minutes Thursday?\n\nJordan Ellsworth"
+},
+{
+"id": "OPP-0201",
+"stage": "won",
+"pushed_at": "2026-07-14T17:00:00Z",
+"sent_at": "2026-07-16T04:00:00Z",
+"email_subject": "Finney County heat during grain fill — getting your yield records in order now",
+"email_body": "Hi Linda,\n\nFinney County, KS forecast shows highs above 100°F for 5 consecutive days during the corn pollination window (NOAA). With 800 acres of corn, FieldSense Yield & Insurance Records can tell you which fields matter most this week and keep the records straight if it turns into a claim.\n\nFifteen minutes Thursday?\n\nJordan Ellsworth"
+},
+{
+"id": "OPP-0202",
+"stage": "lost",
+"pushed_at": "2026-07-18T09:00:00Z",
+"sent_at": "2026-07-20T10:00:00Z",
+"email_subject": "Moore County just moved to moderate drought — a watering plan for the acres you can still irrigate",
+"email_body": "Hi Daniel,\n\nMoore County, TX drought category worsened to D1 (Moderate Drought) this week (US Drought Monitor). With 800 acres of wheat, FieldSense Irrigation Scheduling can tell you which fields matter most this week and keep the records straight if it turns into a claim.\n\nFifteen minutes Thursday?\n\nTyler Bramlett"
+},
+{
+"id": "OPP-0203",
+"stage": "sent",
+"pushed_at": "2026-07-27T10:00:00Z",
+"sent_at": "2026-07-29T14:00:00Z",
+"email_subject": "Keith County: 3.3in of rain over 3 days with a hail warning — planning the field days you have left",
+"email_body": "Hi David,\n\nKeith County, NE 7-day forecast shows 3.3in of rain over 3 days with a hail warning, closing multiple field-work days (NOAA). With 4,200 acres of corn, FieldSense Field-Work Planner can tell you which fields matter most this week and keep the records straight if it turns into a claim.\n\nFifteen minutes Thursday?\n\nSofia Marchetti"
+},
+{
+"id": "OPP-0204",
+"stage": "won",
+"pushed_at": "2026-07-26T23:00:00Z",
+"sent_at": "2026-07-28T08:00:00Z",
+"email_subject": "Keith County: 3.3in of rain over 3 days with a hail warning — planning the field days you have left",
+"email_body": "Hi Michael,\n\nKeith County, NE 7-day forecast shows 3.3in of rain over 3 days with a hail warning, closing multiple field-work days (NOAA). With 1,200 acres of corn, FieldSense Field-Work Planner can tell you which fields matter most this week and keep the records straight if it turns into a claim.\n\nFifteen minutes Thursday?\n\nSofia Marchetti"
+},
+{
+"id": "OPP-0205",
+"stage": "sent",
+"pushed_at": "2026-07-20T07:00:00Z",
+"sent_at": "2026-07-21T05:00:00Z",
+"email_subject": "Texas County just moved to moderate drought — a watering plan for the acres you can still irrigate",
+"email_body": "Hi Daniel,\n\nTexas County, OK drought category worsened to D1 (Moderate Drought) this week (US Drought Monitor). With 4,200 acres of corn, FieldSense Irrigation Scheduling can tell you which fields matter most this week and keep the records straight if it turns into a claim.\n\nFifteen minutes Thursday?\n\nRenee Okafor"
+},
+{
+"id": "OPP-0206",
+"stage": "pushed",
+"pushed_at": "2026-07-28T09:00:00Z",
+"sent_at": null,
+"email_subject": "Grant County heat during grain fill — getting your yield records in order now",
+"email_body": "Hi Mary,\n\nGrant County, KS forecast shows highs above 95°F for 3+ consecutive days during grain fill (NOAA). With 2,200 acres of wheat, FieldSense Yield & Insurance Records can tell you which fields matter most this week and keep the records straight if it turns into a claim.\n\nFifteen minutes Thursday?\n\nJordan Ellsworth"
+},
+{
+"id": "OPP-0207",
+"stage": "won",
+"pushed_at": "2026-07-28T10:00:00Z",
+"sent_at": "2026-07-30T05:00:00Z",
+"email_subject": "Grant County heat during grain fill — getting your yield records in order now",
+"email_body": "Hi David,\n\nGrant County, KS forecast shows highs above 95°F for 3+ consecutive days during grain fill (NOAA). With 2,200 acres of corn, FieldSense Yield & Insurance Records can tell you which fields matter most this week and keep the records straight if it turns into a claim.\n\nFifteen minutes Thursday?\n\nJordan Ellsworth"
+},
+{
+"id": "OPP-0208",
+"stage": "pushed",
+"pushed_at": "2026-08-01T15:00:00Z",
+"sent_at": null,
+"email_subject": "Cheyenne County just moved to severe drought — a watering plan for the acres you can still irrigate",
+"email_body": "Hi Brian,\n\nCheyenne County, NE drought category worsened to D2 (Severe Drought) this week (US Drought Monitor). With 5,000 acres of wheat, FieldSense Irrigation Scheduling can tell you which fields matter most this week and keep the records straight if it turns into a claim.\n\nFifteen minutes Thursday?\n\nSofia Marchetti"
+},
+{
+"id": "OPP-0209",
+"stage": "pushed",
+"pushed_at": "2026-08-02T18:00:00Z",
+"sent_at": null,
+"email_subject": "Cheyenne County just moved to severe drought — a watering plan for the acres you can still irrigate",
+"email_body": "Hi Linda,\n\nCheyenne County, NE drought category worsened to D2 (Severe Drought) this week (US Drought Monitor). With 3,500 acres of corn, FieldSense Irrigation Scheduling can tell you which fields matter most this week and keep the records straight if it turns into a claim.\n\nFifteen minutes Thursday?\n\nSofia Marchetti"
+},
+{
+"id": "OPP-0210",
+"stage": "lost",
+"pushed_at": "2026-08-04T10:00:00Z",
+"sent_at": "2026-08-05T18:00:00Z",
+"email_subject": "Seward County just moved to moderate drought — a watering plan for the acres you can still irrigate",
+"email_body": "Hi Michael,\n\nSeward County, KS drought category worsened to D1 (Moderate Drought) this week (US Drought Monitor). With 6,500 acres of corn, FieldSense Irrigation Scheduling can tell you which fields matter most this week and keep the records straight if it turns into a claim.\n\nFifteen minutes Thursday?\n\nJordan Ellsworth"
+},
+{
+"id": "OPP-0211",
+"stage": "pushed",
+"pushed_at": "2026-08-08T00:00:00Z",
+"sent_at": null,
+"email_subject": "Deaf Smith County heat during grain fill — getting your yield records in order now",
+"email_body": "Hi Ruth,\n\nDeaf Smith County, TX forecast shows highs above 98°F for 4 consecutive days during grain fill (NOAA). With 2,200 acres of cotton, FieldSense Yield & Insurance Records can tell you which fields matter most this week and keep the records straight if it turns into a claim.\n\nFifteen minutes Thursday?\n\nTyler Bramlett"
+},
+{
+"id": "OPP-0212",
+"stage": "won",
+"pushed_at": "2026-08-10T09:00:00Z",
+"sent_at": "2026-08-11T03:00:00Z",
+"email_subject": "Cimarron County just moved to extreme drought — a watering plan for the acres you can still irrigate",
+"email_body": "Hi Sandra,\n\nCimarron County, OK drought category worsened to D3 (Extreme Drought) this week (US Drought Monitor). With 1,600 acres of corn, FieldSense Irrigation Scheduling can tell you which fields matter most this week and keep the records straight if it turns into a claim.\n\nFifteen minutes Thursday?\n\nRenee Okafor"
+},
+{
+"id": "OPP-0213",
+"stage": "sent",
+"pushed_at": "2026-08-10T07:00:00Z",
+"sent_at": "2026-08-11T04:00:00Z",
+"email_subject": "Cimarron County just moved to extreme drought — a watering plan for the acres you can still irrigate",
+"email_body": "Hi Sandra,\n\nCimarron County, OK drought category worsened to D3 (Extreme Drought) this week (US Drought Monitor). With 4,200 acres of corn, FieldSense Irrigation Scheduling can tell you which fields matter most this week and keep the records straight if it turns into a claim.\n\nFifteen minutes Thursday?\n\nRenee Okafor"
+},
+{
+"id": "OPP-0214",
+"stage": "won",
+"pushed_at": "2026-08-18T08:00:00Z",
+"sent_at": "2026-08-19T09:00:00Z",
+"email_subject": "Finney County just moved to severe drought — a watering plan for the acres you can still irrigate",
+"email_body": "Hi Linda,\n\nFinney County, KS drought category worsened to D2 (Severe Drought) this week (US Drought Monitor). With 800 acres of corn, FieldSense Irrigation Scheduling can tell you which fields matter most this week and keep the records straight if it turns into a claim.\n\nFifteen minutes Thursday?\n\nJordan Ellsworth"
+},
+{
+"id": "OPP-0215",
+"stage": "lost",
+"pushed_at": "2026-08-18T15:00:00Z",
+"sent_at": "2026-08-20T06:00:00Z",
+"email_subject": "Finney County just moved to severe drought — a watering plan for the acres you can still irrigate",
+"email_body": "Hi Mary,\n\nFinney County, KS drought category worsened to D2 (Severe Drought) this week (US Drought Monitor). With 2,200 acres of corn, FieldSense Irrigation Scheduling can tell you which fields matter most this week and keep the records straight if it turns into a claim.\n\nFifteen minutes Thursday?\n\nJordan Ellsworth"
+},
+{
+"id": "OPP-0216",
+"stage": "won",
+"pushed_at": "2026-08-22T03:00:00Z",
+"sent_at": "2026-08-23T09:00:00Z",
+"email_subject": "Box Butte County just moved to extreme drought — a watering plan for the acres you can still irrigate",
+"email_body": "Hi Steven,\n\nBox Butte County, NE drought category worsened to D3 (Extreme Drought) this week (US Drought Monitor). With 2,800 acres of dry beans, FieldSense Irrigation Scheduling can tell you which fields matter most this week and keep the records straight if it turns into a claim.\n\nFifteen minutes Thursday?\n\nSofia Marchetti"
+},
+{
+"id": "OPP-0217",
+"stage": "won",
+"pushed_at": "2026-08-24T04:00:00Z",
+"sent_at": "2026-08-24T20:00:00Z",
+"email_subject": "Beaver County just moved to severe drought — a watering plan for the acres you can still irrigate",
+"email_body": "Hi Ruth,\n\nBeaver County, OK drought category worsened to D2 (Severe Drought) this week (US Drought Monitor). With 1,600 acres of sorghum, FieldSense Irrigation Scheduling can tell you which fields matter most this week and keep the records straight if it turns into a claim.\n\nFifteen minutes Thursday?\n\nRenee Okafor"
+},
+{
+"id": "OPP-0218",
+"stage": "sent",
+"pushed_at": "2026-08-24T07:00:00Z",
+"sent_at": "2026-08-24T20:00:00Z",
+"email_subject": "Beaver County just moved to severe drought — a watering plan for the acres you can still irrigate",
+"email_body": "Hi Robert,\n\nBeaver County, OK drought category worsened to D2 (Severe Drought) this week (US Drought Monitor). With 3,500 acres of wheat, FieldSense Irrigation Scheduling can tell you which fields matter most this week and keep the records straight if it turns into a claim.\n\nFifteen minutes Thursday?\n\nRenee Okafor"
+},
+{
+"id": "OPP-0219",
+"stage": "won",
+"pushed_at": "2026-08-24T04:00:00Z",
+"sent_at": "2026-08-24T16:00:00Z",
+"email_subject": "Beaver County just moved to severe drought — a watering plan for the acres you can still irrigate",
+"email_body": "Hi Mark,\n\nBeaver County, OK drought category worsened to D2 (Severe Drought) this week (US Drought Monitor). With 2,200 acres of wheat, FieldSense Irrigation Scheduling can tell you which fields matter most this week and keep the records straight if it turns into a claim.\n\nFifteen minutes Thursday?\n\nRenee Okafor"
+},
+{
+"id": "OPP-0220",
+"stage": "sent",
+"pushed_at": "2026-09-28T12:00:00Z",
+"sent_at": "2026-09-29T12:00:00Z",
+"email_subject": "Cimarron County just moved to exceptional drought — a watering plan for the acres you can still irrigate",
+"email_body": "Hi Sandra,\n\nCimarron County, OK drought category worsened to D4 (Exceptional Drought) this week (US Drought Monitor). With 1,600 acres of corn, FieldSense Field-Work Planner can tell you which fields matter most this week and keep the records straight if it turns into a claim.\n\nFifteen minutes Thursday?\n\nRenee Okafor"
+},
+{
+"id": "OPP-0221",
+"stage": "pushed",
+"pushed_at": "2026-09-28T14:00:00Z",
+"sent_at": null,
+"email_subject": "Cimarron County just moved to exceptional drought — a watering plan for the acres you can still irrigate",
+"email_body": "Hi Sandra,\n\nCimarron County, OK drought category worsened to D4 (Exceptional Drought) this week (US Drought Monitor). With 4,200 acres of corn, FieldSense Irrigation Scheduling can tell you which fields matter most this week and keep the records straight if it turns into a claim.\n\nFifteen minutes Thursday?\n\nRenee Okafor"
+},
+{
+"id": "OPP-0222",
+"stage": "pushed",
+"pushed_at": "2026-08-25T15:00:00Z",
+"sent_at": null,
+"email_subject": "FieldSense Irrigation Scheduling for Whitfield Land & Cattle Co.",
+"email_body": "Hi Mary,\n\nReaching out about FieldSense Irrigation Scheduling. Let me know if there is a good time to talk.\n\nTyler Bramlett"
+},
+{
+"id": "OPP-0223",
+"stage": "pushed",
+"pushed_at": "2026-08-25T15:00:00Z",
+"sent_at": null,
+"email_subject": "FieldSense Irrigation Scheduling for Neufeld Grain Co.",
+"email_body": "Hi Robert,\n\nReaching out about FieldSense Irrigation Scheduling. Let me know if there is a good time to talk.\n\nTyler Bramlett"
+}
+]
+}

@@ -52,20 +52,20 @@ async function insertSignals(rows: NewSignal[]): Promise<string | null> {
   return "Could not allocate a signal id.";
 }
 
-async function latestWeek(): Promise<string | null> {
-  const { data } = await getSupabase()
-    .from("signals")
-    .select("week_of")
-    .order("week_of", { ascending: false })
-    .limit(1);
-  return data?.[0]?.week_of ?? null;
+// VS-10: every inserted signal lands in the week the rep sees it: the Monday
+// of the current week (US Central). The USDM map date stays in detail/source.
+function currentMonday(): string {
+  const today = new Date().toLocaleDateString("en-CA", { timeZone: "America/Chicago" });
+  const d = new Date(`${today}T12:00:00Z`);
+  d.setUTCDate(d.getUTCDate() - ((d.getUTCDay() + 6) % 7));
+  return d.toISOString().slice(0, 10);
 }
 
 // The guaranteed demo path: one canned signal in the demo rep's territory,
 // inserted once. Seward moved D2 → D3 the week before, so D3 → D4 is plausible.
 async function insertDemoSignal(): Promise<RefreshResult> {
   const db = getSupabase();
-  const week = (await latestWeek()) ?? new Date().toISOString().slice(0, 10);
+  const week = currentMonday();
   const { data: existing, error: readErr } = await db
     .from("signals")
     .select("id")
@@ -154,10 +154,11 @@ async function refreshFromUsdm(): Promise<RefreshResult> {
     if (history.length === 0) continue;
 
     const latest = history[0];
-    const week = latest.mapDate.slice(0, 10);
+    const mapDate = latest.mapDate.slice(0, 10);
+    const week = currentMonday();
     const level = levelOf(latest);
     const prev = latestStored.get(key);
-    if (prev && prev.week_of >= week) continue; // already have this week or newer
+    if (prev && prev.week_of >= week) continue; // already have a drought signal this week
     const baseline = (prev && droughtLevel(prev)) ?? (history[1] ? levelOf(history[1]) : level);
     if (level <= baseline || level < 0) continue;
 
@@ -175,8 +176,8 @@ async function refreshFromUsdm(): Promise<RefreshResult> {
       type: "drought",
       severity: level - baseline >= 2 ? "High" : "Medium",
       headline: `${shortCounty(county)}, ${st} moved ${from} → D${level} (${LEVEL_NAME[level]})`,
-      detail: `US Drought Monitor map of ${week}: ${pct.toFixed(0)}% of ${county} is at D${level} or worse.`,
-      source: "US Drought Monitor (live)",
+      detail: `US Drought Monitor map of ${mapDate}: ${pct.toFixed(0)}% of ${county} is at D${level} or worse.`,
+      source: `US Drought Monitor (live, map of ${mapDate})`,
       target_module: "Irrigation Scheduling",
       status: "new",
       rep_id: repId,

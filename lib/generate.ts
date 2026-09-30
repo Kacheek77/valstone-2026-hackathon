@@ -1,4 +1,5 @@
 import { scoreAndDraft } from "./claude";
+import { withDerivedStatus } from "./data";
 import { formatId, nextIdNumber, UNIQUE_VIOLATION } from "./ids";
 import { leadWithFor } from "./match";
 import { amountFor, DEFAULT_PRICES } from "./pricing";
@@ -24,7 +25,7 @@ export async function generateOne(signalId: string, accountId: string): Promise<
     if (existing.data && existing.data.length > 0) return { ok: true, aiOffline: false };
 
     const signal = sig.data as Signal;
-    const account = acc.data as Account;
+    const account = await withDerivedStatus(acc.data as Account);
     const leadWith = leadWithFor(account, signal);
     if (!leadWith) return { ok: false, error: `${account.name} already owns every module.` };
 

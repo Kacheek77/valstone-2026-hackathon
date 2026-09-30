@@ -13,6 +13,24 @@ export type AllData = {
 
 export type Loaded<T> = { ok: true; data: T } | { ok: false; error: string };
 
+// VS-10: customer status is derived, not read from the seed column. An account
+// is a Customer if it owns any FieldSense module or has a won opportunity;
+// otherwise a Prospect. Every badge, filter, map pin and Claude prompt uses this.
+export function derivedStatus(account: Pick<Account, "id" | "modules_owned">, wonAccountIds: Set<string>): Account["customer_status"] {
+  return account.modules_owned.length > 0 || wonAccountIds.has(account.id) ? "Customer" : "Prospect";
+}
+
+// For code paths that load one account on its own (scoring, rewrites, sequences).
+export async function withDerivedStatus(account: Account): Promise<Account> {
+  const { data } = await getSupabase().from("opportunities").select("id").eq("account_id", account.id).eq("stage", "won").limit(1);
+  const won = new Set(data && data.length ? [account.id] : []);
+  return { ...account, customer_status: derivedStatus(account, won) };
+}
+
+// VS-10: signals Reset demo could not delete are moved to this week and
+// ignored everywhere (the app's anon role may not delete signals).
+export const RETIRED_WEEK = "1970-01-05";
+
 // The demo dataset is small (tens of rows per table), so every page loads it
 // whole and computes in memory. Fewer queries, fewer ways to fail.
 export async function loadAll(): Promise<Loaded<AllData>> {
@@ -34,8 +52,11 @@ export async function loadAll(): Promise<Loaded<AllData>> {
       ok: true,
       data: {
         reps: reps.data as Rep[],
-        accounts: accounts.data as Account[],
-        signals: signals.data as Signal[],
+        accounts: (() => {
+          const won = new Set((opps.data as Opportunity[]).filter((o) => o.stage === "won").map((o) => o.account_id));
+          return (accounts.data as Account[]).map((a) => ({ ...a, customer_status: derivedStatus(a, won) }));
+        })(),
+        signals: (signals.data as Signal[]).filter((s) => s.week_of > "2000-01-01"),
         opps: opps.data as Opportunity[],
         // Sequences are an add-on: if the table is missing (VS-7 migration not
         // run yet), the rest of the app still works without them.

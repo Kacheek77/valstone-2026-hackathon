@@ -173,7 +173,9 @@ export function rulesDraft(account: Account, signal: Signal, leadWith: string, r
   const repFirst = firstName(rep.name, "Your FieldSense rep");
   const intro = prospect
     ? `FieldSense is farm-operations software built for Plains growers, and ${leadWith} is the part that fits this week. `
-    : `You already run ${account.modules_owned.join(" and ")} with us; ${leadWith} adds the piece this week calls for. `;
+    : account.modules_owned.length
+      ? `You already run ${account.modules_owned.join(" and ")} with us; ${leadWith} adds the piece this week calls for. `
+      : `As a FieldSense customer, ${leadWith} is the piece this week calls for. `;
 
   return {
     score,

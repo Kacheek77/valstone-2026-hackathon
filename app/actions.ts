@@ -2,6 +2,8 @@
 
 import { revalidatePath } from "next/cache";
 import { rewriteEmail, type RewriteRequest } from "@/lib/claude";
+import { RETIRED_WEEK, withDerivedStatus } from "@/lib/data";
+import SEED from "@/lib/seed-snapshot.json";
 import { buildSequence } from "@/lib/sequence";
 import { refreshSignals, type RefreshResult } from "@/lib/signals-refresh";
 import { getSupabase } from "@/lib/supabase";
@@ -32,7 +34,7 @@ async function loadOpp(oppId: string) {
     db.from("reps").select("*").eq("id", o.rep_id ?? "").maybeSingle(),
   ]);
   if (!acc.data) throw new Error("Account not found.");
-  return { opp: o, account: acc.data as Account, signal: (sig.data as Signal | null) ?? null, rep: (rep.data as Rep | null) ?? null };
+  return { opp: o, account: await withDerivedStatus(acc.data as Account), signal: (sig.data as Signal | null) ?? null, rep: (rep.data as Rep | null) ?? null };
 }
 
 // ---------------------------------------------------------------- signals
@@ -252,22 +254,97 @@ export async function saveVoiceNoteAction(repId: string, note: string): Promise<
 
 // ---------------------------------------------------------------- demo
 
-const DEMO_SIGNAL = "SIG-0023";
+// VS-10: Reset demo restores the whole seed state, not just Finney. It is
+// idempotent: running it twice leaves the same rows.
+//  - signals not in the seed are deleted; where the database does not allow
+//    deleting signals, they are retired instead (week_of moved to RETIRED_WEEK,
+//    which the app ignores everywhere);
+//  - opportunities not in the seed, and every outreach step, are deleted;
+//  - seed opportunities get their seed stage, dates, email and promoted flag
+//    back; seed signals their status; reps their voice note.
+async function chunked<T>(items: T[], size: number, fn: (item: T) => Promise<unknown>) {
+  for (let i = 0; i < items.length; i += size) await Promise.all(items.slice(i, i + size).map(fn));
+}
 
-// Hackathon only (/about?admin=1): clears the Finney demo so Generate can run
-// live again. Its outreach steps go with the opportunities (on delete cascade).
 export async function resetDemoAction(): Promise<{ ok: boolean; message: string }> {
   try {
     const db = getSupabase();
-    const { error: delErr, count } = await db
-      .from("opportunities")
-      .delete({ count: "exact" })
-      .eq("signal_id", DEMO_SIGNAL);
-    if (delErr) return { ok: false, message: `Could not delete the demo opportunities (${delErr.message}).` };
-    const { error: updErr } = await db.from("signals").update({ status: "new" }).eq("id", DEMO_SIGNAL);
-    if (updErr) return { ok: false, message: `Opportunities cleared, but the signal status was not reset (${updErr.message}).` };
+    const seedOppIds = new Set(SEED.opportunities.map((o) => o.id));
+    const seedSignalIds = new Set(SEED.signals.map((s) => s.id));
+    const notes: string[] = [];
+
+    // 1. Outreach steps: all of them.
+    const steps = await db.from("outreach_steps").delete({ count: "exact" }).not("id", "is", null);
+    if (steps.error) notes.push(`steps not cleared (${steps.error.message})`);
+
+    // 2. Opportunities not in the seed (this also covers every generated lead).
+    const { data: allOpps, error: oppReadErr } = await db.from("opportunities").select("id");
+    if (oppReadErr) return { ok: false, message: `Could not read opportunities (${oppReadErr.message}).` };
+    const extraOpps = (allOpps ?? []).map((o) => o.id as string).filter((id) => !seedOppIds.has(id));
+    if (extraOpps.length) {
+      const { error } = await db.from("opportunities").delete().in("id", extraOpps);
+      if (error) return { ok: false, message: `Could not delete generated opportunities (${error.message}).` };
+    }
+
+    // 3. Signals not in the seed: delete, or retire where delete is not granted.
+    const { data: allSignals, error: sigReadErr } = await db.from("signals").select("id,week_of");
+    if (sigReadErr) return { ok: false, message: `Could not read signals (${sigReadErr.message}).` };
+    const extraSignals = (allSignals ?? []).filter((s) => !seedSignalIds.has(s.id as string));
+    let retired = 0;
+    if (extraSignals.length) {
+      const ids = extraSignals.map((s) => s.id as string);
+      await db.from("opportunities").delete().in("signal_id", ids);
+      const del = await db.from("signals").delete({ count: "exact" }).in("id", ids);
+      if (del.error || (del.count ?? 0) < ids.length) {
+        const left = extraSignals.filter((s) => s.week_of !== RETIRED_WEEK).map((s) => s.id as string);
+        if (left.length) {
+          const { error } = await db.from("signals").update({ week_of: RETIRED_WEEK, status: "processed" }).in("id", left);
+          if (error) return { ok: false, message: `Could not remove the extra signals (${error.message}).` };
+        }
+        retired = ids.length;
+      }
+    }
+
+    // 4. Seed rows back to their seed values.
+    let restoreErrors = 0;
+    await chunked(SEED.opportunities, 10, async (o) => {
+      const { error } = await db
+        .from("opportunities")
+        .update({
+          stage: o.stage,
+          pushed_at: o.pushed_at,
+          sent_at: o.sent_at,
+          email_subject: o.email_subject,
+          email_body: o.email_body,
+          promoted: false,
+          email_history: [],
+        })
+        .eq("id", o.id);
+      if (error) restoreErrors++;
+    });
+    await chunked(SEED.signals, 10, async (s) => {
+      const { error } = await db.from("signals").update({ status: s.status }).eq("id", s.id);
+      if (error) restoreErrors++;
+    });
+    await chunked(SEED.reps, 10, async (r) => {
+      const { error } = await db.from("reps").update({ voice_note: r.voice_note }).eq("id", r.id);
+      if (error) restoreErrors++;
+    });
+
     revalidateAll();
-    return { ok: true, message: `Demo reset: ${count ?? 0} Finney opportunities removed; SIG-0023 is new again.` };
+    const parts = [
+      `${extraOpps.length} generated opportunit${extraOpps.length === 1 ? "y" : "ies"} removed`,
+      `${steps.count ?? 0} outreach step${steps.count === 1 ? "" : "s"} cleared`,
+      extraSignals.length
+        ? retired
+          ? `${retired} extra signal${retired === 1 ? "" : "s"} retired (delete not granted; run supabase/migrations/vs10.sql to allow a true delete)`
+          : `${extraSignals.length} extra signal${extraSignals.length === 1 ? "" : "s"} deleted`
+        : "no extra signals",
+      `${SEED.opportunities.length} seed opportunities and ${SEED.signals.length} signals restored`,
+    ];
+    if (restoreErrors) parts.push(`${restoreErrors} rows could not be restored`);
+    if (notes.length) parts.push(...notes);
+    return { ok: restoreErrors === 0, message: `Demo reset: ${parts.join("; ")}.` };
   } catch (e) {
     return { ok: false, message: message(e) };
   }
