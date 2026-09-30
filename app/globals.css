@@ -79,3 +79,37 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .sd-shimmer, .sd-ring-sweep, .sd-fade-in { animation: none; }
 }
+
+/* VS-12 T13: the timeline's done line fills in. */
+@keyframes sd-grow-x { from { width: 0; } }
+.sd-grow-x { animation: sd-grow-x 700ms ease-out; }
+
+/* VS-12 T16: Results bars grow in left to right (segments in stage order). */
+@keyframes sd-bar-grow { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0 0 0 0); } }
+.sd-bar-grow { animation: sd-bar-grow 650ms cubic-bezier(.2,.7,.3,1) both; }
+
+/* VS-12 T14: signal header backdrops. Low opacity keeps text contrast at 4.5:1+. */
+.sd-sunrays {
+  background: repeating-conic-gradient(from 0deg, rgba(232, 155, 22, 0.16) 0deg 5deg, transparent 5deg 16deg);
+  -webkit-mask: radial-gradient(circle, #000 25%, transparent 70%);
+  mask: radial-gradient(circle, #000 25%, transparent 70%);
+  animation: sd-spin 90s linear infinite;
+}
+@keyframes sd-spin { to { transform: rotate(360deg); } }
+.sd-rain {
+  background: repeating-linear-gradient(105deg, rgba(42, 111, 181, 0.12) 0 1.5px, transparent 1.5px 13px);
+  background-size: 60px 60px;
+  animation: sd-rain-fall 0.9s linear infinite;
+}
+@keyframes sd-rain-fall { from { background-position: 0 0; } to { background-position: -16px 60px; } }
+.sd-haze {
+  background: repeating-linear-gradient(0deg, rgba(245, 90, 0, 0.09) 0 8px, transparent 8px 22px);
+  background-size: 100% 44px;
+  filter: blur(5px);
+  animation: sd-haze-rise 5s linear infinite;
+}
+@keyframes sd-haze-rise { from { background-position: 0 0; } to { background-position: 0 -44px; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .sd-grow-x, .sd-bar-grow, .sd-sunrays, .sd-rain, .sd-haze { animation: none; }
+}

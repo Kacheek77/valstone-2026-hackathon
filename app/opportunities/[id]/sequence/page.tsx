@@ -6,7 +6,7 @@ import { BackLink, EmptyState, ErrorBox, Page } from "@/components/ui";
 import { loadAll } from "@/lib/data";
 import { usdExact } from "@/lib/format";
 import { day0Status, dueDate, formatDue, isOpenStep, stepDue, stepsFor, stepStatus } from "@/lib/steps";
-import { SEQUENCE_DAYS } from "@/lib/types";
+import { RESPONSE_LABEL, SEQUENCE_DAYS } from "@/lib/types";
 import { getView } from "@/lib/view";
 
 export const dynamic = "force-dynamic";
@@ -116,7 +116,18 @@ export default async function SequencePage(props: PageProps<"/opportunities/[id]
               readOnly={readOnly}
               defaultTone={lastTone}
               overdue={overdue}
-              reply={{ enabled: replyEnabled, logged: Boolean(opp.response), stage: opp.stage }}
+              reply={{
+                enabled: replyEnabled,
+                logged: Boolean(opp.response),
+                stage: opp.stage,
+                at:
+                  opp.response && opp.responded_at
+                    ? {
+                        day: Math.max(0, Math.round((Date.parse(opp.responded_at) - Date.parse(opp.pushed_at ?? opp.created_at)) / 86_400_000)),
+                        label: RESPONSE_LABEL[opp.response],
+                      }
+                    : null,
+              }}
             />
             {mine.length === 0 && !readOnly && (
               <p className="mt-3 text-sm text-[#5a6975]">

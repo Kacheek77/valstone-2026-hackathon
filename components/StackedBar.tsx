@@ -31,12 +31,14 @@ export function wonColor(p: number | null): string {
 
 // One horizontal bar. Its width is this row's available as a share of `scale`
 // (the largest available among the bars it is compared with).
-export function StackedBar({ b, scale, height = "h-5" }: { b: Breakdown; scale: number; height?: string }) {
+// VS-12 T16: the bar grows in left to right (segments in stage order), after
+// `delay` ms so rows can stagger. CSS only; static under reduced motion.
+export function StackedBar({ b, scale, height = "h-5", delay = 0 }: { b: Breakdown; scale: number; height?: string; delay?: number }) {
   const width = scale > 0 ? Math.max(1.5, (b.available / scale) * 100) : 0;
   if (b.available <= 0) return <div className={`${height} w-full rounded bg-transparent`} />;
   return (
     <div className={`${height} w-full`}>
-      <div className="flex h-full overflow-hidden rounded" style={{ width: `${width}%` }}>
+      <div className="sd-bar-grow flex h-full overflow-hidden rounded" style={{ width: `${width}%`, animationDelay: `${delay}ms` }}>
         {SEGMENTS.map(({ key, label, color }) => {
           const seg = b.segments[key];
           if (seg.value <= 0) return null;

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { Header } from "@/components/Header";
 import { LiveSignalTable, type LiveRow } from "@/components/LiveSignalTable";
+import { SignalBackdrop } from "@/components/SignalBackdrop";
 import { BackLink, ErrorBox, Page, SEVERITY_COLOR, SEVERITY_TINT } from "@/components/ui";
 import { loadAll } from "@/lib/data";
 import { weekLabel } from "@/lib/format";
@@ -99,7 +100,9 @@ export default async function SignalDetail(props: PageProps<"/signals/[id]">) {
         </div>
 
         <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-start">
-          <div className="flex-1 rounded-xl border-l-[6px] px-5 py-4" style={{ background: SEVERITY_TINT[signal.severity], borderColor: color }}>
+          <div className="relative flex-1 overflow-hidden rounded-xl border-l-[6px] px-5 py-4" style={{ background: SEVERITY_TINT[signal.severity], borderColor: color }}>
+            <SignalBackdrop type={signal.type} />
+            <div className="relative">
             <p className="text-sm text-[#5a6975]">
               {TYPE_LABEL[signal.type]} · <b style={{ color }}>{signal.severity}</b> · Week of {weekLabel(signal.week_of)}
               {owner ? ` · ${owner.territory_name}` : ""}
@@ -107,6 +110,7 @@ export default async function SignalDetail(props: PageProps<"/signals/[id]">) {
             <h1 className="mt-1 text-xl font-bold leading-snug">{signal.headline}</h1>
             <p className="mt-2 leading-relaxed text-[#3f4e5b]">{signal.detail}</p>
             <p className="mt-2 text-sm text-[#5a6975]">Source: {signal.source}</p>
+            </div>
           </div>
           {pending === 0 && leadCount > 0 && (
             <div className="md:pt-2">

@@ -2,6 +2,7 @@
 
 import { useLayoutEffect, useRef, useState, useTransition } from "react";
 import { buildSequenceAction, rescheduleAction, saveStepAction, scheduleAllAction, setStepDoneAction } from "@/app/actions";
+import { FA } from "./faIcons";
 import { ResponsePanel } from "./ResponsePanel";
 import { useToast } from "./Toast";
 import { useHydrated } from "@/lib/useHydrated";
@@ -27,6 +28,68 @@ const STATUS_STYLE: Record<string, string> = {
 };
 
 const TONES = ["Direct", "Warm", "Technical", "Shorter"] as const;
+
+const CHANNEL_ICON: Record<string, string> = { email: "envelope-open-text", call: "phone", text: "comment-dots" };
+
+function Glyph({ name, color }: { name: string; color: string }) {
+  const i = FA[name];
+  if (!i) return null;
+  return (
+    <svg viewBox={i.viewBox} width={14} height={14} fill={color} aria-hidden>
+      <path d={i.d} />
+    </svg>
+  );
+}
+
+// VS-12 T13: the sequence as a line from Day 0 to Day 14 (further if steps were
+// added after a reply). Teal up to the last done step, amber where overdue, a
+// green marker for a logged reply. A node opens its step in the table below.
+function Timeline({ rows, reply, onOpen }: { rows: SequenceRow[]; reply: { day: number; label: string } | null; onOpen: (day: number) => void }) {
+  const maxDay = Math.max(14, ...rows.map((r) => r.day), reply?.day ?? 0);
+  const pos = (d: number) => `${(d / maxDay) * 100}%`;
+  const isDone = (r: SequenceRow) => r.status === "Done ✓" || r.status === "Sent ✓";
+  const lastDone = Math.max(-1, ...rows.filter(isDone).map((r) => r.day));
+  return (
+    <div className="mb-4 rounded-xl border border-[#e3e7eb] bg-white px-8 pb-3 pt-4 shadow-[0_2px_8px_rgba(15,20,25,0.06)]">
+      <div className="relative h-[74px]">
+        <div className="absolute left-0 right-0 top-4 h-1 rounded-full bg-[#e3e7eb]" />
+        {lastDone > 0 && <div className="sd-grow-x absolute left-0 top-4 h-1 rounded-full bg-[#3a728a]" style={{ width: pos(lastDone) }} />}
+        {rows.map((r) => {
+          const done = isDone(r);
+          const overdue = r.status === "Overdue";
+          const skipped = r.status === "Skipped";
+          const fill = done ? "#3a728a" : overdue ? "#c47d00" : "#fff";
+          const border = done ? "#3a728a" : overdue ? "#c47d00" : skipped ? "#d9dee3" : "#9aa5ae";
+          return (
+            <button
+              key={r.day}
+              type="button"
+              onClick={() => onOpen(r.day)}
+              title={`Day ${r.day} · ${r.title} · ${r.status}`}
+              className="absolute top-0 flex -translate-x-1/2 flex-col items-center focus-visible:outline-2 focus-visible:outline-[#3a728a]"
+              style={{ left: pos(r.day), opacity: skipped ? 0.55 : 1 }}
+            >
+              <span className="flex h-9 w-9 items-center justify-center rounded-full border-2 transition-transform duration-150 hover:scale-110" style={{ background: fill, borderColor: border }}>
+                <Glyph name={CHANNEL_ICON[r.channel] ?? "envelope-open-text"} color={done || overdue ? "#fff" : "#5a6975"} />
+              </span>
+              <span className="mt-1 whitespace-nowrap text-[11px] font-semibold text-[#3f4e5b]">Day {r.day}</span>
+              <span className="hidden whitespace-nowrap text-[11px] text-[#7a8794] sm:block">{r.due}</span>
+            </button>
+          );
+        })}
+        {reply && (
+          <span
+            className="absolute top-[9px] h-4 w-4 -translate-x-1/2 rounded-full border-2 border-white bg-[#1f9d55] shadow"
+            style={{ left: pos(reply.day) }}
+            title={`Customer replied: ${reply.label}`}
+            aria-label={`Customer replied: ${reply.label}`}
+          />
+        )}
+      </div>
+    </div>
+  );
+}
+
 
 const CHANNEL_LABEL: Record<string, string> = { email: "Email", call: "Call", text: "Text" };
 
@@ -86,7 +149,7 @@ export function SequenceTable({
   // VS-12 T7: some unfinished step is past its date.
   overdue: boolean;
   // VS-12 T8: the inline "Customer replied?" control on done steps.
-  reply: { enabled: boolean; logged: boolean; stage: string };
+  reply: { enabled: boolean; logged: boolean; stage: string; at: { day: number; label: string } | null };
 }) {
   const [open, setOpen] = useState<number | null>(null);
   const [busy, startTransition] = useTransition();
@@ -193,6 +256,19 @@ export function SequenceTable({
           </span>
         </div>
       )}
+      <Timeline
+        rows={rows}
+        reply={reply.at}
+        onOpen={(day) => {
+          setOpen(day);
+          requestAnimationFrame(() =>
+            document.getElementById(`step-${day}`)?.scrollIntoView({
+              block: "center",
+              behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth",
+            }),
+          );
+        }}
+      />
       <div className="overflow-x-auto rounded-xl border border-[#e3e7eb] bg-white shadow-[0_2px_8px_rgba(15,20,25,0.06)]">
         <table className="w-full min-w-[680px] text-sm">
           <thead className="bg-[#efefef] text-left text-[#3f4e5b]">
@@ -208,7 +284,7 @@ export function SequenceTable({
             {rows.map((r) => {
               const expanded = open === r.day;
               return (
-                <tr key={r.day} className="border-t border-[#eef0f2] align-top">
+                <tr key={r.day} id={`step-${r.day}`} className="scroll-mt-24 border-t border-[#eef0f2] align-top">
                   <td className="px-4 py-3 font-semibold tabular-nums">{r.day}</td>
                   <td className="whitespace-nowrap px-3 py-3 text-[#5a6975]">{r.due}</td>
                   <td className="px-3 py-3">{CHANNEL_LABEL[r.channel] ?? r.channel}</td>

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { CountUp } from "@/components/CountUp";
 import { Header } from "@/components/Header";
 import { PeriodPills } from "@/components/PeriodPills";
 import { BarLegend, StackedBar, wonColor } from "@/components/StackedBar";
@@ -26,7 +27,7 @@ function WeekRows({ rows, weeks }: { rows: WeekRow[]; weeks: string[] }) {
   return (
     <Card className="px-5 py-4">
       <div className="flex flex-col gap-3">
-        {all.map((w) => {
+        {all.map((w, i) => {
           const r = byWeek.get(w);
           if (!r || r.breakdown.available === 0) {
             return (
@@ -40,7 +41,7 @@ function WeekRows({ rows, weeks }: { rows: WeekRow[]; weeks: string[] }) {
           return (
             <div key={w} className="grid grid-cols-[56px_minmax(0,1fr)_130px] items-center gap-3 text-sm">
               <span className="font-medium text-[#3f4e5b]">{weekLabel(w)}</span>
-              <StackedBar b={r.breakdown} scale={scale} />
+              <StackedBar b={r.breakdown} scale={scale} delay={i * 60} />
               <span className="whitespace-nowrap text-right tabular-nums text-[#5a6975]">
                 {usd(r.breakdown.available)} · {r.breakdown.signals} sig
               </span>
@@ -124,7 +125,8 @@ export default async function Results(props: PageProps<"/results">) {
             <div>
               <h1 className="text-2xl font-bold">{heading(period, range.label)} · closed against what the weather created</h1>
               <p className="text-[#5a6975]">
-                {rep.name} · Won {usd(total.segments.won.value)} of {usd(total.available)} expected value available ·{" "}
+                {rep.name} · Won <CountUp value={total.segments.won.value} format="usd" /> of{" "}
+                <CountUp value={total.available} format="usd" /> expected value available ·{" "}
                 {weekCount(rows)}
               </p>
             </div>
@@ -167,8 +169,9 @@ export default async function Results(props: PageProps<"/results">) {
               Plains region · {heading(period, range.label)} · {salesReps.length} reps
             </h1>
             <p className="text-[#5a6975]">
-              Won {usd(team.segments.won.value)} of {usd(team.available)} expected value available · team close rate{" "}
-              <b className={wonColor(team.wonPct)}>{team.wonPct === null ? "—" : `${Math.round(team.wonPct)}%`}</b> ·{" "}
+              Won <CountUp value={team.segments.won.value} format="usd" /> of <CountUp value={team.available} format="usd" /> expected
+              value available · team close rate{" "}
+              <b className={wonColor(team.wonPct)}>{team.wonPct === null ? "—" : <CountUp value={team.wonPct} format="pct" />}</b> ·{" "}
               {weekCount(teamRows)}
             </p>
           </div>
@@ -203,7 +206,7 @@ export default async function Results(props: PageProps<"/results">) {
         ) : (
           <Card className="px-5 py-4">
             <div className="flex flex-col gap-1">
-              {repRows.map(({ rep, b }) => (
+              {repRows.map(({ rep, b }, i) => (
                 <Link
                   key={rep.id}
                   // VS-9: drill in as the manager (no view switch).
@@ -211,7 +214,7 @@ export default async function Results(props: PageProps<"/results">) {
                   className="grid grid-cols-[150px_minmax(0,1fr)_150px] items-center gap-3 rounded-lg px-2 py-2 text-sm transition-colors duration-150 hover:bg-[#f6f7f8]"
                 >
                   <span className="truncate font-semibold text-[#3a728a]">{rep.name}</span>
-                  <StackedBar b={b} scale={repScale} />
+                  <StackedBar b={b} scale={repScale} delay={120 + i * 60} />
                   <span className="whitespace-nowrap text-right tabular-nums">
                     <span className="text-[#5a6975]">{usd(b.available)}</span> ·{" "}
                     <b className={wonColor(b.wonPct)}>Won {b.wonPct === null ? "—" : `${Math.round(b.wonPct)}%`}</b>
