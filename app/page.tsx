@@ -35,7 +35,7 @@ async function signalsThisWeek(): Promise<Map<string, number> | null> {
 
 function ChoiceCard({ title, line, children }: { title: string; line: string; children: React.ReactNode }) {
   return (
-    <div className="flex flex-col gap-3 rounded-xl border border-[#d9dee3] bg-white px-5 py-4">
+    <div className="flex min-w-0 flex-col gap-3 rounded-xl border border-[#d9dee3] bg-white px-5 py-4">
       <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#3a728a]">{title}</p>
       <p className="text-[15px] leading-relaxed text-[#3f4e5b]">{line}</p>
       {children}
@@ -124,12 +124,12 @@ export default async function Welcome() {
                         href={`/view?as=${r.id}`}
                         className="flex items-center gap-3 rounded-lg px-2 py-1.5 transition-colors duration-150 hover:bg-[#eef5f9]"
                       >
-                        <span className="min-w-0 flex-1 truncate text-sm">
+                        <span className="min-w-0 flex-1 text-sm">
                           <b className="text-[#142e3a]">{r.name}</b>
                           {r.demo && (
                             <span className="ml-2 rounded bg-[#eef5f9] px-1.5 py-0.5 text-[11px] font-semibold text-[#3a728a]">demo rep</span>
                           )}
-                          <span className="ml-2 text-[#7a8794]">{r.territory}</span>
+                          <span className="ml-2 inline-block text-[#7a8794]">{r.territory}</span>
                         </span>
                         {counts && (
                           <span
