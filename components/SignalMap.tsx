@@ -8,6 +8,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import type { MapAccount, MapData, MapRep, MapSignal } from "@/lib/mapData";
 import { faSvg } from "./faIcons";
 import { CardGenerateButton } from "./GenerateButton";
+import { GEO_FILES, geoJson } from "@/lib/mapGeo";
 
 // VS-8: MapLibre map with county boundaries, signal areas, account and signal
 // markers, hover popups and a click drawer. Approved from the mockup
@@ -136,8 +137,6 @@ function signalAreas(signals: MapSignal[], counties: FC): FC {
   return { type: "FeatureCollection", features };
 }
 
-// US Drought Monitor, week of the map (VS-10).
-export const USDM_DATE = "2026-09-22";
 const USDM_LABEL = "Sep 22";
 export const USDM_COLORS = ["#FFFF00", "#FCD37F", "#FFAA00", "#E60000", "#730000"];
 const USDM_NAMES = ["Abnormally dry", "Moderate drought", "Severe drought", "Extreme drought", "Exceptional drought"];
@@ -450,8 +449,8 @@ export default function SignalMap({
 
   useEffect(() => {
     let cancelled = false;
-    const get = (f: string) => fetch(`/geo/${f}`).then((r) => r.json());
-    Promise.all([get("counties.geojson"), get("states.geojson"), get(`usdm-${USDM_DATE}.geojson`), get("region-counties.geojson")])
+    // Usually already downloading: SignalMapLoader starts these on page load.
+    Promise.all(GEO_FILES.map((f) => geoJson(f)) as Promise<FC>[])
       .then(([counties, states, usdm, region]) => !cancelled && setGeo({ counties, states, usdm, region }))
       .catch(() => !cancelled && setGeoError(true));
     return () => {
