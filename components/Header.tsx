@@ -63,6 +63,10 @@ export function Header({
           {navItem(home.href, home.label, home.key)}
           {navItem("/pipeline", "Pipeline", "pipeline")}
           {navItem("/results", "Results", "results")}
+          <Link href="/try" className="text-sm text-[#cee5f3] transition-colors duration-150 hover:text-white">
+            <span className="md:hidden">Try it →</span>
+            <span className="hidden md:inline">Try it on your company →</span>
+          </Link>
           <ViewSwitcher
             options={options}
             selected={current}

@@ -2,6 +2,8 @@
 
 # Signal Desk
 
+Team Force Majeure: Chris Jackson and Lindsay Chim, Valstone Fall Summit 2026
+
 Signal Desk turns each week's county weather into scored, ready-to-work sales leads for FieldSense, a fictional farm-software product sold by ThiboLiSoft across the Plains states. When a county's drought worsens, heavy rain closes field days, or heat hits during grain fill, it finds the affected accounts by crop and by the FieldSense module they don't yet own, and Claude scores each one and writes the why-now line and the email. The rep accepts a lead, runs a four-touch outreach sequence from a task list, and managers see each rep's performance against the opportunity the weather actually created.
 
 Built for the Valstone Fall Summit 2026 Hackathon, Problem 1 (Sales), on Next.js, Supabase and the Claude API, deployed on Vercel.

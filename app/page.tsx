@@ -147,7 +147,17 @@ export default async function Welcome() {
             </ChoiceCard>
           </div>
 
-          <div className="flex flex-wrap items-center justify-end gap-4 pt-1">
+          {/* VS-13 TRY */}
+          <Link
+            href="/try"
+            className="block rounded-xl border border-dashed border-[#3a728a] px-5 py-3 text-center text-[15px] font-semibold text-[#3a728a] transition-colors duration-150 hover:bg-[#eef5f9]"
+          >
+            Try it on your company →
+          </Link>
+
+          <div className="flex flex-wrap items-center justify-between gap-4 pt-1">
+            {/* VS-13 TEAM */}
+            <p className="text-sm text-[#7a8794]">Built by Team Force Majeure · Chris Jackson · Lindsay Chim</p>
             <div className="flex flex-wrap gap-5 text-sm">
               <Link href="/terms" className="text-[#3a728a] underline underline-offset-2 hover:text-[#142e3a]">
                 Terminology

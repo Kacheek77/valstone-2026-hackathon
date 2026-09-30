@@ -1,0 +1,478 @@
+{
+  "datastor": {
+    "business": "DSL Systems (DATA STOR) sells batching and process-control software to feed mills and chemical plants that need accurate ingredient dosing and traceability.",
+    "signals": [
+      {
+        "event": "A state environmental agency issues or amends an air permit for a new or expanding feed mill or ethanol plant",
+        "source": "State DEQ/DNR air permit databases and public notice postings",
+        "cadence": "weekly"
+      },
+      {
+        "event": "Front-month corn futures move more than 8% over two weeks",
+        "source": "CME Group corn futures settlement prices",
+        "cadence": "daily"
+      },
+      {
+        "event": "FDA posts a new inspection observation or Form 483 at a medicated-feed manufacturer",
+        "source": "FDA Data Dashboard inspection and citation data",
+        "cadence": "weekly"
+      }
+    ],
+    "example": {
+      "account": {
+        "name": "Prairie Ridge Feed Co.",
+        "location": "Fremont, NE",
+        "profile": "Family-owned feed mill producing about 60,000 tons a year of swine and cattle rations on a 20-year-old batching system"
+      },
+      "signal": "A state environmental agency issues or amends an air permit for a new or expanding feed mill or ethanol plant",
+      "score": 86,
+      "why_now": "Nebraska just approved an air permit amendment for Prairie Ridge's second pelleting line, so they are choosing batching controls for the expansion right now.",
+      "lead_with": "Multi-ingredient batching and recipe management module with lot traceability",
+      "email_subject": "Batching controls for your new pelleting line",
+      "email_body": "Hi Dana, I saw Prairie Ridge's air permit amendment for the second pelleting line was approved this month. Expansions like that are usually when mills decide whether to extend the old batching setup or replace it. We build batching software that handles recipe changes, ingredient traceability and scale integration, and can be phased in without stopping current production. Could we take 15 minutes this week to walk through how mills your size have done it? Best, Chris"
+    },
+    "needs": "What Signal Desk would need: your list of current customers and prospect plants with their locations, plus a feed such as state DEQ air permit filings matched to those plants."
+  },
+  "pigknows": {
+    "business": "PigKnows sells swine production management software to hog producers and integrators who need to track herd health, performance and costs.",
+    "signals": [
+      {
+        "event": "A PRRS or other swine disease outbreak is reported in a producer's county or region",
+        "source": "Swine Health Information Center (SHIC) Domestic Swine Disease Monitoring Reports and state animal health board alerts",
+        "cadence": "weekly"
+      },
+      {
+        "event": "The lean hog futures price falls sharply over a short window",
+        "source": "CME Group lean hog futures settlement prices",
+        "cadence": "daily"
+      },
+      {
+        "event": "USDA reports a drop in the national hog crush margin or a rise in feed costs",
+        "source": "USDA AMS National Daily Hog and Pork Summary and USDA Hogs and Pigs report",
+        "cadence": "quarterly for Hogs and Pigs, daily for the AMS summary"
+      }
+    ],
+    "example": {
+      "account": {
+        "name": "Cedar Bend Pork",
+        "location": "Fort Dodge, IA",
+        "profile": "Family-run farrow-to-finish operation with about 2,400 sows, currently tracking herd records in spreadsheets"
+      },
+      "signal": "A PRRS outbreak is reported in Webster County and two neighboring counties",
+      "score": 84,
+      "why_now": "Three PRRS cases were confirmed within 20 miles of Cedar Bend this week, and they need a fast way to trace pig movement and health records across their sites.",
+      "lead_with": "Herd health and movement tracking module",
+      "email_subject": "PRRS cases near Fort Dodge: tracing pig movements",
+      "email_body": "Hi Dale, three PRRS cases were confirmed in Webster and neighboring counties this week. If one shows up near your sites, the first question will be which pigs moved where and when. PigKnows keeps movement, vaccination and mortality records in one place, so you can trace exposure in minutes instead of digging through spreadsheets. Some producers in the area are setting this up now, before an outbreak reaches them. Do you have 15 minutes this week for a quick walkthrough? Thanks, Maria"
+    },
+    "needs": "What Signal Desk would need: your list of customer and prospect producers with their county locations, plus a feed such as the Swine Health Information Center's weekly Domestic Swine Disease Monitoring Reports."
+  },
+  "verticalsoftware": {
+    "business": "Vertical Software sells ERP and scale software to grain elevators and grain merchandisers that handle receiving, storage, and settlement.",
+    "signals": [
+      {
+        "event": "USDA Crop Progress shows corn or soybean harvest running well ahead of the five-year average in a state",
+        "source": "USDA NASS weekly Crop Progress report",
+        "cadence": "weekly"
+      },
+      {
+        "event": "Local cash bids drop sharply against the futures price (basis widens) as bins fill",
+        "source": "USDA AMS daily grain bids and basis reports",
+        "cadence": "daily"
+      },
+      {
+        "event": "State issues a temporary weight-limit or hours-of-service waiver for harvest trucking",
+        "source": "State department of transportation harvest waivers and USDOT FMCSA emergency declarations",
+        "cadence": "seasonal, updated as issued"
+      }
+    ],
+    "example": {
+      "account": {
+        "name": "Prairie Crossing Grain Co-op",
+        "location": "Marshall, MN",
+        "profile": "Two-location co-op with about 3 million bushels of storage, six receiving pits, and scale tickets still keyed into spreadsheets at day's end"
+      },
+      "signal": "USDA Crop Progress shows corn or soybean harvest running well ahead of the five-year average in a state",
+      "score": 88,
+      "why_now": "Minnesota soybean harvest is 18 points ahead of the five-year average this week, so your pits will be loaded before your paper tickets can keep up.",
+      "lead_with": "Scale ticketing and live inventory module",
+      "email_subject": "Harvest is 18 points ahead in Minnesota, are your tickets ready?",
+      "email_body": "Hi Dana, USDA's latest Crop Progress has Minnesota soybeans 18 points ahead of the five-year pace, which usually means trucks stack up at the scale a week or two earlier than planned. Vertical Software's scale and inventory module prints tickets at the scale, updates bin inventory as each load is weighed, and pushes settlements without re-keying. Co-ops your size have been live in under two weeks. Could we do 15 minutes this week to see if it fits before your peak? Best, Marcus"
+    },
+    "needs": "What Signal Desk would need: your list of customer and prospect elevators with their locations and storage capacity, plus the weekly USDA NASS Crop Progress report to match each one to its state's harvest pace."
+  },
+  "redwing": {
+    "business": "Red Wing Software sells farm accounting and payroll software to farms and agricultural employers.",
+    "signals": [
+      {
+        "event": "USDA declares a drought disaster designation in a county",
+        "source": "USDA Farm Service Agency disaster designations",
+        "cadence": "weekly"
+      },
+      {
+        "event": "A county's crop insurance claims activity rises during claims season",
+        "source": "USDA Risk Management Agency summary of business and indemnity data",
+        "cadence": "monthly"
+      },
+      {
+        "event": "Federal or state payroll and tax rules change for agricultural employers (wage rates, withholding, reporting)",
+        "source": "IRS newsroom and Federal Register notices",
+        "cadence": "monthly"
+      }
+    ],
+    "example": {
+      "account": {
+        "name": "Harlan Ridge Farms",
+        "location": "Hastings, NE",
+        "profile": "Family grain operation, 3,200 acres of corn and soybeans, 9 seasonal employees, bookkeeping still done in spreadsheets"
+      },
+      "signal": "USDA declares a drought disaster designation in a county",
+      "score": 84,
+      "why_now": "Adams County was just designated a drought disaster area, so Harlan Ridge will be assembling loss records and payroll numbers for emergency loan and relief applications in the next few weeks.",
+      "lead_with": "Farm accounting module with crop-level expense and loss reporting",
+      "email_subject": "Drought designation in Adams County: loss records for FSA paperwork",
+      "email_body": "Hi Dale, Adams County was designated a drought disaster area this week, which usually means farms need clean expense, yield and payroll records for FSA loans and relief programs. Red Wing Software's accounting module tracks costs by field and crop and exports the reports those applications ask for, so you are not rebuilding them from spreadsheets under deadline. Would 15 minutes this week work to walk through how it would fit Harlan Ridge? Thanks, Megan"
+    },
+    "needs": "What Signal Desk would need: your list of customers and prospect farms with their county locations, plus a live read of the USDA Farm Service Agency disaster designation feed."
+  },
+  "matrix": {
+    "business": "Matrix Controls sells processing yield, recipe and traceability software to food manufacturers and processors.",
+    "signals": [
+      {
+        "event": "FDA or USDA-FSIS posts a recall in a product category a processor makes",
+        "source": "FDA recalls, market withdrawals and safety alerts feed; USDA-FSIS recall announcements",
+        "cadence": "daily"
+      },
+      {
+        "event": "FDA issues an inspection report (Form 483) citing lot tracking or recordkeeping gaps at a facility",
+        "source": "FDA Inspection Observations and 483 database",
+        "cadence": "weekly"
+      },
+      {
+        "event": "FDA publishes guidance or an enforcement update on the Food Traceability Rule (FSMA Section 204) compliance deadline",
+        "source": "FDA Food Traceability Rule page and Federal Register notices",
+        "cadence": "monthly"
+      }
+    ],
+    "example": {
+      "account": {
+        "name": "Harborview Smoked Foods",
+        "location": "Green Bay, WI",
+        "profile": "Mid-size producer of smoked sausages and deli meats, about 180 employees, tracking lots on spreadsheets across two plants"
+      },
+      "signal": "USDA-FSIS posts a recall for ready-to-eat sausage from a Wisconsin competitor over undeclared allergens and incomplete lot records",
+      "score": 87,
+      "why_now": "A competitor 40 miles away just recalled the same product category, and the customers and auditors are asking every sausage maker how fast they could trace a lot if it happened to them.",
+      "lead_with": "Lot traceability module, with recipe control as the second step",
+      "email_subject": "Sausage recall in Wisconsin: how fast could you trace a lot?",
+      "email_body": "Hi Dana, USDA-FSIS posted a ready-to-eat sausage recall this week from a Wisconsin processor, and the notice points to incomplete lot records. Retailers usually start asking suppliers about traceability right after one of these. Matrix Controls software links each finished lot back to ingredients, recipes and yield in minutes instead of days, and it covers the FSMA 204 recordkeeping fields. Could we take 15 minutes this week so I can show how it would work on your Green Bay lines? Best, Marcus"
+    },
+    "needs": "What Signal Desk would need: your list of customer and prospect plants with their product categories and locations, plus a public feed such as the FDA recalls and safety alerts feed to match each new recall to the accounts that make similar products."
+  },
+  "prophet": {
+    "business": "Prophet sells fresh-produce ERP software to growers, packers, and distributors who manage sourcing, inventory, and traceability for perishable goods.",
+    "signals": [
+      {
+        "event": "FDA posts a new produce recall or outbreak advisory naming a commodity and growing region",
+        "source": "FDA recalls and outbreak investigation pages (with the FDA enforcement report)",
+        "cadence": "daily"
+      },
+      {
+        "event": "A growing county is declared a drought or freeze disaster area, or a major growing region has a weather-driven crop shortfall",
+        "source": "USDA Farm Service Agency disaster designations and the U.S. Drought Monitor",
+        "cadence": "weekly"
+      },
+      {
+        "event": "Terminal market prices for a commodity jump sharply week over week, signaling supply disruption",
+        "source": "USDA AMS Market News terminal market reports",
+        "cadence": "daily"
+      }
+    ],
+    "example": {
+      "account": {
+        "name": "Riverbend Fresh Distributors",
+        "location": "Salinas, CA",
+        "profile": "Regional produce distributor, about 60 employees, sourcing leafy greens and berries for grocery chains, still tracking lots in spreadsheets"
+      },
+      "signal": "FDA posts a new produce recall or outbreak advisory naming a commodity and growing region",
+      "score": 88,
+      "why_now": "The FDA just named romaine from your growing region in an outbreak advisory, and your buyers will ask this week which of your lots are affected.",
+      "lead_with": "Lot traceability and recall management module",
+      "email_subject": "Romaine advisory: can you trace your lots by tonight?",
+      "email_body": "Hi Dana, the FDA advisory posted yesterday names romaine from the Salinas Valley. Grocery buyers will want lot-level answers fast: which fields, which pallets, which customers. Prophet's traceability module links each lot from receiving to shipment, so a recall check takes minutes instead of a day of spreadsheet work. Other distributors your size have used it to answer customer recall inquiries the same afternoon. Do you have 15 minutes this week for a quick walkthrough? Best, Marcus"
+    },
+    "needs": "What Signal Desk would need: your list of customer and prospect accounts with their location and the commodities they handle, plus a feed such as the FDA recalls and outbreak advisories data to match against."
+  },
+  "aws-cis": {
+    "business": "AWS and Creative Info Systems sell truck-scale ticketing software to aggregates producers, mines, landfills and waste haulers that weigh and bill loads at the gate.",
+    "signals": [
+      {
+        "event": "A state environmental agency issues a new or expanded quarry, mine or landfill permit",
+        "source": "State DEQ / DNR permit issuance databases and public notice postings",
+        "cadence": "weekly"
+      },
+      {
+        "event": "A state DOT awards or advertises a large highway or bridge construction contract that will consume aggregate tonnage",
+        "source": "State DOT bid lettings and award tabulations",
+        "cadence": "monthly"
+      },
+      {
+        "event": "A landfill or transfer station files a permit modification to raise its daily tonnage cap or add a new waste stream",
+        "source": "State solid waste permit modification filings and EPA ECHO facility records",
+        "cadence": "weekly"
+      }
+    ],
+    "example": {
+      "account": {
+        "name": "Redbank Aggregates",
+        "location": "Fort Wayne, IN",
+        "profile": "Family-owned limestone quarry and two ready-mix plants, about 120 trucks a day, still writing paper scale tickets at two scales"
+      },
+      "signal": "A state DOT awards a large highway or bridge construction contract that will consume aggregate tonnage",
+      "score": 84,
+      "why_now": "INDOT just awarded a 14-mile interstate resurfacing contract within 40 miles of your quarry, so your gate traffic is about to jump and paper tickets will be the bottleneck.",
+      "lead_with": "Truck-scale ticketing with automated invoicing and customer portal",
+      "email_subject": "Ticketing for the I-69 resurfacing surge",
+      "email_body": "Hi Dana, INDOT's award for the I-69 resurfacing package puts a lot of new tonnage within reach of Redbank, and that usually means longer lines at the scale house. We set up truck-scale ticketing for quarries that need to move more loads per hour without adding clerks, with tickets flowing straight into invoicing. Contractors also get their own portal to pull tickets, so fewer calls to your office. Could we do 15 minutes this week to walk through how it would work at your two scales? Thanks, Marcus"
+    },
+    "needs": "What Signal Desk would need: your list of current customers and target quarries, mines and landfills with their locations, plus a public feed such as your state DOT's monthly bid lettings and award tabulations."
+  },
+  "aldata": {
+    "business": "ALDATA sells timber fiber supply software to sawmills, pulp mills, and timberland operators who buy, haul, and account for logs and fiber.",
+    "signals": [
+      {
+        "event": "A state forestry agency or USDA Forest Service posts a new wildfire or storm-damage salvage sale in a county",
+        "source": "USDA Forest Service timber sale announcements and state forestry agency salvage notices",
+        "cadence": "weekly"
+      },
+      {
+        "event": "A sawmill or pulp mill announces an opening, curtailment, or closure in a wood basket",
+        "source": "State economic development press releases and Forest Products Journal industry news feeds",
+        "cadence": "weekly"
+      },
+      {
+        "event": "A severe storm or wildfire perimeter is declared over commercial forestland",
+        "source": "NOAA Storm Prediction Center reports and NIFC wildfire perimeter data",
+        "cadence": "daily"
+      }
+    ],
+    "example": {
+      "account": {
+        "name": "Pinecrest Lumber Co.",
+        "location": "Roseburg, OR",
+        "profile": "Family-owned sawmill, about 120 employees, buys roughly 60 truckloads of Douglas fir logs a week from private and federal sales"
+      },
+      "signal": "A state forestry agency or USDA Forest Service posts a new wildfire or storm-damage salvage sale in a county",
+      "score": 84,
+      "why_now": "A 9-million-board-foot fire salvage sale just posted two counties from your mill, and salvage logs lose value quickly, so tracking loads, scaling and payments fast matters this month.",
+      "lead_with": "Log purchasing and scale ticket reconciliation module",
+      "email_subject": "Salvage sale near Roseburg: tracking the extra loads",
+      "email_body": "Hi Dana, the Forest Service posted a large fire salvage sale in Douglas County this week. Mills nearby will see a sudden jump in trucks, scale tickets, and contractor payments over the next few months, often before staffing catches up. ALDATA's purchasing and scale reconciliation module keeps those loads and payments in one place without adding spreadsheets. Could we take 15 minutes this week so I can show how other mills handled a salvage surge? Best, Marcus"
+    },
+    "needs": "What Signal Desk would need: your list of customer and prospect mills and timberland owners with their locations, plus a feed such as USDA Forest Service timber sale announcements to match new salvage sales to nearby accounts."
+  },
+  "henning": {
+    "business": "Henning Software sells ERP systems to tier-2 aerospace and automotive manufacturers that supply parts to larger prime contractors and OEMs.",
+    "signals": [
+      {
+        "event": "A DoD prime contractor is awarded a new or expanded contract, creating downstream supplier demand",
+        "source": "SAM.gov and USAspending.gov contract award data",
+        "cadence": "daily"
+      },
+      {
+        "event": "A CMMC Level 2 assessment deadline or DFARS clause update takes effect for defense suppliers",
+        "source": "Federal Register notices and DoD CIO CMMC program announcements",
+        "cadence": "monthly"
+      },
+      {
+        "event": "An auto OEM or aerospace prime announces a production ramp, new platform launch or supplier expansion",
+        "source": "SEC 8-K filings and OEM investor press releases",
+        "cadence": "weekly"
+      }
+    ],
+    "example": {
+      "account": {
+        "name": "Kessler Precision Castings",
+        "location": "Wichita, KS",
+        "profile": "140-employee machine shop making titanium and aluminum brackets for airframe assemblies, running on spreadsheets and a legacy job-tracking tool"
+      },
+      "signal": "A DoD prime contractor is awarded a new or expanded contract, creating downstream supplier demand",
+      "score": 88,
+      "why_now": "The prime that buys your brackets just landed a multi-year DoD contract, so your order volume and traceability requirements are about to jump.",
+      "lead_with": "Henning's production scheduling and lot traceability module, paired with the CMMC-ready document controls",
+      "email_subject": "Your prime's new DoD award and what it means for Kessler's floor",
+      "email_body": "Hi Dana, I saw that your largest airframe customer was awarded an expanded DoD contract last week. Suppliers in your position usually see order volume rise within a quarter, along with tighter traceability and cybersecurity documentation requirements. Henning's ERP is built for tier-2 shops handling exactly that: scheduling, lot tracking and CMMC-aligned records in one system. Could we do 15 minutes this week to walk through how similar shops prepared? Best, Marcus"
+    },
+    "needs": "What Signal Desk would need: your list of current customers and prospect manufacturers with their prime contractor relationships, plus a feed such as the SAM.gov contract awards API to match new DoD awards to the suppliers behind each prime."
+  },
+  "discus": {
+    "business": "DISCUS sells first-article inspection and ballooning software to aerospace and defense manufacturers that have to document new part numbers for their OEM customers.",
+    "signals": [
+      {
+        "event": "A prime contractor is awarded a new defense program or contract modification that adds production part numbers",
+        "source": "SAM.gov contract award notices and the Department of Defense daily contract announcements",
+        "cadence": "daily"
+      },
+      {
+        "event": "An aircraft OEM raises its monthly build rate and pushes new or revised parts to its supply base",
+        "source": "Boeing and Airbus monthly order and delivery reports, plus OEM earnings-call disclosures",
+        "cadence": "monthly"
+      },
+      {
+        "event": "A supplier receives or renews AS9100 or NADCAP certification, or is added to an approved supplier list",
+        "source": "IAQG OASIS database certification records",
+        "cadence": "weekly"
+      }
+    ],
+    "example": {
+      "account": {
+        "name": "Corbett & Vale Precision Machining",
+        "location": "Wichita, KS",
+        "profile": "62-employee machine shop cutting titanium and aluminum brackets and housings for airframe subassemblies"
+      },
+      "signal": "An aircraft OEM raises its monthly build rate and pushes new or revised parts to its supply base",
+      "score": 84,
+      "why_now": "The OEM just announced a higher monthly build rate, and suppliers like Corbett & Vale will be handed a wave of new part numbers that each need a first-article report before production ships.",
+      "lead_with": "Automated ballooning of customer drawings and first-article report generation",
+      "email_subject": "Faster first-article reports as build rates climb",
+      "email_body": "Hi Dana, the OEM's new build rate announcement usually means a batch of new and revised part numbers lands on suppliers within a few weeks, and each one needs a first-article report. Shops your size often lose days to manual ballooning and report formatting. DISCUS turns a drawing into a ballooned, AS9102-ready package much faster, so inspection stays ahead of the schedule. Could we take 15 minutes this week so I can show you on one of your own drawings? Best, Marcus"
+    },
+    "needs": "What Signal Desk would need: your list of current customers and prospects with their OEM programs and locations, plus one public feed such as SAM.gov contract award notices to match each new award to the suppliers that will inherit its part numbers."
+  },
+  "shopdata": {
+    "business": "ShopData sells CAD/CAM nesting software that helps steel fabrication shops cut more parts from each plate and waste less material.",
+    "signals": [
+      {
+        "event": "Producer price index for steel mill products rises sharply month over month",
+        "source": "BLS Producer Price Index, steel mill products series",
+        "cadence": "monthly"
+      },
+      {
+        "event": "New tariff or duty change on imported steel takes effect",
+        "source": "Federal Register notices and US Commerce Department Section 232 announcements",
+        "cadence": "weekly"
+      },
+      {
+        "event": "Large commercial or industrial construction project is permitted within 100 miles of a shop",
+        "source": "City and county building permit portals, plus Census Bureau building permits survey",
+        "cadence": "weekly"
+      }
+    ],
+    "example": {
+      "account": {
+        "name": "Tallgrass Structural Steel",
+        "location": "Tulsa, OK",
+        "profile": "Family-owned fabricator, about 45 employees, cuts beams and plate for commercial building frames"
+      },
+      "signal": "Producer price index for steel mill products rises sharply month over month",
+      "score": 84,
+      "why_now": "Plate prices jumped this month, so every percent of scrap Tallgrass cuts now costs them noticeably more than it did in spring.",
+      "lead_with": "Automatic plate nesting with remnant tracking",
+      "email_subject": "Plate prices are up; scrap just got more expensive",
+      "email_body": "Hi Dana, steel mill product prices rose sharply again this month, and for a shop cutting plate every day, scrap is now a bigger line item than it was a quarter ago. ShopData's nesting software packs parts tighter, tracks usable remnants, and typically trims material waste for shops your size. I can show you a nest of one of your recent jobs and the yield difference. Do you have 15 minutes this week? Best, Marcus"
+    },
+    "needs": "What Signal Desk would need: ShopData's customer and prospect list with shop locations and plate-cutting profiles, plus a feed such as the BLS Producer Price Index for steel mill products to flag price jumps."
+  },
+  "documoto": {
+    "business": "Documoto and CADShare sell interactive parts catalog and 3D parts software to equipment manufacturers (OEMs) and their dealer networks.",
+    "signals": [
+      {
+        "event": "A manufacturer files a safety recall that changes or replaces parts on a product line",
+        "source": "NHTSA recall database and CPSC recall notices",
+        "cadence": "daily"
+      },
+      {
+        "event": "A manufacturer announces or ships a new model or model-year lineup",
+        "source": "Manufacturer press releases and trade show exhibitor lists",
+        "cadence": "weekly"
+      },
+      {
+        "event": "A manufacturer changes its parts-related job postings, such as hiring a parts documentation or technical publications lead",
+        "source": "Public company job boards and LinkedIn job listings",
+        "cadence": "weekly"
+      }
+    ],
+    "example": {
+      "account": {
+        "name": "Halvorsen Turf & Trailer Works",
+        "location": "Fond du Lac, WI",
+        "profile": "Mid-size maker of commercial mowers and utility trailers, about 300 employees, sells through 120 dealers, parts lists still kept in PDFs and spreadsheets."
+      },
+      "signal": "A manufacturer files a safety recall that changes or replaces parts on a product line",
+      "score": 84,
+      "why_now": "Halvorsen just filed a recall that swaps the blade spindle assembly on its 2021-2023 zero-turn line, so every dealer needs the corrected parts list right now and the PDFs they send out are already out of date.",
+      "lead_with": "Documoto interactive parts catalog with dealer-facing published updates",
+      "email_subject": "Getting the corrected spindle parts list to 120 dealers",
+      "email_body": "Hi Karen, I saw the recall notice on the 2021-2023 zero-turn spindle assembly. When a parts list changes mid-year, dealers often keep ordering from the old PDF for weeks. Documoto lets you publish the revised diagram and part numbers once, and every dealer sees the update the same day, with the superseded parts flagged. A few manufacturers your size have used it to cut wrong-part orders after a recall. Could we take 15 minutes this week to walk through how it would work for your line? Thanks, Dana.\n"
+    },
+    "needs": "What Signal Desk would need: your list of OEM customers and prospects with their product lines, plus a feed such as the NHTSA recall database to match recalls to those accounts."
+  },
+  "geometrix": {
+    "business": "GeoMetrix, PST and Nascent sell railcar tracking, crew management and terminal operations software to railroads, shortlines and terminal operators.",
+    "signals": [
+      {
+        "event": "A railroad or port posts a service advisory or embargo that reroutes or holds traffic",
+        "source": "Class I railroad service advisories and Surface Transportation Board service reports",
+        "cadence": "daily"
+      },
+      {
+        "event": "Container dwell time or vessels waiting at a port rises above its recent average",
+        "source": "Port of Los Angeles Signal and Port of Long Beach public congestion data",
+        "cadence": "daily"
+      },
+      {
+        "event": "FRA publishes a new or proposed crew, fatigue or safety rule",
+        "source": "Federal Register and FRA rulemaking notices",
+        "cadence": "weekly"
+      }
+    ],
+    "example": {
+      "account": {
+        "name": "Prairie Junction Terminal Railway",
+        "location": "Fargo, ND",
+        "profile": "Shortline with about 120 miles of track and 45 crew members, handling grain and fertilizer interchange with a Class I"
+      },
+      "signal": "A railroad or port posts a service advisory or embargo that reroutes or holds traffic",
+      "score": 84,
+      "why_now": "The connecting Class I posted an interchange embargo on Tuesday, so your cars are sitting in the yard with no clear picture of where they are or which crews are free to move them.",
+      "lead_with": "Railcar tracking, with crew management as the second conversation",
+      "email_subject": "Cars held at your interchange since Tuesday",
+      "email_body": "Hi Dana, the Class I connecting at Fargo posted an interchange embargo this week, which usually leaves shortlines with loaded cars parked and crews waiting on a call. Teams in that spot tell us the hard part is knowing which cars are stuck, for how long, and who is legally rested to move them once it lifts. Our railcar tracking and crew management tools were built for exactly that gap. Could we take 15 minutes this week to walk through how it would look for Prairie Junction? Best, Sam"
+    },
+    "needs": "What Signal Desk would need: your list of railroad, shortline and terminal customers and prospects with their interchange partners and ports, plus a feed such as Class I railroad service advisories or Port of Los Angeles Signal congestion data."
+  },
+  "gtmaritime": {
+    "business": "GT Maritime sells ship-to-shore secure communications to commercial vessel operators and port-linked shipping companies.",
+    "signals": [
+      {
+        "event": "US Coast Guard publishes or updates a maritime cybersecurity rule or compliance deadline",
+        "source": "Federal Register and USCG Marine Safety Information Bulletins",
+        "cadence": "weekly"
+      },
+      {
+        "event": "A cyber incident is reported on a commercial vessel or at a port operator",
+        "source": "USCG National Response Center reports and CISA advisories",
+        "cadence": "daily"
+      },
+      {
+        "event": "A vessel operator's flagged vessels are detained or cited in a port state control inspection with a communications or cyber deficiency",
+        "source": "Paris MoU and Tokyo MoU port state control detention databases",
+        "cadence": "weekly"
+      }
+    ],
+    "example": {
+      "account": {
+        "name": "Harborline Bulk Carriers",
+        "location": "Houston, TX",
+        "profile": "Regional operator with 14 bulk carriers moving grain and fertilizer through Gulf ports"
+      },
+      "signal": "US Coast Guard publishes or updates a maritime cybersecurity rule or compliance deadline",
+      "score": 86,
+      "why_now": "The Coast Guard just set a compliance deadline for vessel cyber plans, and Harborline has 14 ships that all need a documented, secured ship-to-shore link before then.",
+      "lead_with": "Encrypted ship-to-shore link with audit logging for compliance reporting",
+      "email_subject": "Coast Guard cyber deadline and your 14 vessels",
+      "email_body": "Hi Marcus, the Coast Guard's new maritime cybersecurity deadline means each Harborline vessel needs a documented, secured communications path to shore. We set up encrypted ship-to-shore links with built-in audit logs, so your cyber plan has evidence behind it instead of screenshots. Operators with fleets your size usually start with two pilot vessels and roll out during scheduled port calls. Could we take 15 minutes this week to map your fleet against the deadline? Dana"
+    },
+    "needs": "What Signal Desk would need: your list of customer and prospect vessel operators (with fleet size, flag and ports served) plus a live read of the Federal Register and USCG Marine Safety Information Bulletins for new cybersecurity rules and deadlines."
+  }
+}

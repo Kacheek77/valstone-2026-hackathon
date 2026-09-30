@@ -9,6 +9,7 @@ import { amountExplain } from "@/lib/pricing";
 import type { PriceList } from "@/lib/types";
 import type { ScoredOpp } from "@/lib/generate";
 import { PromoteButton } from "./PromoteButton";
+import { ScoreRing } from "./ScoreRing";
 import { runGenerate } from "./runGenerate";
 import { Card, HoverTip, InfoTip, StatusBadge } from "./ui";
 
@@ -28,27 +29,6 @@ type Progress = { done: number; total: number; offline: number; failed: string[]
 
 const reducedMotion = () => typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-function ScoreRing({ score, threshold, sweep }: { score: number; threshold: number; sweep: boolean }) {
-  const r = 15;
-  const c = 2 * Math.PI * r;
-  const color = score >= 75 ? "#1f9d55" : score >= threshold ? "#3a728a" : "#bcc4cb";
-  return (
-    <svg viewBox="0 0 40 40" className="h-10 w-10" role="img" aria-label={`Score ${score}`}>
-      <circle cx="20" cy="20" r={r} fill="none" stroke="#e3e7eb" strokeWidth="4" />
-      <circle
-        cx="20" cy="20" r={r} fill="none" stroke={color} strokeWidth="4" strokeLinecap="round"
-        strokeDasharray={`${c} ${c}`}
-        strokeDashoffset={c - (score / 100) * c}
-        transform="rotate(-90 20 20)"
-        className={sweep ? "sd-ring-sweep" : undefined}
-        style={{ "--sd-c": c } as React.CSSProperties}
-      />
-      <text x="20" y="24.5" textAnchor="middle" fontSize="12" fontWeight="700" fill="#0f1419">
-        {score}
-      </text>
-    </svg>
-  );
-}
 
 // VS-12 T9 + T11: the signal page scores its unscored matches as soon as it
 // opens (three at a time), and each row fills in live: shimmer while waiting,

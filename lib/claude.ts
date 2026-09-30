@@ -145,13 +145,19 @@ export function signalFacts(signal: Signal) {
   };
 }
 
-export async function callJson<T>(system: string, input: unknown, schema: Record<string, unknown>): Promise<T | null> {
+export async function callJson<T>(
+  system: string,
+  input: unknown,
+  schema: Record<string, unknown>,
+  opts: { timeoutMs?: number; maxTokens?: number } = {},
+): Promise<T | null> {
   if (!process.env.ANTHROPIC_API_KEY) return null;
+  const timeoutMs = opts.timeoutMs ?? TIMEOUT_MS;
   try {
-    const client = new Anthropic({ timeout: TIMEOUT_MS, maxRetries: 0 });
+    const client = new Anthropic({ timeout: timeoutMs, maxRetries: 0 });
     const call = client.messages.create({
       model: MODEL,
-      max_tokens: 1024,
+      max_tokens: opts.maxTokens ?? 1024,
       // Short structured task on a 12 s budget: no thinking between steps, low effort.
       thinking: { type: "between_tools" },
       output_config: { effort: "low", format: { type: "json_schema", schema } },
@@ -160,7 +166,7 @@ export async function callJson<T>(system: string, input: unknown, schema: Record
     });
     let timeoutId: ReturnType<typeof setTimeout> | undefined;
     const timer = new Promise<never>((_, reject) => {
-      timeoutId = setTimeout(() => reject(new Error("timeout")), TIMEOUT_MS);
+      timeoutId = setTimeout(() => reject(new Error("timeout")), timeoutMs);
     });
     const response = await Promise.race([call, timer]).finally(() => clearTimeout(timeoutId));
     if (response.stop_reason !== "end_turn") return null;

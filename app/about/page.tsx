@@ -63,6 +63,7 @@ export default async function About(props: PageProps<"/about">) {
             <ResetDemoButton />
           </Card>
         )}
+        <p className="mt-6 text-sm text-[#7a8794]">Team Force Majeure: Chris Jackson and Lindsay Chim, Valstone Fall Summit 2026</p>
       </div>
     </Page>
   );
