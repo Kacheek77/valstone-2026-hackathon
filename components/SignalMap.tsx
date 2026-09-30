@@ -107,26 +107,30 @@ const short = (county: string) => county.replace(/ County$/, "");
 const money = (n: number) => `$${Math.round(n).toLocaleString("en-US")}`;
 const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]!);
 
-function signalAreas(signals: MapSignal[], counties: FC, reps: MapRep[]): FC {
+// VS-10: only the signal's own county. The regional extent of a drought now
+// comes from the Drought Monitor layer, so the old spread-to-neighbours tint
+// is gone. fill = 1 for rain and heat (no public polygons for those).
+function signalAreas(signals: MapSignal[], counties: FC): FC {
   const key = (c: string, st: string) => `${c}, ${st}`;
   const byKey = new Map(counties.features.map((f) => [key(String(f.properties.county), String(f.properties.state)), f]));
-  const direct = new Set(signals.map((s) => key(s.county, s.state)));
   const features: Feature[] = [];
   for (const s of signals) {
     const f = byKey.get(key(s.county, s.state));
     if (!f) continue;
-    const color = signalColor(s);
-    features.push({ type: "Feature", geometry: f.geometry, properties: { sid: s.id, color, strength: 1 } });
-    // Spread to neighbours: the rest of the territory, as the matcher treats it.
-    const rep = reps.find((r) => r.id === s.repId);
-    for (const c of rep?.counties ?? []) {
-      if (direct.has(c)) continue;
-      const nf = byKey.get(c);
-      if (nf) features.push({ type: "Feature", geometry: nf.geometry, properties: { sid: s.id, color, strength: 0.35 } });
-    }
+    features.push({
+      type: "Feature",
+      geometry: f.geometry,
+      properties: { sid: s.id, color: signalColor(s), strength: 1, fill: s.type === "drought" ? 0 : 1 },
+    });
   }
   return { type: "FeatureCollection", features };
 }
+
+// US Drought Monitor, week of the map (VS-10).
+export const USDM_DATE = "2026-09-22";
+const USDM_LABEL = "Sep 22";
+export const USDM_COLORS = ["#FFFF00", "#FCD37F", "#FFAA00", "#E60000", "#730000"];
+const USDM_NAMES = ["Abnormally dry", "Moderate drought", "Severe drought", "Extreme drought", "Exceptional drought"];
 
 // ---------------------------------------------------------------- drawer
 
@@ -378,7 +382,7 @@ function SvgFallback({ counties, states, data, mode, repId }: { counties: FC; st
     const polys = f.geometry.type === "MultiPolygon" ? (f.geometry.coordinates as number[][][][]) : [f.geometry.coordinates as number[][][]];
     return polys.map((p) => p.map((ring) => ring.map(([a, b], i) => `${i ? "L" : "M"}${x(a).toFixed(1)} ${y(b).toFixed(1)}`).join(" ") + "Z").join(" ")).join(" ");
   };
-  const areas = signalAreas(data.signals, counties, data.reps);
+  const areas = signalAreas(data.signals, counties);
   return (
     <svg viewBox={`0 0 ${W} ${H}`} className="h-full w-full" role="img" aria-label="County outlines and signal areas (offline map)">
       <rect width={W} height={H} fill="#eef2f5" />
@@ -425,14 +429,15 @@ export default function SignalMap({
   });
   const [offline, setOffline] = useState(false);
   const [noWebgl, setNoWebgl] = useState(() => !webglAvailable());
-  const [geo, setGeo] = useState<{ counties: FC; states: FC } | null>(null);
+  const [geo, setGeo] = useState<{ counties: FC; states: FC; usdm: FC; region: FC } | null>(null);
   const [geoError, setGeoError] = useState(false);
   const [selected, setSelected] = useState<Selection>(null);
 
   useEffect(() => {
     let cancelled = false;
-    Promise.all([fetch("/geo/counties.geojson").then((r) => r.json()), fetch("/geo/states.geojson").then((r) => r.json())])
-      .then(([counties, states]) => !cancelled && setGeo({ counties, states }))
+    const get = (f: string) => fetch(`/geo/${f}`).then((r) => r.json());
+    Promise.all([get("counties.geojson"), get("states.geojson"), get(`usdm-${USDM_DATE}.geojson`), get("region-counties.geojson")])
+      .then(([counties, states, usdm, region]) => !cancelled && setGeo({ counties, states, usdm, region }))
       .catch(() => !cancelled && setGeoError(true));
     return () => {
       cancelled = true;
@@ -445,7 +450,7 @@ export default function SignalMap({
     return () => document.removeEventListener("keydown", onKey);
   }, []);
 
-  const areas = useMemo(() => (geo ? signalAreas(data.signals, geo.counties, data.reps) : null), [geo, data]);
+  const areas = useMemo(() => (geo ? signalAreas(data.signals, geo.counties) : null), [geo, data]);
 
   useEffect(() => {
     if (!geo || !areas || !container.current || noWebgl) return;
@@ -468,6 +473,8 @@ export default function SignalMap({
           style,
           bounds,
           fitBoundsOptions: { padding: 50 },
+          // The drought and county layers cover this box (scripts/build-usdm.mjs).
+          maxBounds: [[-112, 31.5], [-90, 45.5]],
           attributionControl: { compact: true },
         });
       } catch {
@@ -499,38 +506,64 @@ export default function SignalMap({
         map.resize();
         map.fitBounds(bounds, { padding: 50, duration: 0 });
         zoomClass();
+        map.addSource("region", { type: "geojson", data: geo.region as never });
+        map.addSource("usdm", { type: "geojson", data: geo.usdm as never });
         map.addSource("states", { type: "geojson", data: geo.states as never });
         map.addSource("counties", { type: "geojson", data: geo.counties as never });
         map.addSource("areas", { type: "geojson", data: areas as never });
+        // Every county in the box, hairline, so the map reads as continuous.
+        map.addLayer({ id: "region-line", type: "line", source: "region", paint: { "line-color": "#7a8794", "line-width": 0.4, "line-opacity": 0.55 } });
+        // US Drought Monitor areas, standard colours, beneath the territories.
+        map.addLayer({
+          id: "usdm-fill",
+          type: "fill",
+          source: "usdm",
+          paint: { "fill-color": ["match", ["get", "DM"], 0, USDM_COLORS[0], 1, USDM_COLORS[1], 2, USDM_COLORS[2], 3, USDM_COLORS[3], 4, USDM_COLORS[4], "#cccccc"] as never, "fill-opacity": 0.35 },
+        });
         map.addLayer({ id: "states-line", type: "line", source: "states", paint: { "line-color": "#142e3a", "line-width": 1.6, "line-opacity": 0.7 } });
         map.addLayer({
           id: "terr-fill",
           type: "fill",
           source: "counties",
           paint: manager
-            ? { "fill-color": ["match", ["get", "rep_id"], ...Object.entries(TINT).flat(), "#999999"] as never, "fill-opacity": 0.22 }
-            : { "fill-color": "#3a728a", "fill-opacity": ["case", ["==", ["get", "rep_id"], repId ?? ""], 0.2, 0.03] as never },
+            ? { "fill-color": ["match", ["get", "rep_id"], ...Object.entries(TINT).flat(), "#999999"] as never, "fill-opacity": 0.15 }
+            : { "fill-color": "#3a728a", "fill-opacity": ["case", ["==", ["get", "rep_id"], repId ?? ""], 0.06, 0] as never },
         });
-        map.addLayer({ id: "sig-fill", type: "fill", source: "areas", paint: { "fill-color": ["get", "color"], "fill-opacity": ["*", ["get", "strength"], 0.45] } });
-        map.addLayer({
-          id: "sig-line",
-          type: "line",
-          source: "areas",
-          paint: { "line-color": ["get", "color"], "line-width": ["*", ["get", "strength"], 3], "line-dasharray": [2, 1.5], "line-opacity": ["get", "strength"] },
-        });
+        // Territory outlines: rep view, the rep's counties 2 px teal and the rest hairline.
         map.addLayer({
           id: "county-line",
           type: "line",
           source: "counties",
-          paint: { "line-color": "#3a728a", "line-width": manager ? 1 : ["case", ["==", ["get", "rep_id"], repId ?? ""], 2, 1] as never, "line-opacity": 0.85 },
+          paint: {
+            "line-color": "#3a728a",
+            "line-width": manager ? 1 : (["case", ["==", ["get", "rep_id"], repId ?? ""], 2, 0.5] as never),
+            "line-opacity": manager ? 0.85 : (["case", ["==", ["get", "rep_id"], repId ?? ""], 0.95, 0.6] as never),
+          },
         });
 
+        // Rain and heat: county fill at 35%. Drought: no fill (the USDM layer shows it).
+        map.addLayer({ id: "sig-fill", type: "fill", source: "areas", paint: { "fill-color": ["get", "color"], "fill-opacity": ["*", ["get", "fill"], 0.35] } });
+        // Every signal county: a soft outer glow, then a 2.5 px outline.
+        map.addLayer({
+          id: "sig-glow",
+          type: "line",
+          source: "areas",
+          paint: { "line-color": ["get", "color"], "line-width": 11, "line-blur": 6, "line-opacity": 0.35 },
+        });
+        map.addLayer({ id: "sig-line", type: "line", source: "areas", paint: { "line-color": ["get", "color"], "line-width": 2.5, "line-opacity": 0.95 } });
+        // Drought Monitor hover, where nothing more specific is under the cursor.
+        map.on("mousemove", "usdm-fill", (e) => {
+          if (map!.queryRenderedFeatures(e.point, { layers: ["sig-fill", ...(manager ? ["terr-fill"] : [])] }).length) return;
+          const dm = Number(e.features?.[0]?.properties?.DM);
+          if (!(dm >= 0 && dm <= 4)) return;
+          tip(e.lngLat, `<b>D${dm} ${USDM_NAMES[dm]}</b> · US Drought Monitor, ${USDM_LABEL}`);
+        });
+        map.on("mouseleave", "usdm-fill", untip);
+
         const byId = new Map(data.signals.map((s) => [s.id, s]));
-        // A point is "on a signal" only where the signal's own county is; the
-        // spread-to-neighbours tint is context. In manager view a click there
-        // falls through to the territory (rep card).
-        const directSignal = (point: maplibregl.PointLike) =>
-          map!.queryRenderedFeatures(point, { layers: ["sig-fill"] }).find((f) => Number(f.properties?.strength) >= 1);
+        // A point is "on a signal" where the signal's own county is (fill layer,
+        // transparent for drought but still hit-testable).
+        const directSignal = (point: maplibregl.PointLike) => map!.queryRenderedFeatures(point, { layers: ["sig-fill"] })[0];
         map.on("mousemove", "sig-fill", (e) => {
           const hit = manager ? directSignal(e.point) : e.features?.[0];
           if (!hit) return;
@@ -735,6 +768,16 @@ function MapLegend() {
   );
   return (
     <div className="flex flex-wrap items-center gap-x-5 gap-y-1 text-[13px] text-[#3f4e5b]">
+      <span className="flex items-center gap-1.5">
+        <span className="flex overflow-hidden rounded-sm">
+          {USDM_COLORS.map((c, i) => (
+            <span key={c} className="inline-block h-3 w-4 text-center text-[8px] leading-3 text-[#142e3a]" style={{ background: c, opacity: 0.8 }} title={`D${i}`}>
+              {i}
+            </span>
+          ))}
+        </span>
+        US Drought Monitor, {USDM_LABEL}
+      </span>
       {sw("#d23b3b", "Drought, High (pulses)")}
       {sw("#e89b16", "Drought, Medium")}
       {sw("#f55a00", "Heat")}
