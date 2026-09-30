@@ -8,7 +8,7 @@ import type { TryOutput } from "@/lib/tryChips";
 // and "Regenerate live" call Claude. Static page, phone first.
 export const dynamic = "force-static";
 
-export const metadata = { title: "Try Signal Desk on your company" };
+export const metadata = { title: "Try it with your company" };
 
 export default function TryPage() {
   return (
@@ -23,7 +23,7 @@ export default function TryPage() {
         </Link>
       </div>
 
-      <h1 className="text-2xl font-bold leading-tight text-[#142e3a] sm:text-3xl">Try it on your company</h1>
+      <h1 className="text-2xl font-bold leading-tight text-[#142e3a] sm:text-3xl">Try it with your company</h1>
       <p className="mb-5 mt-2 text-[15px] leading-relaxed text-[#3f4e5b]">
         Signal Desk watches public events that change what your customers need, finds the accounts they hit, scores them and
         writes the outreach. Pick a Valstone company, or describe a business. Every answer is an illustrative example with

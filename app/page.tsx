@@ -112,7 +112,6 @@ function ChoiceCard({ title, line, children }: { title: string; line: string; ch
   );
 }
 
-const REPO_URL = "https://github.com/Kacheek77/valstone-2026-hackathon";
 
 function InfoCard({ title, tone, children }: { title: string; tone: "plain" | "solution"; children: React.ReactNode }) {
   const styles = {
@@ -281,7 +280,7 @@ export default async function Welcome() {
             href="/try"
             className="block rounded-xl border border-dashed border-[#3a728a] px-5 py-2 text-center text-[15px] font-semibold text-[#3a728a] transition-colors duration-150 hover:bg-[#eef5f9]"
           >
-            Try it on your company →
+            Try it with your company →
           </Link>
 
           <div className="flex flex-wrap items-center justify-between gap-4 pt-1">
@@ -294,9 +293,6 @@ export default async function Welcome() {
               <Link href="/about" className="text-[#3a728a] underline underline-offset-2 hover:text-[#142e3a]">
                 What is real vs. seeded
               </Link>
-              <a href={REPO_URL} target="_blank" rel="noreferrer" className="text-[#3a728a] underline underline-offset-2 hover:text-[#142e3a]">
-                GitHub
-              </a>
             </div>
           </div>
         </div>

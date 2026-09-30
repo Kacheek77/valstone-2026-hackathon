@@ -51,7 +51,7 @@ function Timeline({ rows, reply, onOpen }: { rows: SequenceRow[]; reply: { day: 
   const lastDone = Math.max(-1, ...rows.filter(isDone).map((r) => r.day));
   return (
     <div className="mb-4 rounded-xl border border-[#e3e7eb] bg-white px-8 pb-3 pt-4 shadow-[0_2px_8px_rgba(15,20,25,0.06)]">
-      <div className="relative h-[74px]">
+      <div className="relative mx-8 h-[74px]">
         <div className="absolute left-0 right-0 top-4 h-1 rounded-full bg-[#e3e7eb]" />
         {lastDone > 0 && <div className="sd-grow-x absolute left-0 top-4 h-1 rounded-full bg-[#3a728a]" style={{ width: pos(lastDone) }} />}
         {rows.map((r) => {
