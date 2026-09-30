@@ -3,8 +3,10 @@ import { FA } from "@/components/faIcons";
 import { BrandMark } from "@/components/Header";
 import { HeroBuild } from "@/components/HeroBuild";
 import { TeamThumb, type ThumbSignal } from "@/components/TeamThumb";
-import { currentWeek, inWeek, RETIRED_WEEK } from "@/lib/data";
-import { getSupabase } from "@/lib/supabase";
+import { CountUp } from "@/components/CountUp";
+import { loadAll } from "@/lib/data";
+import { matchAccounts } from "@/lib/match";
+import { periodFor, periodSignals, sumValues } from "@/lib/metrics";
 import type { Signal } from "@/lib/types";
 
 // Cached and re-rendered at most once a minute (and on every Reset or
@@ -24,23 +26,66 @@ const REPS = [
 
 type WeekSignal = Pick<Signal, "rep_id" | "week_of" | "type" | "severity" | "lat" | "lng">;
 
-// This week's signals, by rep (VS-13 W8 adds their types and places).
-async function signalsThisWeek(): Promise<{ byRep: Map<string, WeekSignal[]>; all: WeekSignal[] } | null> {
+type Week = {
+  byRep: Map<string, WeekSignal[]>;
+  all: WeekSignal[];
+  // VS-13 W4: the live numbers band.
+  accounts: number;
+  reps: number;
+  available: number;
+};
+
+// This week's signals, by rep, plus the band's totals. Null (no badges, no
+// thumbnail, no band) when the database is unreachable.
+async function thisWeek(): Promise<Week | null> {
   try {
-    const { data, error } = await getSupabase()
-      .from("signals")
-      .select("rep_id,week_of,type,severity,lat,lng")
-      .gt("week_of", RETIRED_WEEK);
-    if (error || !data) return null;
-    const rows = data as WeekSignal[];
-    const week = currentWeek(rows as Signal[]);
-    const all = rows.filter((s) => inWeek(s.week_of, week));
+    const loaded = await loadAll();
+    if (!loaded.ok) return null;
+    const data = loaded.data;
+    const all = periodSignals(data.signals, periodFor("week"));
     const byRep = new Map<string, WeekSignal[]>();
     for (const s of all) if (s.rep_id) byRep.set(s.rep_id, [...(byRep.get(s.rep_id) ?? []), s]);
-    return { byRep, all };
+    const affected = new Set<string>();
+    for (const s of all) {
+      for (const m of matchAccounts(s, data.accounts, data.reps)) affected.add(m.account.id);
+      for (const o of data.opps) if (o.signal_id === s.id) affected.add(o.account_id);
+    }
+    return {
+      byRep,
+      all,
+      accounts: affected.size,
+      reps: data.reps.filter((r) => !r.is_manager).length,
+      available: sumValues(all, data).available,
+    };
   } catch {
     return null;
   }
+}
+
+// VS-13 W7: faint topographic contours drifting in the header band.
+function Contours() {
+  const rings = [0, 1, 2, 3, 4, 5, 6];
+  const ring = (cx: number, cy: number, k: number, wob: number) => {
+    const pts: string[] = [];
+    for (let a = 0; a <= 360; a += 15) {
+      const t = (a * Math.PI) / 180;
+      const r = 40 + k * 34 + Math.sin(t * 3 + k) * wob + Math.cos(t * 2 - k) * wob * 0.6;
+      pts.push(`${(cx + Math.cos(t) * r * 1.5).toFixed(1)},${(cy + Math.sin(t) * r).toFixed(1)}`);
+    }
+    return `M${pts.join(" L")} Z`;
+  };
+  return (
+    <svg aria-hidden className="sd-contours pointer-events-none absolute inset-0 h-full w-full" preserveAspectRatio="xMidYMid slice" viewBox="0 0 1200 320">
+      <g fill="none" stroke="#ffffff" strokeWidth="1.2" opacity="0.07">
+        {rings.map((k) => (
+          <path key={`a${k}`} d={ring(260, 250, k, 9)} />
+        ))}
+        {rings.slice(0, 5).map((k) => (
+          <path key={`b${k}`} d={ring(980, 60, k, 12)} />
+        ))}
+      </g>
+    </svg>
+  );
 }
 
 const TYPE_ICON = { drought: "sun-plant-wilt", rain: "cloud-showers-heavy", heat: "temperature-arrow-up" } as const;
@@ -86,14 +131,15 @@ function InfoCard({ title, tone, children }: { title: string; tone: "plain" | "s
 
 // Final copy (her voice pass, 2026-09-29).
 export default async function Welcome() {
-  const week = await signalsThisWeek();
+  const week = await thisWeek();
   const counts = week ? new Map([...week.byRep].map(([k, v]) => [k, v.length])) : null;
   return (
     <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col justify-center px-4 py-5 sm:px-6">
       <div className="overflow-hidden rounded-xl bg-white shadow-[0_8px_24px_rgba(15,20,25,0.12)]">
         {/* VS-13 W1 + W2: the headline left (about 55%), its animation right (W3). */}
-        <div className="grid items-center gap-5 bg-gradient-to-r from-[#142e3a] to-[#3a728a] px-6 py-5 sm:px-8 md:grid-cols-[55fr_45fr]">
-          <div className="flex flex-col gap-3">
+        <div className="relative grid items-center gap-5 overflow-hidden bg-gradient-to-r from-[#142e3a] to-[#3a728a] px-6 py-4 sm:px-8 md:grid-cols-[55fr_45fr]">
+          <Contours />
+          <div className="relative flex flex-col gap-3">
             <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-[#cee5f3]">
               <BrandMark className="h-5 w-5" color="#cee5f3" />
               <span className="font-bold text-white">Signal Desk</span>
@@ -104,20 +150,60 @@ export default async function Welcome() {
               Signal Desk reads this week&apos;s weather, finds the farms it affects, and writes the outreach.
             </p>
           </div>
-          <div className="mx-auto w-full max-w-[340px] rounded-xl bg-white p-1.5 shadow-[0_8px_24px_rgba(0,0,0,0.25)]">
+          <div className="relative mx-auto w-full max-w-[340px] rounded-xl bg-white p-1.5 shadow-[0_8px_24px_rgba(0,0,0,0.25)]">
             <HeroBuild />
           </div>
         </div>
+
+        {/* VS-13 W4: live numbers, from the database; absent if it is unreachable. */}
+        {week && (
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 border-b border-[#d9e7ee] bg-[#eef5f9] px-6 py-1.5 text-sm text-[#2c5a6e] sm:px-8">
+            <b>This week:</b>
+            <span>
+              <CountUp value={week.all.length} format="int" /> signals
+            </span>
+            ·
+            <span>
+              <CountUp value={week.accounts} format="int" /> accounts
+            </span>
+            ·
+            <span>
+              <CountUp value={week.reps} format="int" /> reps
+            </span>
+            ·
+            <span>
+              <b>
+                <CountUp value={week.available} format="usd" />
+              </b>{" "}
+              expected value available
+            </span>
+          </div>
+        )}
 
         <div className="flex flex-col gap-3 px-6 py-4 sm:px-8">
           <div className="grid gap-4 md:grid-cols-2">
             <InfoCard title="The business" tone="plain">
               <p>ThiboLiSoft&apos;s FieldSense software for crop growers comprises three products:</p>
-              <ul className="my-1 list-disc pl-5 font-semibold">
-                <li>Irrigation Scheduling</li>
-                <li>Field-Work Planner</li>
-                <li>Yield &amp; Insurance Records</li>
-              </ul>
+              {/* VS-13 W6: each product with the weather that triggers it. */}
+              <div className="my-1.5 grid gap-2 sm:grid-cols-3">
+                {(
+                  [
+                    ["Irrigation Scheduling", "drought", "drought worsens"],
+                    ["Field-Work Planner", "rain", "heavy rain"],
+                    ["Yield & Insurance Records", "heat", "heat or hail"],
+                  ] as const
+                ).map(([name, type, trigger]) => (
+                  <div key={name} className="flex items-start gap-2 rounded-lg border border-[#e3e7eb] bg-white px-2.5 py-1.5">
+                    <span className="mt-0.5 shrink-0">
+                      <TypeIcon type={type} />
+                    </span>
+                    <span className="leading-tight">
+                      <b className="block text-[13px] text-[#142e3a]">{name}</b>
+                      <span className="text-xs text-[#5a6975]">← {trigger}</span>
+                    </span>
+                  </div>
+                ))}
+              </div>
               <p>Each product is utilized in the week the weather turns and affects the farm.</p>
             </InfoCard>
             <InfoCard title="Our solution" tone="solution">
@@ -160,7 +246,7 @@ export default async function Welcome() {
                     <li key={r.id}>
                       <a
                         href={`/view?as=${r.id}`}
-                        className="flex items-center gap-3 rounded-lg px-2 py-1.5 transition-colors duration-150 hover:bg-[#eef5f9]"
+                        className="flex items-center gap-3 rounded-lg px-2 py-1 transition-colors duration-150 hover:bg-[#eef5f9]"
                       >
                         <span className="min-w-0 flex-1 text-sm">
                           <b className="text-[#142e3a]">{r.name}</b>

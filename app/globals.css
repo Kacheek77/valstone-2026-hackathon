@@ -155,3 +155,8 @@ body {
 @keyframes hb-cap3 { 0%, 42% { opacity: 0; } 45%, 64% { opacity: 1; } 67%, 100% { opacity: 0; } }
 @keyframes hb-cap4 { 0%, 65% { opacity: 0; } 68%, 100% { opacity: 1; } }
 @media (prefers-reduced-motion: reduce) { .hb * { animation: none !important; } }
+
+/* VS-13 W7: the Welcome header's contours drift very slowly. */
+@keyframes sd-drift { from { transform: translate(0, 0); } to { transform: translate(-40px, 14px); } }
+.sd-contours { animation: sd-drift 40s ease-in-out infinite alternate; }
+@media (prefers-reduced-motion: reduce) { .sd-contours { animation: none; } }
