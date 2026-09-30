@@ -49,7 +49,7 @@ function PeriodPills() {
 }
 
 const FOOTNOTE =
-  "Bar length = expected value available that week. Gray remainder = lost or expired. Prior-week figures are seeded history. Time to act = signal to accept.";
+  "Bar length = expected value available that week. Hatched = open, not yet worked (drafts and unscored matches from the last 21 days). Gray = lost or expired. Prior-week figures are seeded history. Time to act = signal to accept.";
 
 export default async function Results(props: PageProps<"/results">) {
   const sp = await props.searchParams;
@@ -163,7 +163,7 @@ export default async function Results(props: PageProps<"/results">) {
         </Card>
 
         <div className="mb-2 flex items-center justify-between">
-          <h2 className="font-semibold text-[#3f4e5b]">{byWeek ? "Team by week" : "By rep"}</h2>
+          <h2 className="font-semibold text-[#3f4e5b]">{byWeek ? "Team, week by week" : "Each rep this quarter"}</h2>
           <div className="flex gap-2 text-sm" role="group" aria-label="Rows">
             <Link
               href="/results"
@@ -204,7 +204,7 @@ export default async function Results(props: PageProps<"/results">) {
           </Card>
         )}
         <p className="mt-3 text-xs text-[#7a8794]">
-          {byWeek ? FOOTNOTE : "Bar length = expected value available to that rep this quarter. Gray remainder = lost or expired. Prior-week figures are seeded history."}{" "}
+          {byWeek ? FOOTNOTE : "Bar length = expected value available to that rep this quarter. Hatched = open, not yet worked (drafts and unscored matches from the last 21 days). Gray = lost or expired. Prior-week figures are seeded history."}{" "}
           Won % = won ÷ available, in expected value (amount × score ÷ 100); green 15%+, amber 8–14%, red under 8%. Click a rep
           to open their results.
         </p>

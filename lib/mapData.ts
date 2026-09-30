@@ -22,6 +22,7 @@ export type MapSignal = {
   amount: number; // Σ amount of those opportunities
   stages: Record<string, number>;
   matches: number; // accounts the matcher finds
+  pending: string[]; // matched accounts with no opportunity yet (drawer scoring)
 };
 
 export type MapOpp = { id: string; stage: string; amount: number; lead: string; score: number; signalId: string | null };
@@ -59,6 +60,8 @@ export function buildMapData(data: AllData, periodSignals: Signal[]): MapData {
     const opps = data.opps.filter((o) => o.signal_id === s.id);
     const stages: Record<string, number> = {};
     for (const o of opps) stages[o.stage] = (stages[o.stage] ?? 0) + 1;
+    const generated = new Set(opps.map((o) => o.account_id));
+    const matched = matchAccounts(s, data.accounts, data.reps);
     return {
       id: s.id,
       county: s.county,
@@ -76,7 +79,8 @@ export function buildMapData(data: AllData, periodSignals: Signal[]): MapData {
       n: opps.length,
       amount: opps.reduce((sum, o) => sum + o.amount, 0),
       stages,
-      matches: matchAccounts(s, data.accounts, data.reps).length,
+      matches: matched.length,
+      pending: matched.filter((m) => !generated.has(m.account.id)).map((m) => m.account.id),
     };
   });
 

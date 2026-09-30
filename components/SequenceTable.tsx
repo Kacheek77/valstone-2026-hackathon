@@ -109,7 +109,7 @@ export function SequenceTable({
                 : "rounded-full bg-[#f55a00] px-5 py-2 text-sm font-semibold text-white transition-colors duration-150 hover:bg-[#d94f00] disabled:opacity-60"
             }
           >
-            {busy ? "Working…" : built ? "Rebuild" : "Build sequence"}
+            {busy ? "Claude is writing the call, email and text… (about 15 s)" : built ? "Rebuild" : "Build sequence"}
           </button>
           {built && (
             <button

@@ -1,7 +1,7 @@
 import { Header } from "@/components/Header";
 import { PipelineClient, type PipelineRow, type SignalOption } from "@/components/PipelineClient";
 import { BackLink, ErrorBox, Page } from "@/components/ui";
-import { currentWeek, inWeek, loadAll } from "@/lib/data";
+import { loadAll } from "@/lib/data";
 import { dateTime, eventLine, weekLabel } from "@/lib/format";
 import { stepProgress } from "@/lib/steps";
 import { isLead } from "@/lib/types";
@@ -63,12 +63,12 @@ export default async function Pipeline(props: PageProps<"/pipeline">) {
     };
   });
 
-  // The Signal filter offers this week's signals (in scope), plus whichever
-  // signal the URL asked for.
-  const week = currentWeek(signals);
-  const optionSignals = signals.filter(
-    (s) => (inWeek(s.week_of, week) && (view.kind === "manager" || s.rep_id === view.repId)) || s.id === signalFilter,
-  );
+  // The Signal filter offers every signal present in the rows, newest first,
+  // plus whichever signal the URL asked for.
+  const inRows = new Set(rows.map((r) => r.signalId).filter(Boolean));
+  const optionSignals = signals
+    .filter((s) => inRows.has(s.id) || s.id === signalFilter)
+    .sort((a, b) => b.week_of.localeCompare(a.week_of) || a.id.localeCompare(b.id));
   const signalOptions: SignalOption[] = optionSignals.map((s) => ({ id: s.id, label: `${eventLine(s)} · ${weekLabel(s.week_of)}` }));
 
   return (

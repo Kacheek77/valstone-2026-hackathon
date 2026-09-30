@@ -170,6 +170,8 @@ export default async function Dashboard(props: PageProps<"/dashboard">) {
                 const sOpps = opps.filter((o) => o.signal_id === s.id);
                 const leads = sOpps.filter((o) => isLead(o));
                 const below = sOpps.length - leads.length;
+                const scoredIds = new Set(sOpps.map((o) => o.account_id));
+                const unscored = matches.filter((m) => !scoredIds.has(m.account.id)).length;
                 const acctCount = new Set([...matches.map((m) => m.account.id), ...sOpps.map((o) => o.account_id)]).size;
                 return (
                   <Card key={s.id} className="flex items-center gap-4 px-4 py-3 transition-shadow duration-150 hover:shadow-md">
@@ -187,7 +189,8 @@ export default async function Dashboard(props: PageProps<"/dashboard">) {
                         ) : (
                           <>
                             {leads.length} lead{leads.length === 1 ? "" : "s"}
-                            {below > 0 && <span className="text-[#7a8794]"> · {below} below threshold</span>} · {s.target_module} ·{" "}
+                            {below > 0 && <span className="text-[#7a8794]"> · {below} below threshold</span>}
+                            {unscored > 0 && <span className="text-[#7a8794]"> · {unscored} not scored</span>} · {s.target_module} ·{" "}
                             <b>{usd(expectedValue(leads.length ? leads : sOpps))} expected</b>
                           </>
                         )}
@@ -259,7 +262,9 @@ export default async function Dashboard(props: PageProps<"/dashboard">) {
                 <Sparkline values={series((n) => n.hours)} color="#c64800" label="Hours saved, last five weeks" />
               </Tile>
             </div>
-            <p className="text-xs text-[#7a8794]">Sparklines show the four prior weeks of seeded history, then this week.</p>
+            {period.key === "week" && (
+              <p className="text-xs text-[#7a8794]">Sparklines show the four prior weeks of seeded history, then this week.</p>
+            )}
 
             <Card className="px-4 py-3">
               <div className="mb-2 flex items-baseline justify-between">

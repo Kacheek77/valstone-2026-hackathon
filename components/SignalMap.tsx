@@ -7,6 +7,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { MapAccount, MapData, MapRep, MapSignal } from "@/lib/mapData";
 import { faSvg } from "./faIcons";
+import { CardGenerateButton } from "./GenerateButton";
 
 // VS-8: MapLibre map with county boundaries, signal areas, account and signal
 // markers, hover popups and a click drawer. Approved from the mockup
@@ -41,6 +42,9 @@ export function signalColor(s: Pick<MapSignal, "type" | "severity">): string {
 // MapLibre resolves its worker next to its own chunk, which the bundler moves;
 // serve it from public/maplibre (copied there by the prebuild script).
 maplibregl.setWorkerUrl("/maplibre/maplibre-gl-worker.mjs");
+// Start the workers as soon as this module loads, so the county layers are
+// ready by the time the map is (VS-10: pins used to appear seconds earlier).
+if (typeof window !== "undefined") maplibregl.prewarm();
 
 const POSITRON = "https://tiles.openfreemap.org/styles/positron";
 const USGS_TOPO: StyleSpecification = {
@@ -157,11 +161,15 @@ const btnPrimary = `${btn} border-[#f55a00] bg-[#f55a00] text-white`;
 const btnSecondary = `${btn} border-[#3a728a] bg-white text-[#3a728a]`;
 const btnQuiet = "flex items-center gap-2.5 px-3.5 py-1 text-sm text-[#5a6975] hover:underline";
 
-function SignalCard({ s, reps }: { s: MapSignal; reps: MapRep[] }) {
+function SignalCard({ s, reps, mode }: { s: MapSignal; reps: MapRep[]; mode: MapMode }) {
   const color = signalColor(s);
   const rep = reps.find((r) => r.id === s.repId);
   const week = new Date(`${s.week}T12:00:00Z`).toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "UTC" });
-  const sourceUrl = s.type === "drought" ? `https://droughtmonitor.unl.edu/CurrentMap/StateDroughtMonitor.aspx?${s.state}` : "https://www.weather.gov/";
+  // Only drought has a public page to link; rain and heat show their source as text.
+  const sourceUrl = s.type === "drought" ? `https://droughtmonitor.unl.edu/CurrentMap/StateDroughtMonitor.aspx?${s.state}` : null;
+  // VS-10: in rep view the drawer scores in place (same helper as the dashboard
+  // card), then opens the signal page. Managers only open the signal.
+  const scoreHere = mode === "rep" && s.n === 0 && s.pending.length > 0;
   return (
     <>
       <div className="mb-2 flex items-center gap-2.5">
@@ -203,18 +211,28 @@ function SignalCard({ s, reps }: { s: MapSignal; reps: MapRep[] }) {
         ]}
       />
       <div className="mt-3 flex flex-col gap-2">
-        <Link href={`/signals/${s.id}`} className={btnPrimary}>
-          <Icon name="wand-magic-sparkles" color="#fff" />
-          {s.n ? "Open signal" : "Score & generate leads"}
-        </Link>
+        {scoreHere ? (
+          <div className="[&>div]:items-stretch [&_button]:w-full">
+            <CardGenerateButton signalId={s.id} pendingAccountIds={s.pending} />
+          </div>
+        ) : (
+          <Link href={`/signals/${s.id}`} className={btnPrimary}>
+            <Icon name="wand-magic-sparkles" color="#fff" />
+            Open signal
+          </Link>
+        )}
         <Link href={`/pipeline?signal=${s.id}`} className={btnSecondary}>
           <Icon name="table-list" color="#3a728a" />
           Pipeline for this signal
         </Link>
-        <a href={sourceUrl} target="_blank" rel="noreferrer" className={btnQuiet}>
-          <Icon name="arrow-up-right-from-square" color="#5a6975" />
-          Source: {s.source}
-        </a>
+        {sourceUrl ? (
+          <a href={sourceUrl} target="_blank" rel="noreferrer" className={btnQuiet}>
+            <Icon name="arrow-up-right-from-square" color="#5a6975" />
+            Source: {s.source}
+          </a>
+        ) : (
+          <p className="px-3.5 py-1 text-sm text-[#5a6975]">Source: {s.source}</p>
+        )}
       </div>
     </>
   );
@@ -529,6 +547,7 @@ export default function SignalMap({
         map.on("click", "sig-fill", (e) => {
           const hit = manager ? directSignal(e.point) : e.features?.[0];
           const sid = String(hit?.properties?.sid ?? "");
+          untip();
           if (byId.has(sid)) setSelected({ kind: "signal", id: sid });
         });
 
@@ -550,10 +569,16 @@ export default function SignalMap({
           map.on("click", "terr-fill", (e) => {
             if (directSignal(e.point)) return;
             const rid = String(e.features?.[0]?.properties?.rep_id ?? "");
+            untip();
             if (rid) setSelected({ kind: "rep", id: rid });
           });
         }
 
+        // Markers go on once the layers have drawn, so pins and counties appear together.
+        map.once("idle", () => { if (map) addMarkers(map); });
+      });
+
+      const addMarkers = (map: maplibregl.Map) => {
         // Account pins: tractor = customer, seedling = prospect.
         for (const a of data.accounts) {
           const other = !manager && a.repId !== repId;
@@ -571,6 +596,7 @@ export default function SignalMap({
           el.addEventListener("mouseleave", untip);
           el.addEventListener("click", (ev) => {
             ev.stopPropagation();
+            untip();
             setSelected({ kind: "account", id: a.id });
           });
           markers.push(new maplibregl.Marker({ element: el }).setLngLat([a.lng, a.lat]).addTo(map));
@@ -595,11 +621,12 @@ export default function SignalMap({
           el.addEventListener("mouseleave", untip);
           el.addEventListener("click", (ev) => {
             ev.stopPropagation();
+            untip();
             setSelected({ kind: "signal", id: s.id });
           });
           markers.push(new maplibregl.Marker({ element: el }).setLngLat([s.lng, s.lat]).addTo(map));
         }
-      });
+      };
     })();
 
     return () => {
@@ -643,7 +670,7 @@ export default function SignalMap({
           >
             <Icon name="xmark" size={14} color="#5a6975" />
           </button>
-          {selected.kind === "signal" && <SignalCard s={sel as MapSignal} reps={data.reps} />}
+          {selected.kind === "signal" && <SignalCard s={sel as MapSignal} reps={data.reps} mode={mode} />}
           {selected.kind === "account" && <AccountCard a={sel as MapAccount} reps={data.reps} />}
           {selected.kind === "rep" && <RepCard r={sel as MapRep} data={data} />}
         </>

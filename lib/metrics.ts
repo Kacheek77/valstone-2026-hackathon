@@ -18,7 +18,9 @@ export function expectedValue(opps: Opportunity[]): number {
   return opps.reduce((sum, o) => sum + (o.amount * o.score) / 100, 0);
 }
 
-export type SignalValue = { available: number; captured: number; generated: number; ungenerated: number };
+// ungeneratedValue: the part of available that comes from matched accounts
+// nobody has generated yet (score 50). VS-10 splits it out for Results.
+export type SignalValue = { available: number; captured: number; generated: number; ungenerated: number; ungeneratedValue: number };
 
 // Available = Σ generated (amount × score/100) + Σ matched-but-ungenerated
 // (amount at the signal's target module × 50/100). Captured = Σ generated
@@ -28,16 +30,18 @@ export function signalValue(signal: Signal, data: AllData): SignalValue {
   const generated = new Set(opps.map((o) => o.account_id));
   let available = expectedValue(opps);
   let ungenerated = 0;
+  let ungeneratedValue = 0;
   if (!(UNGENERATED_ONLY_WHEN_IGNORED && opps.length > 0)) {
     for (const m of matchAccounts(signal, data.accounts, data.reps)) {
       if (generated.has(m.account.id)) continue;
       ungenerated++;
-      available +=
-        (amountFor(signal.target_module as Module, m.account.acres, data.settings.price_list) * UNGENERATED_SCORE) / 100;
+      const v = (amountFor(signal.target_module as Module, m.account.acres, data.settings.price_list) * UNGENERATED_SCORE) / 100;
+      ungeneratedValue += v;
+      available += v;
     }
   }
   const captured = expectedValue(opps.filter((o) => ACTED_STAGES.includes(o.stage)));
-  return { available, captured, generated: opps.length, ungenerated };
+  return { available, captured, generated: opps.length, ungenerated, ungeneratedValue };
 }
 
 export function sumValues(signals: Signal[], data: AllData): SignalValue {
@@ -49,9 +53,10 @@ export function sumValues(signals: Signal[], data: AllData): SignalValue {
         captured: acc.captured + v.captured,
         generated: acc.generated + v.generated,
         ungenerated: acc.ungenerated + v.ungenerated,
+        ungeneratedValue: acc.ungeneratedValue + v.ungeneratedValue,
       };
     },
-    { available: 0, captured: 0, generated: 0, ungenerated: 0 },
+    { available: 0, captured: 0, generated: 0, ungenerated: 0, ungeneratedValue: 0 },
   );
 }
 
@@ -95,7 +100,9 @@ export function signalWeeks(signals: Signal[]): string[] {
 // Draft or accepted opportunities older than this are counted as expired.
 export const EXPIRE_DAYS = 21;
 
-export type SegmentKey = "won" | "sentOpen" | "pushed" | "draft";
+// "open" (VS-10): drafts and matched-but-ungenerated value younger than the
+// expiry, i.e. current value nobody has worked yet. Not lost.
+export type SegmentKey = "won" | "sentOpen" | "pushed" | "open";
 export type Segment = { value: number; count: number; amount: number };
 
 // Everything is in expected value (amount × score / 100), so the segments
@@ -137,7 +144,7 @@ export function breakdown(signals: Signal[], opps: Opportunity[], data: AllData,
     sumValues(signals, data).available +
     expectedValue(opps.filter((o) => !o.signal_id || !signalIds.has(o.signal_id)));
   const empty = (): Segment => ({ value: 0, count: 0, amount: 0 });
-  const segments: Record<SegmentKey, Segment> = { won: empty(), sentOpen: empty(), pushed: empty(), draft: empty() };
+  const segments: Record<SegmentKey, Segment> = { won: empty(), sentOpen: empty(), pushed: empty(), open: empty() };
   const lost = { count: 0, amount: 0 };
   const expired = { count: 0, amount: 0 };
   for (const o of opps) {
@@ -152,10 +159,18 @@ export function breakdown(signals: Signal[], opps: Opportunity[], data: AllData,
       expired.amount += o.amount;
       continue;
     }
-    const key: SegmentKey = o.stage === "won" ? "won" : o.stage === "sent" ? "sentOpen" : o.stage === "pushed" ? "pushed" : "draft";
+    const key: SegmentKey = o.stage === "won" ? "won" : o.stage === "sent" ? "sentOpen" : o.stage === "pushed" ? "pushed" : "open";
     segments[key].value += ev;
     segments[key].count++;
     segments[key].amount += o.amount;
+  }
+  // Matched accounts nobody generated: open while the signal is recent,
+  // part of "lost or expired" once it is older than the expiry.
+  for (const sig of signals) {
+    if (now - Date.parse(`${sig.week_of}T00:00:00Z`) > EXPIRE_DAYS * 86_400_000) continue;
+    const v = signalValue(sig, data);
+    segments.open.value += v.ungeneratedValue;
+    segments.open.count += v.ungenerated;
   }
   const used = Object.values(segments).reduce((s, g) => s + g.value, 0);
   return {
@@ -205,7 +220,7 @@ export function totalBreakdown(rows: WeekRow[]): Breakdown {
   const empty = (): Segment => ({ value: 0, count: 0, amount: 0 });
   const t: Breakdown = {
     available: 0,
-    segments: { won: empty(), sentOpen: empty(), pushed: empty(), draft: empty() },
+    segments: { won: empty(), sentOpen: empty(), pushed: empty(), open: empty() },
     remainder: 0,
     lost: { count: 0, amount: 0 },
     expired: { count: 0, amount: 0 },

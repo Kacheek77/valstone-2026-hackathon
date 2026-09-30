@@ -1,21 +1,22 @@
 import { EXPIRE_DAYS, type Breakdown, type SegmentKey } from "@/lib/metrics";
 import { usd, usdExact } from "@/lib/format";
 
+// color is a CSS background (the open segment is hatched).
 export const SEGMENTS: { key: SegmentKey; label: string; color: string }[] = [
   { key: "won", label: "Won", color: "#1f9d55" },
   { key: "sentOpen", label: "Sent, open", color: "#4b8fae" },
   { key: "pushed", label: "Accepted, not sent", color: "#a7cce5" },
-  { key: "draft", label: "Draft", color: "#d9dee3" },
+  { key: "open", label: "Open, not yet worked", color: "repeating-linear-gradient(135deg, #cfe3ee 0 3px, #eef5f9 3px 7px)" },
 ];
-// Hatched, so "lost or expired" never reads as the flat gray of Draft.
-export const REMAINDER_BG = "repeating-linear-gradient(135deg, #e3e7eb 0 3px, #f6f7f8 3px 7px)";
+// Lost or expired: flat gray, clearly different from the hatched open segment.
+export const REMAINDER_BG = "#d9dee3";
 
 function remainderTitle(b: Breakdown): string {
   return [
     `Lost or expired: ${usdExact(b.remainder)} expected value`,
     `${b.lost.count} lost (${usdExact(b.lost.amount)} amount)`,
     `${b.expired.count} expired: draft or accepted, created more than ${EXPIRE_DAYS} days ago (${usdExact(b.expired.amount)} amount)`,
-    "plus matched accounts on ignored signals that were never generated",
+    `plus matched accounts never generated on signals older than ${EXPIRE_DAYS} days`,
   ].join("\n");
 }
 
@@ -42,7 +43,11 @@ export function StackedBar({ b, scale, height = "h-5" }: { b: Breakdown; scale: 
           return (
             <div
               key={key}
-              title={`${label}: ${seg.count} opportunit${seg.count === 1 ? "y" : "ies"}, ${usdExact(seg.value)} expected value (${usdExact(seg.amount)} amount)`}
+              title={
+                key === "open"
+                  ? `${label}: ${seg.count} draft or not-yet-scored item${seg.count === 1 ? "" : "s"} from the last ${EXPIRE_DAYS} days, ${usdExact(seg.value)} expected value`
+                  : `${label}: ${seg.count} opportunit${seg.count === 1 ? "y" : "ies"}, ${usdExact(seg.value)} expected value (${usdExact(seg.amount)} amount)`
+              }
               className="h-full transition-opacity duration-150 hover:opacity-80"
               style={{ width: `${(seg.value / b.available) * 100}%`, background: color }}
             />
@@ -70,7 +75,7 @@ export function BarLegend({ b }: { b: Breakdown }) {
         </span>
       ))}
       <span className="flex items-center gap-1.5 text-[#3f4e5b]">
-        <span className="h-2.5 w-3.5 rounded-sm border border-[#d9dee3]" style={{ background: REMAINDER_BG }} />
+        <span className="h-2.5 w-3.5 rounded-sm" style={{ background: REMAINDER_BG }} />
         Lost or expired <b className="tabular-nums">{usd(b.remainder)}</b>
       </span>
       <span className={`font-semibold ${wonColor(b.wonPct)}`}>
