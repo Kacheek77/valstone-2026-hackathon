@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { DraftEditor } from "@/components/DraftEditor";
 import { Header } from "@/components/Header";
 import { OppActions, ReopenLink } from "@/components/OppActions";
@@ -46,6 +46,8 @@ export default async function OpportunityPage(props: PageProps<"/opportunities/[
   const { reps, accounts, signals, opps, steps } = loaded.data;
   const opp = opps.find((o) => o.id === id);
   if (!opp) notFound();
+  // VS-12 T19: reps see only their own records (off-territory ones they own included).
+  if (view.kind === "rep" && opp.rep_id !== view.repId) redirect(`/dashboard?rep=${view.repId}&note=territory`);
   const account = accounts.find((a) => a.id === opp.account_id);
   const signal = signals.find((s) => s.id === opp.signal_id);
   const rep = reps.find((r) => r.id === opp.rep_id);
@@ -135,7 +137,7 @@ export default async function OpportunityPage(props: PageProps<"/opportunities/[
           <div className="flex min-w-0 flex-col gap-3">
             {managerView && !closed && (
               <div className="rounded-xl bg-[#eef0f2] px-5 py-3 text-sm text-[#3f4e5b]">
-                Manager view: read-only. {rep?.name ?? "The rep"} works this opportunity from their own view.
+                Read-only in manager view · {rep?.name ?? "The rep"} works this lead
               </div>
             )}
             {closed && (

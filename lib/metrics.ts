@@ -249,25 +249,68 @@ export function totalBreakdown(rows: WeekRow[]): Breakdown {
 // Composition only: these call the functions above, so /team and /team/[repId]
 // can never disagree.
 
+// VS-12 T18: one set of periods everywhere, keyed ?period=week|month|quarter.
+// Week = the current week (the newest signal's); Month = the weeks whose Monday
+// falls in the current week's calendar month; Quarter = its calendar quarter.
 export const PERIODS = [
-  { key: "week", label: "This week", days: 7, phrase: "this week" },
-  { key: "4w", label: "4 weeks", days: 28, phrase: "in the last 4 weeks" },
-  { key: "season", label: "Season", days: Infinity, phrase: "this season" },
+  { key: "week", label: "Week", phrase: "this week" },
+  { key: "month", label: "Month", phrase: "this month" },
+  { key: "quarter", label: "Quarter", phrase: "this quarter" },
 ] as const;
 export type Period = (typeof PERIODS)[number];
+export type PeriodKey = Period["key"];
 
-export function periodFor(key: unknown): Period {
-  return PERIODS.find((p) => p.key === key) ?? PERIODS[0];
+export function periodFor(key: unknown, fallback: PeriodKey = "week"): Period {
+  return PERIODS.find((p) => p.key === key) ?? PERIODS.find((p) => p.key === fallback)!;
 }
 
-// Signals whose week falls in the period ending at the newest signal's week.
+const quarterOf = (iso: string) => `${iso.slice(0, 4)}-Q${Math.floor((Number(iso.slice(5, 7)) - 1) / 3) + 1}`;
+
+export function inPeriod(weekOf: string, current: string | null, period: Period): boolean {
+  if (!current) return false;
+  const w = weekStart(weekOf);
+  const c = weekStart(current);
+  if (w > c) return false;
+  if (period.key === "week") return w === c;
+  if (period.key === "month") return w.slice(0, 7) === c.slice(0, 7);
+  return quarterOf(w) === quarterOf(c);
+}
+
+// The period's first and last calendar day (ISO dates), for range queries.
+export function periodRange(current: string, period: Period): { from: string; to: string; label: string } {
+  const c = weekStart(current);
+  const d = (y: number, m: number, day: number) => new Date(Date.UTC(y, m, day)).toISOString().slice(0, 10);
+  const y = Number(c.slice(0, 4));
+  const m = Number(c.slice(5, 7)) - 1;
+  if (period.key === "week") {
+    const end = new Date(`${c}T12:00:00Z`);
+    end.setUTCDate(end.getUTCDate() + 6);
+    return { from: c, to: end.toISOString().slice(0, 10), label: "this week" };
+  }
+  if (period.key === "month") {
+    const name = new Date(Date.UTC(y, m, 1)).toLocaleDateString("en-US", { month: "long", timeZone: "UTC" });
+    return { from: d(y, m, 1), to: d(y, m + 1, 0), label: name };
+  }
+  const q0 = Math.floor(m / 3) * 3;
+  return { from: d(y, q0, 1), to: d(y, q0 + 3, 0), label: `Q${q0 / 3 + 1}` };
+}
+
+// Every Monday in [from, to], newest first.
+export function mondaysBetween(from: string, to: string): string[] {
+  const out: string[] = [];
+  const d = new Date(`${weekStart(from)}T12:00:00Z`);
+  if (d.toISOString().slice(0, 10) < from) d.setUTCDate(d.getUTCDate() + 7);
+  while (d.toISOString().slice(0, 10) <= to) {
+    out.push(d.toISOString().slice(0, 10));
+    d.setUTCDate(d.getUTCDate() + 7);
+  }
+  return out.reverse();
+}
+
+// Signals whose week falls in the period, relative to the newest signal's week.
 export function periodSignals(signals: Signal[], period: Period): Signal[] {
   const current = signals.reduce<string | null>((max, s) => (max && max > s.week_of ? max : s.week_of), null);
-  if (!current) return [];
-  return signals.filter((s) => {
-    const diff = (Date.parse(current) - Date.parse(s.week_of)) / 86_400_000;
-    return diff >= 0 && diff < period.days;
-  });
+  return signals.filter((s) => inPeriod(s.week_of, current, period));
 }
 
 export type TeamRow = {

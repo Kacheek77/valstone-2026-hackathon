@@ -6,7 +6,7 @@ export const dynamic = "force-dynamic";
 
 // Final copy (her voice pass, VS-7 tweak 3), verbatim.
 const REAL = [
-  "Claude scores every matched account and writes the why-now line and the email when you click Generate leads. If Claude is unreachable, a rules-based score and a template stand in, marked 'AI offline'.",
+  "Claude scores every matched account and writes the why-now line and the email as soon as the signal page opens; there is no button to press. If Claude is unreachable, a rules-based score and a template stand in, marked 'AI offline'.",
   "Matching is real logic: accounts in the affected county (for drought, the whole territory), with a relevant crop, that do not yet own the module.",
   "Drought signals are live: Refresh signals calls the US Drought Monitor's county data service and adds a signal only when a county's drought category has risen.",
   "Amounts come from one formula: module rate per acre × acres + $2,500 setup, rounded to $100.",
@@ -58,7 +58,7 @@ export default async function About(props: PageProps<"/about">) {
             <b>Admin: reset the demo.</b>
             <p>
               Restores all seed data and removes generated leads, outreach sequences and any refreshed signals. Finney (SIG-0023)
-              goes back to new, so Score &amp; generate leads can run live again.
+              goes back to new, so opening it scores its accounts live again.
             </p>
             <ResetDemoButton />
           </Card>

@@ -1,8 +1,8 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { CountUp } from "@/components/CountUp";
-import { CardGenerateButton } from "@/components/GenerateButton";
 import { Header } from "@/components/Header";
+import { PeriodPills } from "@/components/PeriodPills";
 import { RefreshButton } from "@/components/RefreshButton";
 import { TaskDoneButton } from "@/components/TaskDoneButton";
 import { Sparkline } from "@/components/Sparkline";
@@ -21,7 +21,7 @@ import { currentWeek, inWeek, loadAll, type AllData } from "@/lib/data";
 import { eventLine, firstName, usd, weekLabel } from "@/lib/format";
 import { buildMapData } from "@/lib/mapData";
 import { matchAccounts } from "@/lib/match";
-import { captureRate, expectedValue, signalWeeks, sumValues } from "@/lib/metrics";
+import { captureRate, expectedValue, inPeriod, periodFor, signalWeeks, sumValues, type PeriodKey } from "@/lib/metrics";
 import { formatDue, tasksDue } from "@/lib/steps";
 import { isLead, type Opportunity, type Signal } from "@/lib/types";
 import { getView, parseView } from "@/lib/view";
@@ -29,18 +29,6 @@ import { getView, parseView } from "@/lib/view";
 export const dynamic = "force-dynamic";
 
 const MINUTES_PER_OPP = 20;
-
-const PERIODS = [
-  { key: "week", label: "This week", days: 7, phrase: "this week" },
-  { key: "4w", label: "4 weeks", days: 28, phrase: "in the last 4 weeks" },
-  { key: "season", label: "Season", days: Infinity, phrase: "this season" },
-] as const;
-
-function inPeriod(weekOf: string, current: string | null, days: number): boolean {
-  if (!current) return false;
-  const diff = (Date.parse(current) - Date.parse(weekOf)) / 86_400_000;
-  return diff >= 0 && diff < days;
-}
 
 function greeting(): string {
   const hour = Number(
@@ -70,9 +58,12 @@ export default async function Dashboard(props: PageProps<"/dashboard">) {
   const override = parseView(typeof sp.rep === "string" ? sp.rep : null);
   const repId = override?.kind === "rep" ? override.repId : view.kind === "rep" ? view.repId : null;
   if (repId === null) redirect("/team");
+  // VS-12 T19: a rep sees only their own territory.
+  if (view.kind === "rep" && repId !== view.repId) redirect(`/dashboard?rep=${view.repId}&note=territory`);
   const demo = sp.demo === "1";
-  const period = PERIODS.find((p) => p.key === sp.period) ?? PERIODS[0];
-  const periodHref = (key: string) => {
+  const period = periodFor(sp.period);
+  const chosen = typeof sp.period === "string" && sp.period === period.key ? period.key : undefined;
+  const periodHref = (key: PeriodKey) => {
     const q = new URLSearchParams({ rep: repId });
     if (key !== "week") q.set("period", key);
     if (demo) q.set("demo", "1");
@@ -94,7 +85,9 @@ export default async function Dashboard(props: PageProps<"/dashboard">) {
   const data = loaded.data;
   const { reps, accounts, signals, opps } = data;
   const rep = reps.find((r) => r.id === repId && !r.is_manager);
-  const header = <Header view={view} reps={reps} active={view.kind === "rep" ? "dashboard" : null} selected={repId} />;
+  const header = (
+    <Header view={view} reps={reps} active={view.kind === "rep" ? "dashboard" : null} selected={repId} period={chosen} />
+  );
   if (!rep) {
     return (
       <>
@@ -109,7 +102,7 @@ export default async function Dashboard(props: PageProps<"/dashboard">) {
   const week = currentWeek(signals);
   const repAllSignals = signals.filter((s) => s.rep_id === rep.id);
   // The period decides what the map, cards and tiles show.
-  const repSignals = repAllSignals.filter((s) => inPeriod(s.week_of, week, period.days));
+  const repSignals = repAllSignals.filter((s) => inPeriod(s.week_of, week, period));
   const myAccounts = accounts.filter((a) => a.rep_id === rep.id);
   const tasks = tasksDue(data, rep.id);
   const accountName = new Map(accounts.map((a) => [a.id, a.name]));
@@ -125,6 +118,9 @@ export default async function Dashboard(props: PageProps<"/dashboard">) {
     <>
       {header}
       <Page>
+        {sp.note === "territory" && (
+          <p className="mb-3 rounded-lg bg-[#eef0f2] px-4 py-2 text-sm text-[#3f4e5b]">That record belongs to another territory.</p>
+        )}
         <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
           <div>
             <h1 className="text-2xl font-bold">
@@ -136,19 +132,7 @@ export default async function Dashboard(props: PageProps<"/dashboard">) {
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-3">
-            <nav className="flex gap-2 text-sm" aria-label="Period">
-              {PERIODS.map((p) => (
-                <Link
-                  key={p.key}
-                  href={periodHref(p.key)}
-                  className={`rounded-full px-4 py-1.5 transition-colors duration-150 ${
-                    p.key === period.key ? "bg-[#3a728a] font-medium text-white" : "border border-[#bcc4cb] text-[#3f4e5b] hover:bg-white"
-                  }`}
-                >
-                  {p.label}
-                </Link>
-              ))}
-            </nav>
+            <PeriodPills current={period.key} href={periodHref} />
             <RefreshButton demo={demo} />
           </div>
         </div>
@@ -198,7 +182,13 @@ export default async function Dashboard(props: PageProps<"/dashboard">) {
                       </p>
                     </div>
                     {sOpps.length === 0 && matches.length > 0 ? (
-                      <CardGenerateButton signalId={s.id} pendingAccountIds={matches.map((m) => m.account.id)} />
+                      // VS-12 T9: scoring starts when the signal page opens.
+                      <Link
+                        href={`/signals/${s.id}`}
+                        className="whitespace-nowrap rounded-full bg-[#f55a00] px-5 py-2 text-sm font-semibold text-white transition-colors duration-150 hover:bg-[#d94f00]"
+                      >
+                        Open signal · {matches.length} account{matches.length === 1 ? "" : "s"}
+                      </Link>
                     ) : sOpps.length === 0 ? (
                       <OutlineButtonLink href={`/signals/${s.id}`} color="#7a8794">
                         Review
@@ -218,7 +208,7 @@ export default async function Dashboard(props: PageProps<"/dashboard">) {
             )}
 
             <div className="mt-1 flex flex-col gap-3 sm:flex-row">
-              <Tile label={`Pipeline, ${period.label.toLowerCase()}`}>
+              <Tile label={`Pipeline ${period.phrase}`}>
                 <p className="text-2xl font-bold text-[#3a728a]">
                   <CountUp value={now.pipeline} format="usd" />
                   <span className="ml-2 text-sm font-normal text-[#5a6975]">
@@ -286,7 +276,7 @@ export default async function Dashboard(props: PageProps<"/dashboard">) {
                         <span className="font-medium">{accountName.get(t.opp.account_id) ?? "Account"}</span>
                         <span className="text-[#5a6975]"> · Day {t.step.day} {t.step.channel} · {t.step.title}</span>
                       </Link>
-                      <TaskDoneButton stepId={t.step.id} />
+                      {view.kind === "rep" && <TaskDoneButton stepId={t.step.id} />}
                     </li>
                   ))}
                 </ul>

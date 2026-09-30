@@ -6,7 +6,8 @@ import { Sparkline } from "@/components/Sparkline";
 import { Card, EmptyState, ErrorBox, Page, StageBadge, Tile } from "@/components/ui";
 import { currentWeek, loadAll } from "@/lib/data";
 import { captureColor, dateTime, eventLine, pct, usd, usdExact, weekLabel } from "@/lib/format";
-import { periodFor, PERIODS, signalValue, teamRow, weekStart, weeklyCapture } from "@/lib/metrics";
+import { PeriodPills } from "@/components/PeriodPills";
+import { inPeriod, periodFor, signalValue, teamRow, weekStart, weeklyCapture } from "@/lib/metrics";
 import { formatDue, stepProgress, tasksDue } from "@/lib/steps";
 import { getView } from "@/lib/view";
 
@@ -47,11 +48,7 @@ export default async function RepSummary(props: PageProps<"/team/[repId]">) {
 
   // The period's opportunities: those on the period's signals, plus
   // list-prospected ones created in the period's weeks.
-  const inPeriodWeek = (iso: string) => {
-    if (!week) return false;
-    const diff = (Date.parse(week) - Date.parse(weekStart(iso))) / 86_400_000;
-    return diff >= 0 && diff < period.days;
-  };
+  const inPeriodWeek = (iso: string) => inPeriod(weekStart(iso), week, period);
   const opps = data.opps
     .filter((o) => o.rep_id === rep.id && (o.signal_id ? signalIds.has(o.signal_id) : inPeriodWeek(o.created_at)))
     .sort((a, b) => b.score - a.score);
@@ -62,7 +59,7 @@ export default async function RepSummary(props: PageProps<"/team/[repId]">) {
 
   return (
     <>
-      <Header view={view} reps={data.reps} active="team" selected="manager" />
+      <Header view={view} reps={data.reps} active="team" selected="manager" period={typeof sp.period === "string" && sp.period === period.key ? period.key : undefined} />
       <Page>
         <nav className="mb-3 text-sm text-[#5a6975]" aria-label="Breadcrumb">
           <Link href={`/team${q(period.key)}`} className="text-[#3a728a] hover:underline">
@@ -78,19 +75,7 @@ export default async function RepSummary(props: PageProps<"/team/[repId]">) {
               {rep.territory_name} · {rep.counties.map((c) => c.replace(/ County, /, ", ")).join(" · ")}
             </p>
           </div>
-          <nav className="flex gap-2 text-sm" aria-label="Period">
-            {PERIODS.map((p) => (
-              <Link
-                key={p.key}
-                href={`/team/${rep.id}${q(p.key)}`}
-                className={`rounded-full px-4 py-1.5 transition-colors duration-150 ${
-                  p.key === period.key ? "bg-[#3a728a] font-medium text-white" : "border border-[#bcc4cb] text-[#3f4e5b] hover:bg-white"
-                }`}
-              >
-                {p.label}
-              </Link>
-            ))}
-          </nav>
+          <PeriodPills current={period.key} href={(k) => `/team/${rep.id}${q(k)}`} />
         </div>
 
         {/* 1. The same numbers as this rep's /team row. */}

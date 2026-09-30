@@ -10,7 +10,7 @@ Built for the Valstone Fall Summit 2026 Hackathon, Problem 1 (Sales), on Next.js
 
 | The CEO asked for | Signal Desk does | Where to see it |
 |---|---|---|
-| More opportunities in the pipeline | Every weekly weather change is matched against the whole account base, including prospects no rep was working, and turned into scored leads | Dashboard → a signal → **Generate leads**; Pipeline |
+| More opportunities in the pipeline | Every weekly weather change is matched against the whole account base, including prospects no rep was working, and turned into scored leads | Dashboard → open a signal (scoring starts on arrival); Pipeline |
 | Faster deals | Outreach lands in the week the grower feels the problem, with the reason stated in their terms: county, event, acres, module | Signal detail "Why now"; the drafted email on each opportunity |
 | Administrative work that disappears | The opportunity, the email and a 14-day outreach sequence are drafted for the rep; tone pills and a one-line instruction rewrite in the rep's own voice; scheduled steps land on a task list | Opportunity page: **Accept lead**, tone pills, **Open sequence**; dashboard **My tasks** |
 | (Management) | Capture rate against the value the weather created, time to act, off-territory and list-prospected work, per rep | Team view (Enter as manager) |
@@ -19,7 +19,7 @@ Built for the Valstone Fall Summit 2026 Hackathon, Problem 1 (Sales), on Next.js
 ## What is real and what is seeded
 
 **Real**
-- Claude scores every matched account and writes the why-now line and the email when you click Generate leads. If Claude is unreachable, a rules-based score and a template stand in, marked "AI offline".
+- Claude scores every matched account and writes the why-now line and the email as soon as the signal page opens (three at a time, rows filling in live). If Claude is unreachable, a rules-based score and a template stand in, marked "AI offline".
 - Matching is real logic: accounts in the affected county (for drought, the whole territory), with a relevant crop, that do not yet own the module.
 - Drought signals are live: Refresh signals calls the US Drought Monitor's county data service and adds a signal only when a county's drought category has risen.
 - Amounts come from one formula: module rate per acre × acres + $2,500 setup, rounded to $100.
@@ -37,7 +37,7 @@ Standalone for the hackathon. ThiboLiSoft runs Salesforce; syncing accounts in a
 ## Demo flags
 
 - `/dashboard?demo=1`: **Refresh signals** inserts one canned signal (Seward County, KS, D3 → D4), so the refresh flow can be shown on any day.
-- `/about?admin=1`: **Reset demo** deletes the opportunities (and their outreach steps) on the Finney signal (SIG-0023) and sets it back to new, so **Score & generate leads** can run live again.
+- `/about?admin=1`: **Reset demo** restores all seed data and removes generated leads, sequences and refreshed signals. Finney (SIG-0023) goes back to new, so opening it scores its accounts live again.
 
 ## Run locally
 

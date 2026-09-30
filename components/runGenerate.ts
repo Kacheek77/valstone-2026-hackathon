@@ -22,7 +22,7 @@ export type GenerateSummary = { done: number; failed: string[]; offline: number 
 export async function runGenerate(
   signalId: string,
   accountIds: string[],
-  onStep: (summary: GenerateSummary) => void,
+  onStep: (summary: GenerateSummary, last: { accountId: string; result: GenerateResult }) => void,
 ): Promise<GenerateSummary> {
   const summary: GenerateSummary = { done: 0, failed: [], offline: 0 };
   const queue = [...accountIds];
@@ -33,7 +33,7 @@ export async function runGenerate(
       if (!r.ok) summary.failed.push(r.error);
       else if (r.aiOffline) summary.offline++;
       summary.done++;
-      onStep({ ...summary, failed: [...summary.failed] });
+      onStep({ ...summary, failed: [...summary.failed] }, { accountId: id, result: r });
     }
   };
   await Promise.all(Array.from({ length: Math.min(CONCURRENCY, queue.length) }, worker));

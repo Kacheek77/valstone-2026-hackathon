@@ -1,4 +1,4 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { Header } from "@/components/Header";
 import { SequenceTable, type SequenceRow } from "@/components/SequenceTable";
 import { BackLink, EmptyState, ErrorBox, Page } from "@/components/ui";
@@ -30,6 +30,8 @@ export default async function SequencePage(props: PageProps<"/opportunities/[id]
   const { reps, accounts, opps, steps } = loaded.data;
   const opp = opps.find((o) => o.id === id);
   if (!opp) notFound();
+  if (view.kind === "rep" && opp.rep_id !== view.repId) redirect(`/dashboard?rep=${view.repId}&note=territory`);
+  const rep = reps.find((r) => r.id === opp.rep_id);
   const account = accounts.find((a) => a.id === opp.account_id);
   const closed = opp.stage === "won" || opp.stage === "lost";
   const readOnly = closed || view.kind === "manager";
@@ -75,6 +77,11 @@ export default async function SequencePage(props: PageProps<"/opportunities/[id]
           Outreach sequence · {SEQUENCE_DAYS.length + 1} touches over {SEQUENCE_DAYS[SEQUENCE_DAYS.length - 1]} days
         </h1>
 
+        {view.kind === "manager" && !closed && (
+          <div className="mb-3 rounded-xl bg-[#eef0f2] px-5 py-3 text-sm text-[#3f4e5b]">
+            Read-only in manager view · {rep?.name ?? "The rep"} works this lead
+          </div>
+        )}
         {!accepted ? (
           <EmptyState>Accept the lead on the opportunity page first; the sequence runs from the day it is accepted.</EmptyState>
         ) : (

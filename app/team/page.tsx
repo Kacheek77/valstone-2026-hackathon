@@ -7,7 +7,8 @@ import { Card, ErrorBox, Page, Tile } from "@/components/ui";
 import { currentWeek, loadAll } from "@/lib/data";
 import { buildMapData } from "@/lib/mapData";
 import { captureColor, pct, usd, weekLabel } from "@/lib/format";
-import { captureRate, periodFor, periodSignals, PERIODS, sumValues, teamRow } from "@/lib/metrics";
+import { PeriodPills } from "@/components/PeriodPills";
+import { captureRate, periodFor, periodRange, periodSignals, sumValues, teamRow } from "@/lib/metrics";
 import { tasksDue } from "@/lib/steps";
 import { getView } from "@/lib/view";
 
@@ -16,6 +17,7 @@ export const dynamic = "force-dynamic";
 export default async function Team(props: PageProps<"/team">) {
   const sp = await props.searchParams;
   const period = periodFor(sp.period);
+  const chosen = typeof sp.period === "string" && sp.period === period.key ? period.key : undefined;
   const periodQuery = period.key === "week" ? "" : `?period=${period.key}`;
   const view = await getView();
   const loaded = await loadAll();
@@ -41,28 +43,17 @@ export default async function Team(props: PageProps<"/team">) {
 
   return (
     <>
-      <Header view={view} reps={data.reps} active="team" selected="manager" />
+      <Header view={view} reps={data.reps} active="team" selected="manager" period={chosen} />
       <Page>
         <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
           <div>
             <h1 className="text-2xl font-bold">
-              Plains region · {salesReps.length} reps · {period.key === "week" ? `week of ${week ? weekLabel(week) : "—"}` : period.phrase}
+              Plains region · {salesReps.length} reps ·{" "}
+              {period.key === "week" ? `week of ${week ? weekLabel(week) : "—"}` : week ? periodRange(week, period).label : period.phrase}
             </h1>
             <p className="text-[#5a6975]">Performance against the opportunity the weather created, not against a flat quota</p>
           </div>
-          <nav className="flex gap-2 text-sm" aria-label="Period">
-            {PERIODS.map((p) => (
-              <Link
-                key={p.key}
-                href={p.key === "week" ? "/team" : `/team?period=${p.key}`}
-                className={`rounded-full px-4 py-1.5 transition-colors duration-150 ${
-                  p.key === period.key ? "bg-[#3a728a] font-medium text-white" : "border border-[#bcc4cb] text-[#3f4e5b] hover:bg-white"
-                }`}
-              >
-                {p.label}
-              </Link>
-            ))}
-          </nav>
+          <PeriodPills current={period.key} href={(k) => (k === "week" ? "/team" : `/team?period=${k}`)} />
         </div>
 
         <div className="mb-5 grid grid-cols-2 gap-3 md:grid-cols-4">

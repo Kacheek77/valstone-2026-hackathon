@@ -20,12 +20,15 @@ export function Header({
   reps,
   active,
   selected,
+  period,
 }: {
   view: View;
   reps: Pick<Rep, "id" | "name" | "is_manager" | "voice_note">[] | null;
   active: "dashboard" | "team" | "pipeline" | "results" | null;
   // Which switcher entry to show; defaults to the cookie view.
   selected?: string;
+  // VS-12 T18: an explicitly chosen period, carried on the nav links.
+  period?: string;
 }) {
   // Header still works (with placeholder names) when the database is down.
   const repList = reps ? reps.filter((r) => !r.is_manager) : FALLBACK_REPS;
@@ -36,10 +39,11 @@ export function Header({
   const current = selected ?? (view.kind === "manager" ? "manager" : view.repId);
   const home = view.kind === "manager" ? { href: "/team", label: "Team", key: "team" } : { href: "/dashboard", label: "Dashboard", key: "dashboard" };
 
+  const carry = (href: string) => (period ? `${href}${href.includes("?") ? "&" : "?"}period=${period}` : href);
   const navItem = (href: string, label: string, key: string) => (
     <Link
       key={key}
-      href={href}
+      href={carry(href)}
       className={`border-b-2 pb-0.5 text-sm transition-colors duration-150 ${
         active === key ? "border-[#f55a00] font-semibold text-white" : "border-transparent text-[#cee5f3] hover:text-white"
       }`}

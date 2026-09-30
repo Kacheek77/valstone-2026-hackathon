@@ -1,11 +1,10 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
-import { GenerateButton } from "@/components/GenerateButton";
+import { notFound, redirect } from "next/navigation";
 import { Header } from "@/components/Header";
-import { PromoteButton } from "@/components/PromoteButton";
-import { BackLink, Card, EmptyState, ErrorBox, InfoTip, Page, SEVERITY_COLOR, SEVERITY_TINT, StatusBadge } from "@/components/ui";
+import { LiveSignalTable, type LiveRow } from "@/components/LiveSignalTable";
+import { BackLink, ErrorBox, Page, SEVERITY_COLOR, SEVERITY_TINT } from "@/components/ui";
 import { loadAll } from "@/lib/data";
-import { usdExact, weekLabel } from "@/lib/format";
+import { weekLabel } from "@/lib/format";
 import { matchAccounts } from "@/lib/match";
 import { amountFor } from "@/lib/pricing";
 import { DEFAULT_THRESHOLD, isLead, THRESHOLDS, type Account, type Opportunity, type SignalType } from "@/lib/types";
@@ -22,24 +21,6 @@ const TYPE_LABEL: Record<SignalType, string> = {
 };
 
 type Row = { account: Account; leadWith: string; opp: Opportunity | null; estimate: number };
-
-function ScoreRing({ score, threshold }: { score: number; threshold: number }) {
-  const r = 15;
-  const c = 2 * Math.PI * r;
-  const color = score >= 75 ? "#1f9d55" : score >= threshold ? "#3a728a" : "#bcc4cb";
-  return (
-    <svg viewBox="0 0 40 40" className="h-10 w-10" role="img" aria-label={`Score ${score}`}>
-      <circle cx="20" cy="20" r={r} fill="none" stroke="#e3e7eb" strokeWidth="4" />
-      <circle
-        cx="20" cy="20" r={r} fill="none" stroke={color} strokeWidth="4" strokeLinecap="round"
-        strokeDasharray={`${(score / 100) * c} ${c}`} transform="rotate(-90 20 20)"
-      />
-      <text x="20" y="24.5" textAnchor="middle" fontSize="12" fontWeight="700" fill="#0f1419">
-        {score}
-      </text>
-    </svg>
-  );
-}
 
 export default async function SignalDetail(props: PageProps<"/signals/[id]">) {
   const { id } = await props.params;
@@ -64,6 +45,8 @@ export default async function SignalDetail(props: PageProps<"/signals/[id]">) {
   const { reps, accounts, signals, opps, settings } = loaded.data;
   const signal = signals.find((s) => s.id === id);
   if (!signal) notFound();
+  // VS-12 T19: reps see only their own territory's signals.
+  if (view.kind === "rep" && signal.rep_id !== view.repId) redirect(`/dashboard?rep=${view.repId}&note=territory`);
 
   const matches = matchAccounts(signal, accounts, reps);
   const sOpps = opps.filter((o) => o.signal_id === signal.id);
@@ -88,7 +71,21 @@ export default async function SignalDetail(props: PageProps<"/signals/[id]">) {
     return b.account.acres - a.account.acres;
   });
 
-  const pending = rows.filter((r) => !r.opp).map((r) => r.account.id);
+  const pending = rows.filter((r) => !r.opp).length;
+  const leadCount = sOpps.filter((o) => isLead(o, threshold)).length;
+  const liveRows: LiveRow[] = rows.map(({ account, leadWith, opp, estimate }) => ({
+    accountId: account.id,
+    name: account.name,
+    place: `${account.county}, ${account.state}`,
+    status: account.customer_status,
+    crops: account.crops.join(", "),
+    acres: account.acres,
+    leadWith,
+    estimate,
+    opp: opp
+      ? { id: opp.id, score: opp.score, why_now: opp.why_now, amount: opp.amount, lead_with: opp.lead_with, ai_offline: opp.ai_offline, promoted: opp.promoted === true }
+      : null,
+  }));
   const color = SEVERITY_COLOR[signal.severity];
   const backHref = view.kind === "manager" ? `/dashboard?rep=${signal.rep_id ?? DEMO_REP_ID}` : "/dashboard";
   const owner = reps.find((r) => r.id === signal.rep_id);
@@ -111,9 +108,16 @@ export default async function SignalDetail(props: PageProps<"/signals/[id]">) {
             <p className="mt-2 leading-relaxed text-[#3f4e5b]">{signal.detail}</p>
             <p className="mt-2 text-sm text-[#5a6975]">Source: {signal.source}</p>
           </div>
-          <div className="md:pt-2">
-            <GenerateButton signalId={signal.id} pendingAccountIds={pending} total={rows.length} leads={sOpps.filter((o) => isLead(o, threshold)).length} />
-          </div>
+          {pending === 0 && leadCount > 0 && (
+            <div className="md:pt-2">
+              <Link
+                href={`/pipeline?signal=${signal.id}`}
+                className="inline-flex whitespace-nowrap rounded-full border-2 border-[#1f9d55] px-5 py-2 text-sm font-semibold text-[#1f9d55] transition-opacity duration-150 hover:opacity-80"
+              >
+                View {leadCount} lead{leadCount === 1 ? "" : "s"} →
+              </Link>
+            </div>
+          )}
         </div>
 
         <div className="mb-2 flex flex-wrap items-center justify-between gap-3">
@@ -134,94 +138,17 @@ export default async function SignalDetail(props: PageProps<"/signals/[id]">) {
             ))}
           </nav>
         </div>
-        {rows.length === 0 ? (
-          <EmptyState>
-            No accounts match this signal: none farm a relevant crop in {signal.county}
-            {signal.type === "drought" ? " or the rest of the territory" : ""}, or they already own every module.
-          </EmptyState>
-        ) : (
-          <Card className="overflow-x-auto">
-            <table className="w-full min-w-[760px] text-left text-sm">
-              <thead className="bg-[#efefef] text-[#3f4e5b]">
-                <tr>
-                  <th className="px-4 py-2.5 font-semibold">
-                    <span className="flex items-center gap-1.5">
-                      Score
-                      <InfoTip label="What drives the score">
-                        <b>Drivers:</b> signal severity (High 35, Medium 25), acreage (up to 25), module gap (20 when the
-                        account lacks the signal&apos;s own module, else 10), crop directly affected (10), existing customer (5)
-                        and contact in the last 30 days (5). Claude starts from that total and may move it by up to 10 with a
-                        reason.
-                        <br />
-                        <br />
-                        <b>If Claude is offline:</b> High 70 / Medium 55, +15 over 3,000 acres or +8 over 1,500, +10 for a
-                        prospect, capped at 100, marked &ldquo;AI offline&rdquo;.
-                      </InfoTip>
-                    </span>
-                  </th>
-                  <th className="px-3 py-2.5 font-semibold">Account</th>
-                  <th className="px-3 py-2.5 font-semibold">Status</th>
-                  <th className="px-3 py-2.5 font-semibold">Crops · acres</th>
-                  <th className="px-3 py-2.5 font-semibold">Lead with</th>
-                  <th className="px-3 py-2.5 font-semibold">Why now</th>
-                  <th className="px-4 py-2.5 text-right font-semibold">Amount</th>
-                </tr>
-              </thead>
-              <tbody>
-                {rows.map(({ account, leadWith, opp, estimate }) => {
-                  const below = opp !== null && !isLead(opp, threshold);
-                  const underScore = opp !== null && opp.score < threshold;
-                  return (
-                    <tr key={account.id} className={`border-t border-[#eef0f2] align-top transition-colors duration-150 hover:bg-[#f6f7f8] ${below ? "text-[#9aa5ae]" : ""}`}>
-                      <td className="px-4 py-2.5">
-                        {opp ? <ScoreRing score={opp.score} threshold={threshold} /> : <span className="inline-block pt-2 text-[#bcc4cb]">—</span>}
-                      </td>
-                      <td className="px-3 py-3">
-                        {opp ? (
-                          <Link href={`/opportunities/${opp.id}`} className="font-semibold text-[#3a728a] hover:underline">
-                            {account.name}
-                          </Link>
-                        ) : (
-                          <span className="font-semibold">{account.name}</span>
-                        )}
-                        <p className="text-xs text-[#7a8794]">
-                          {account.county}, {account.state}
-                        </p>
-                      </td>
-                      <td className="px-3 py-3">
-                        <StatusBadge status={account.customer_status} />
-                      </td>
-                      <td className="px-3 py-3">
-                        {account.crops.join(", ")} · {account.acres.toLocaleString("en-US")}
-                      </td>
-                      <td className="px-3 py-3">{leadWith}</td>
-                      <td className="max-w-sm px-3 py-3">
-                        {opp ? (
-                          <>
-                            {opp.why_now}
-                            <span className="mt-1 flex gap-2">
-                              {below && <span className="rounded bg-[#eef0f2] px-1.5 py-0.5 text-xs text-[#7a8794]">below threshold</span>}
-                              {underScore && <PromoteButton oppId={opp.id} promoted={opp.promoted === true} />}
-                              {opp.ai_offline && <span className="rounded bg-[#fcf1d9] px-1.5 py-0.5 text-xs text-[#8a5a00]">AI offline</span>}
-                            </span>
-                          </>
-                        ) : (
-                          <span className="italic text-[#9aa5ae]">Not scored yet</span>
-                        )}
-                      </td>
-                      <td className="px-4 py-3 text-right tabular-nums">
-                        {opp ? usdExact(opp.amount) : <span className="text-[#9aa5ae]">{usdExact(estimate)}</span>}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </Card>
-        )}
+        <LiveSignalTable
+          signalId={signal.id}
+          rows={liveRows}
+          threshold={threshold}
+          canPromote={view.kind === "rep"}
+          county={signal.county}
+          drought={signal.type === "drought"}
+        />
         <p className="mt-3 text-xs text-[#7a8794]">
           Matching is deterministic: accounts in the county{signal.type === "drought" ? " and the rest of its territory" : ""}, with a
-          relevant crop, that do not yet own the module. Claude scores and writes each row; a rules-based score marked
+          relevant crop, that do not yet own the module. Claude scores and writes each row as soon as the page opens; a rules-based score marked
           &ldquo;AI offline&rdquo; stands in if Claude is unavailable. Rows under the threshold ({threshold}) are grayed unless promoted to a lead.
         </p>
       </Page>

@@ -7,7 +7,6 @@ import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { MapAccount, MapData, MapRep, MapSignal } from "@/lib/mapData";
 import { faSvg } from "./faIcons";
-import { CardGenerateButton } from "./GenerateButton";
 import { GEO_FILES, geoJson } from "@/lib/mapGeo";
 
 // VS-8: MapLibre map with county boundaries, signal areas, account and signal
@@ -224,16 +223,11 @@ function SignalCard({ s, reps, mode }: { s: MapSignal; reps: MapRep[]; mode: Map
         ]}
       />
       <div className="mt-3 flex flex-col gap-2">
-        {scoreHere ? (
-          <div className="[&>div]:items-stretch [&_button]:w-full">
-            <CardGenerateButton signalId={s.id} pendingAccountIds={s.pending} />
-          </div>
-        ) : (
-          <Link href={`/signals/${s.id}`} className={btnPrimary}>
-            <Icon name="wand-magic-sparkles" color="#fff" />
-            Open signal
-          </Link>
-        )}
+        {/* VS-12 T9: scoring starts when the signal page opens. */}
+        <Link href={`/signals/${s.id}`} className={btnPrimary}>
+          <Icon name="wand-magic-sparkles" color="#fff" />
+          {scoreHere ? `Open signal · ${s.pending.length} account${s.pending.length === 1 ? "" : "s"}` : "Open signal"}
+        </Link>
         <Link href={`/pipeline?signal=${s.id}`} className={btnSecondary}>
           <Icon name="table-list" color="#3a728a" />
           Pipeline for this signal
@@ -647,9 +641,10 @@ export default function SignalMap({
       const addMarkers = (map: maplibregl.Map) => {
         // Account pins: tractor = customer, seedling = prospect.
         for (const a of data.accounts) {
-          const other = !manager && a.repId !== repId;
+          // VS-12 T19: a rep's map shows only their own accounts.
+          if (!manager && a.repId !== repId) continue;
           const el = document.createElement("div");
-          el.className = `sd-acct${a.status === "Prospect" ? " prospect" : ""}${other ? " other" : ""}${a.openLead && !other ? " hot" : ""}`;
+          el.className = `sd-acct${a.status === "Prospect" ? " prospect" : ""}${a.openLead ? " hot" : ""}`;
           el.innerHTML = faSvg(a.status === "Prospect" ? "seedling" : "tractor", manager ? 8 : 10);
           el.addEventListener("mouseenter", () =>
             tip(

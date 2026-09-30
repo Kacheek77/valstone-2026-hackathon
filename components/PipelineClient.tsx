@@ -236,7 +236,7 @@ export function PipelineClient({
       {visible.length === 0 ? (
         <div className="rounded-xl border border-dashed border-[#bcc4cb] bg-white px-4 py-8 text-center text-sm text-[#5a6975]">
           {rows.length === 0
-            ? "No leads yet. Open a signal from the dashboard and click Score & generate leads."
+            ? "No leads yet. Open a signal from the dashboard; its accounts are scored as the page opens."
             : "Nothing matches. Change the stage or clear a filter."}
         </div>
       ) : (

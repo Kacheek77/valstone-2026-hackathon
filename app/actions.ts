@@ -8,6 +8,7 @@ import { buildSequence } from "@/lib/sequence";
 import { refreshSignals, type RefreshResult } from "@/lib/signals-refresh";
 import { getSupabase } from "@/lib/supabase";
 import { SEQUENCE_DAYS, type Account, type Opportunity, type OutreachStep, type Rep, type Signal, type Stage } from "@/lib/types";
+import { getView } from "@/lib/view";
 
 // The dataset is small and every page reads all of it, so any write
 // revalidates the whole app.
@@ -37,6 +38,22 @@ async function loadOpp(oppId: string) {
   return { opp: o, account: await withDerivedStatus(acc.data as Account), signal: (sig.data as Signal | null) ?? null, rep: (rep.data as Rep | null) ?? null };
 }
 
+// VS-12 T19: the manager views rep work but never changes it, and a rep acts
+// only on their own records. Returns the refusal, or null to proceed.
+async function repGuard(oppId: string): Promise<string | null> {
+  const view = await getView();
+  if (view.kind === "manager") return "Read-only in manager view.";
+  const { data } = await getSupabase().from("opportunities").select("rep_id").eq("id", oppId).maybeSingle();
+  if (data && data.rep_id !== view.repId) return "That record belongs to another territory.";
+  return null;
+}
+
+async function stepGuard(stepId: string): Promise<string | null> {
+  const { data } = await getSupabase().from("outreach_steps").select("opportunity_id").eq("id", stepId).maybeSingle();
+  if (!data) return (await getView()).kind === "manager" ? "Read-only in manager view." : null;
+  return repGuard(String(data.opportunity_id));
+}
+
 // ---------------------------------------------------------------- signals
 
 export async function refreshAction(demo: boolean): Promise<RefreshResult> {
@@ -56,6 +73,8 @@ export async function finishSignalAction(signalId: string): Promise<void> {
 
 export async function promoteAction(oppId: string, promoted: boolean): Promise<{ ok: boolean; error?: string }> {
   if (!OPP_ID.test(oppId)) return { ok: false, error: "Unknown opportunity." };
+  const guard = await repGuard(oppId);
+  if (guard) return { ok: false, error: guard };
   const { error } = await getSupabase().from("opportunities").update({ promoted }).eq("id", oppId);
   if (error) return { ok: false, error: error.message };
   revalidateAll();
@@ -66,6 +85,8 @@ export async function promoteAction(oppId: string, promoted: boolean): Promise<{
 
 export async function saveDraftAction(oppId: string, subject: string, body: string): Promise<{ ok: boolean; error?: string }> {
   if (!OPP_ID.test(oppId)) return { ok: false, error: "Unknown opportunity." };
+  const guard = await repGuard(oppId);
+  if (guard) return { ok: false, error: guard };
   const { error } = await getSupabase()
     .from("opportunities")
     .update({ email_subject: subject.slice(0, 300), email_body: body.slice(0, 5000) })
@@ -86,6 +107,8 @@ export async function rewriteEmailAction(
   req: RewriteRequest,
 ): Promise<RewriteActionResult> {
   try {
+    const guard = await repGuard(oppId);
+    if (guard) return { ok: false, error: guard };
     const { opp, account, signal, rep } = await loadOpp(oppId);
     const result = await rewriteEmail(
       account,
@@ -125,6 +148,8 @@ export async function rewriteEmailAction(
 
 export async function resetEmailAction(oppId: string): Promise<RewriteActionResult> {
   try {
+    const guard = await repGuard(oppId);
+    if (guard) return { ok: false, error: guard };
     const { opp } = await loadOpp(oppId);
     const original = opp.email_history?.[0];
     if (!original) return { ok: true, subject: opp.email_subject, body: opp.email_body, aiOffline: false, historyLength: 0 };
@@ -147,6 +172,8 @@ export async function resetEmailAction(oppId: string): Promise<RewriteActionResu
 // for the outreach sequence. Nothing leaves the app.
 export async function acceptLeadAction(oppId: string): Promise<{ ok: boolean; error?: string }> {
   try {
+    const guard = await repGuard(oppId);
+    if (guard) return { ok: false, error: guard };
     const { opp } = await loadOpp(oppId);
     if (opp.stage !== "draft") return { ok: true };
     const { error } = await getSupabase()
@@ -164,6 +191,8 @@ export async function acceptLeadAction(oppId: string): Promise<{ ok: boolean; er
 // "sent" from a closed stage is the Reopen correction; it keeps the original sent_at.
 export async function setStageAction(oppId: string, stage: Extract<Stage, "sent" | "won" | "lost">): Promise<{ ok: boolean; error?: string }> {
   if (!OPP_ID.test(oppId)) return { ok: false, error: "Unknown opportunity." };
+  const guard = await repGuard(oppId);
+  if (guard) return { ok: false, error: guard };
   const update: Record<string, unknown> = { stage };
   if (stage === "sent") {
     const { data } = await getSupabase().from("opportunities").select("sent_at").eq("id", oppId).maybeSingle();
@@ -185,6 +214,8 @@ export type SequenceResult = { ok: true; aiOffline: boolean } | { ok: false; err
 // leaves done steps (and their status) alone.
 export async function buildSequenceAction(oppId: string): Promise<SequenceResult> {
   try {
+    const guard = await repGuard(oppId);
+    if (guard) return { ok: false, error: guard };
     const { opp, account, signal, rep } = await loadOpp(oppId);
     if (opp.stage === "won" || opp.stage === "lost") return { ok: false, error: "This opportunity is closed." };
     const db = getSupabase();
@@ -212,6 +243,8 @@ export async function buildSequenceAction(oppId: string): Promise<SequenceResult
 
 export async function scheduleAllAction(oppId: string): Promise<{ ok: boolean; error?: string }> {
   if (!OPP_ID.test(oppId)) return { ok: false, error: "Unknown opportunity." };
+  const guard = await repGuard(oppId);
+  if (guard) return { ok: false, error: guard };
   const { error } = await getSupabase()
     .from("outreach_steps")
     .update({ status: "scheduled" })
@@ -224,6 +257,8 @@ export async function scheduleAllAction(oppId: string): Promise<{ ok: boolean; e
 
 export async function setStepDoneAction(stepId: string, done: boolean): Promise<{ ok: boolean; error?: string }> {
   if (!STEP_ID.test(stepId)) return { ok: false, error: "Unknown step." };
+  const guard = await stepGuard(stepId);
+  if (guard) return { ok: false, error: guard };
   const { error } = await getSupabase()
     .from("outreach_steps")
     .update(done ? { status: "done", done_at: new Date().toISOString() } : { status: "scheduled", done_at: null })
@@ -235,6 +270,8 @@ export async function setStepDoneAction(stepId: string, done: boolean): Promise<
 
 export async function saveStepAction(stepId: string, body: string): Promise<{ ok: boolean; error?: string }> {
   if (!STEP_ID.test(stepId)) return { ok: false, error: "Unknown step." };
+  const guard = await stepGuard(stepId);
+  if (guard) return { ok: false, error: guard };
   const { error } = await getSupabase().from("outreach_steps").update({ body: body.slice(0, 3000) }).eq("id", stepId);
   if (error) return { ok: false, error: error.message };
   revalidateAll();

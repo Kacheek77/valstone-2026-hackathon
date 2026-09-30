@@ -4,9 +4,25 @@ import { formatId, nextIdNumber, UNIQUE_VIOLATION } from "./ids";
 import { leadWithFor } from "./match";
 import { amountFor, DEFAULT_PRICES } from "./pricing";
 import { getSupabase } from "./supabase";
-import type { Account, PriceList, Signal } from "./types";
+import type { Account, Opportunity, PriceList, Signal } from "./types";
 
-export type GenerateResult = { ok: true; aiOffline: boolean } | { ok: false; error: string };
+// The saved row, so the signal page can animate it in without a reload (VS-12 T11).
+export type ScoredOpp = Pick<Opportunity, "id" | "score" | "why_now" | "amount" | "lead_with" | "ai_offline" | "promoted">;
+export type GenerateResult = { ok: true; aiOffline: boolean; opp: ScoredOpp | null } | { ok: false; error: string };
+
+const SCORED_FIELDS = "id,score,why_now,amount,lead_with,ai_offline,promoted";
+
+// The lowest-id opportunity for the pair: the one that stands if two runs raced.
+async function firstForPair(signalId: string, accountId: string): Promise<ScoredOpp | null> {
+  const { data } = await getSupabase()
+    .from("opportunities")
+    .select(SCORED_FIELDS)
+    .eq("signal_id", signalId)
+    .eq("account_id", accountId)
+    .order("id", { ascending: true })
+    .limit(1);
+  return ((data ?? [])[0] as ScoredOpp | undefined) ?? null;
+}
 
 // Score and draft one account for one signal, then save it as a draft
 // opportunity. Safe to repeat: an existing opportunity is left alone.
@@ -22,7 +38,8 @@ export async function generateOne(signalId: string, accountId: string): Promise<
     const err = sig.error ?? acc.error ?? existing.error;
     if (err) return { ok: false, error: err.message };
     if (!sig.data || !acc.data) return { ok: false, error: "Signal or account not found." };
-    if (existing.data && existing.data.length > 0) return { ok: true, aiOffline: false };
+    // Already scored (another tab, a refresh mid-run): skip, return what is there.
+    if (existing.data && existing.data.length > 0) return { ok: true, aiOffline: false, opp: await firstForPair(signalId, accountId) };
 
     const signal = sig.data as Signal;
     const account = await withDerivedStatus(acc.data as Account);
@@ -58,7 +75,20 @@ export async function generateOne(signalId: string, accountId: string): Promise<
     for (let attempt = 0; attempt < 6; attempt++) {
       const id = formatId("OPP", (await nextIdNumber("opportunities", "OPP")) + attempt);
       const { error } = await db.from("opportunities").insert({ id, ...row });
-      if (!error) return { ok: true, aiOffline: draft.ai_offline };
+      if (!error) {
+        // Two runs can pass the "already scored" check together (two tabs, or a
+        // refresh mid-run). The lowest id stands; a later duplicate removes itself.
+        const first = await firstForPair(signal.id, account.id);
+        if (first && first.id !== id) {
+          await db.from("opportunities").delete().eq("id", id);
+          return { ok: true, aiOffline: first.ai_offline, opp: first };
+        }
+        return {
+          ok: true,
+          aiOffline: draft.ai_offline,
+          opp: { id, score: row.score, why_now: row.why_now, amount: row.amount, lead_with: row.lead_with, ai_offline: row.ai_offline, promoted: false },
+        };
+      }
       if (error.code !== UNIQUE_VIOLATION) return { ok: false, error: error.message };
       const { data: dup } = await db
         .from("opportunities")
@@ -66,7 +96,7 @@ export async function generateOne(signalId: string, accountId: string): Promise<
         .eq("signal_id", signal.id)
         .eq("account_id", account.id)
         .limit(1);
-      if (dup && dup.length > 0) return { ok: true, aiOffline: draft.ai_offline };
+      if (dup && dup.length > 0) return { ok: true, aiOffline: draft.ai_offline, opp: await firstForPair(signal.id, account.id) };
     }
     return { ok: false, error: "Could not allocate an opportunity id." };
   } catch (e) {
