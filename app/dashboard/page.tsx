@@ -285,7 +285,9 @@ export default async function Dashboard(props: PageProps<"/dashboard">) {
               </div>
               {tasks.length === 0 ? (
                 <p className="text-sm text-[#7a8794]">
-                  Nothing due. Accept a lead, then Build sequence and Schedule all on its sequence page.
+                  {view.kind === "manager"
+                    ? "Nothing due in the next 7 days."
+                    : "Nothing due. Accept a lead, then Build sequence and Schedule all on its sequence page."}
                 </p>
               ) : (
                 <ul className="divide-y divide-[#eef0f2]">

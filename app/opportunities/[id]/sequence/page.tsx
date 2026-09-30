@@ -33,6 +33,8 @@ export default async function SequencePage(props: PageProps<"/opportunities/[id]
   if (!opp) notFound();
   if (view.kind === "rep" && opp.rep_id !== view.repId) redirect(`/dashboard?rep=${view.repId}&note=territory`);
   const rep = reps.find((r) => r.id === opp.rep_id);
+  const manager = view.kind === "manager";
+  const repName = rep?.name ?? "The rep";
   const account = accounts.find((a) => a.id === opp.account_id);
   const closed = opp.stage === "won" || opp.stage === "lost";
   const readOnly = closed || view.kind === "manager";
@@ -86,14 +88,22 @@ export default async function SequencePage(props: PageProps<"/opportunities/[id]
           Outreach sequence · {SEQUENCE_DAYS.length + 1} touches over {SEQUENCE_DAYS[SEQUENCE_DAYS.length - 1]} days
         </h1>
 
-        {view.kind === "manager" && !closed && (
+        {/* VS-13 M1: the manager gets one read-only line, never rep instructions. */}
+        {manager && (
           <div className="mb-3 rounded-xl bg-[#eef0f2] px-5 py-3 text-sm text-[#3f4e5b]">
-            Read-only in manager view · {rep?.name ?? "The rep"} works this lead
+            Read-only in manager view ·{" "}
+            {!accepted
+              ? `No sequence yet: ${repName} has not accepted this lead.`
+              : mine.length === 0
+                ? `No sequence yet: ${repName} has not built it.`
+                : closed
+                  ? `${repName} closed this lead.`
+                  : `${repName} works this lead`}
           </div>
         )}
         {!accepted ? (
-          <EmptyState>Accept the lead on the opportunity page first; the sequence runs from the day it is accepted.</EmptyState>
-        ) : (
+          !manager && <EmptyState>Accept the lead on the opportunity page first; the sequence runs from the day it is accepted.</EmptyState>
+        ) : manager && mine.length === 0 ? null : (
           <>
             {(opp.response || (complete && !readOnly)) && (
               <div className="mb-3">
@@ -137,12 +147,14 @@ export default async function SequencePage(props: PageProps<"/opportunities/[id]
             )}
           </>
         )}
+        {!readOnly && (
         <p className="mt-3 text-xs text-[#7a8794]">
           Due dates run from the day the lead was accepted. Day 0 mirrors the opportunity: Sent ✓ once it is marked sent.
           Schedule all puts the steps on the dashboard&apos;s My tasks list. Rebuild, or a tone, rewrites every step not yet done. Click
           a step to read or edit it. Log the customer&apos;s reply on a done step; reading replies from the mailbox is a production
           integration.
         </p>
+        )}
       </Page>
     </>
   );
