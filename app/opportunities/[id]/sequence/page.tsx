@@ -1,10 +1,11 @@
 import { notFound, redirect } from "next/navigation";
 import { Header } from "@/components/Header";
+import { ResponsePanel } from "@/components/ResponsePanel";
 import { SequenceTable, type SequenceRow } from "@/components/SequenceTable";
 import { BackLink, EmptyState, ErrorBox, Page } from "@/components/ui";
 import { loadAll } from "@/lib/data";
 import { usdExact } from "@/lib/format";
-import { day0Status, dueDate, formatDue, stepsFor, stepStatus } from "@/lib/steps";
+import { day0Status, dueDate, formatDue, isOpenStep, stepDue, stepsFor, stepStatus } from "@/lib/steps";
 import { SEQUENCE_DAYS } from "@/lib/types";
 import { getView } from "@/lib/view";
 
@@ -52,7 +53,7 @@ export default async function SequencePage(props: PageProps<"/opportunities/[id]
     ...mine.map((s) => ({
       id: s.id,
       day: s.day,
-      due: formatDue(dueDate(opp, s.day)),
+      due: formatDue(stepDue(opp, s)),
       channel: s.channel,
       title: s.title,
       body: s.body,
@@ -60,6 +61,14 @@ export default async function SequencePage(props: PageProps<"/opportunities/[id]
       aiOffline: s.ai_offline,
     })),
   ];
+
+  // VS-12 T6: the sequence starts in the tone last used on the email.
+  const lastTone = [...(opp.email_history ?? [])].reverse().find((h) => h.note && ["Direct", "Warm", "Technical", "Shorter"].includes(h.note))?.note ?? null;
+  // VS-12 T7: an unfinished step (or an unsent Day 0) is past its date.
+  const overdue = rows.some((r) => r.status === "Overdue");
+  // VS-12 T8: responses need vs12.sql; the columns are absent until it runs.
+  const replyEnabled = "response" in opp;
+  const complete = mine.length > 0 && day0Status(opp) === "Sent ✓" && !mine.some(isOpenStep) && !opp.response;
 
   return (
     <>
@@ -86,7 +95,29 @@ export default async function SequencePage(props: PageProps<"/opportunities/[id]
           <EmptyState>Accept the lead on the opportunity page first; the sequence runs from the day it is accepted.</EmptyState>
         ) : (
           <>
-            <SequenceTable oppId={opp.id} rows={rows} built={mine.length > 0} readOnly={readOnly} />
+            {(opp.response || (complete && !readOnly)) && (
+              <div className="mb-3">
+                <ResponsePanel
+                  oppId={opp.id}
+                  response={opp.response ?? null}
+                  respondedAt={opp.responded_at ?? null}
+                  note={opp.response_note ?? null}
+                  stage={opp.stage}
+                  readOnly={readOnly}
+                  complete={complete}
+                  enabled={replyEnabled}
+                />
+              </div>
+            )}
+            <SequenceTable
+              oppId={opp.id}
+              rows={rows}
+              built={mine.length > 0}
+              readOnly={readOnly}
+              defaultTone={lastTone}
+              overdue={overdue}
+              reply={{ enabled: replyEnabled, logged: Boolean(opp.response), stage: opp.stage }}
+            />
             {mine.length === 0 && !readOnly && (
               <p className="mt-3 text-sm text-[#5a6975]">
                 Build sequence writes the Day 3 call script, the Day 7 follow-up email and the Day 14 text in one step, in the
@@ -97,8 +128,9 @@ export default async function SequencePage(props: PageProps<"/opportunities/[id]
         )}
         <p className="mt-3 text-xs text-[#7a8794]">
           Due dates run from the day the lead was accepted. Day 0 mirrors the opportunity: Sent ✓ once it is marked sent.
-          Schedule all puts the steps on the dashboard&apos;s My tasks list. Rebuild rewrites every step not yet done. Click a step to
-          read or edit it.
+          Schedule all puts the steps on the dashboard&apos;s My tasks list. Rebuild, or a tone, rewrites every step not yet done. Click
+          a step to read or edit it. Log the customer&apos;s reply on a done step; reading replies from the mailbox is a production
+          integration.
         </p>
       </Page>
     </>

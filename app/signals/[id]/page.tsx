@@ -145,6 +145,7 @@ export default async function SignalDetail(props: PageProps<"/signals/[id]">) {
           canPromote={view.kind === "rep"}
           county={signal.county}
           drought={signal.type === "drought"}
+          prices={settings.price_list}
         />
         <p className="mt-3 text-xs text-[#7a8794]">
           Matching is deterministic: accounts in the county{signal.type === "drought" ? " and the rest of its territory" : ""}, with a

@@ -62,13 +62,34 @@ def clean(rows, keep):
     return [{k: val(r[k]) for k in keep} for r in rows]
 
 
+# VS-12 T10: the seed template dropped a verb and said "a watering plan" for
+# every module. The same one-time fix is in supabase/migrations/vs12.sql, so
+# Reset restores the corrected text.
+WATERING = "a watering plan pays for itself in the week allocations tighten"
+BY_MODULE = {
+    "Field-Work Planner": "planning field-work days around the water that is left pays for itself this week",
+    "Yield & Insurance Records": "yield records kept now are what a crop insurance claim will need",
+}
+
+
+def fix_why_now(o):
+    w = o["why_now"].replace(", which D", ", which moved from D")
+    if o["lead_with"] in BY_MODULE:
+        w = w.replace(WATERING, BY_MODULE[o["lead_with"]])
+    o["why_now"] = w
+    return o
+
+
 snap = {
     "reps": clean(tuples("reps"), ["id", "voice_note"]),
     "signals": clean(tuples("signals"), ["id", "status"]),
     "opportunities": clean(
         tuples("opportunities"),
-        ["id", "stage", "pushed_at", "sent_at", "email_subject", "email_body"],
+        ["id", "stage", "pushed_at", "sent_at", "email_subject", "email_body", "why_now", "lead_with"],
     ),
 }
+snap["opportunities"] = [fix_why_now(o) for o in snap["opportunities"]]
+for o in snap["opportunities"]:
+    del o["lead_with"]
 json.dump(snap, open("lib/seed-snapshot.json", "w", encoding="utf-8"), ensure_ascii=False, indent=0)
 print({k: len(v) for k, v in snap.items()})

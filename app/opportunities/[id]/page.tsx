@@ -3,9 +3,11 @@ import { notFound, redirect } from "next/navigation";
 import { DraftEditor } from "@/components/DraftEditor";
 import { Header } from "@/components/Header";
 import { OppActions, ReopenLink } from "@/components/OppActions";
-import { BackLink, Card, ErrorBox, Page, StageBadge } from "@/components/ui";
+import { ResponsePanel } from "@/components/ResponsePanel";
+import { BackLink, Card, ErrorBox, HoverTip, Page, StageBadge } from "@/components/ui";
 import { loadAll } from "@/lib/data";
-import { dateTime, eventLine, usdExact } from "@/lib/format";
+import { dateTime, eventLine, SCORE_TIP, usdExact } from "@/lib/format";
+import { amountExplain } from "@/lib/pricing";
 import { stepProgress } from "@/lib/steps";
 import { isLead } from "@/lib/types";
 import { getView } from "@/lib/view";
@@ -43,7 +45,7 @@ export default async function OpportunityPage(props: PageProps<"/opportunities/[
       </>
     );
   }
-  const { reps, accounts, signals, opps, steps } = loaded.data;
+  const { reps, accounts, signals, opps, steps, settings } = loaded.data;
   const opp = opps.find((o) => o.id === id);
   if (!opp) notFound();
   // VS-12 T19: reps see only their own records (off-territory ones they own included).
@@ -118,14 +120,20 @@ export default async function OpportunityPage(props: PageProps<"/opportunities/[
             </Card>
             <Card className="px-5 py-4">
               <div className="flex items-baseline justify-between">
-                <p className="text-3xl font-bold text-[#3a728a]">{opp.score}</p>
+                <HoverTip tip={SCORE_TIP}>
+                  <p className="text-3xl font-bold text-[#3a728a]">{opp.score}</p>
+                </HoverTip>
                 <StageBadge stage={opp.stage} />
               </div>
               <p className="text-sm text-[#3f4e5b]">
                 Lead with {opp.lead_with}
                 {!isLead(opp) && <span className="ml-1 text-[#7a8794]">· below threshold</span>}
               </p>
-              <p className="mt-2 text-xl font-bold">{usdExact(opp.amount)}</p>
+              <div className="mt-2">
+                <HoverTip tip={account ? amountExplain(opp.lead_with, account.acres, settings.price_list) : "Module rate per acre × acres + setup."}>
+                  <p className="text-xl font-bold">{usdExact(opp.amount)}</p>
+                </HoverTip>
+              </div>
               <p className="text-xs text-[#7a8794]">Module rate per acre × acres + $2,500 setup, rounded to $100</p>
               {opp.ai_offline && <p className="mt-2 text-xs text-[#8a5a00]">AI offline: rules-based score and template draft.</p>}
               {opp.is_off_territory && (
@@ -139,6 +147,18 @@ export default async function OpportunityPage(props: PageProps<"/opportunities/[
               <div className="rounded-xl bg-[#eef0f2] px-5 py-3 text-sm text-[#3f4e5b]">
                 Read-only in manager view · {rep?.name ?? "The rep"} works this lead
               </div>
+            )}
+            {opp.response && (
+              <ResponsePanel
+                oppId={opp.id}
+                response={opp.response}
+                respondedAt={opp.responded_at ?? null}
+                note={opp.response_note ?? null}
+                stage={opp.stage}
+                complete={false}
+                enabled
+                readOnly={managerView}
+              />
             )}
             {closed && (
               <div
@@ -186,6 +206,18 @@ export default async function OpportunityPage(props: PageProps<"/opportunities/[
             ) : (
               <Card className="flex flex-col gap-3 px-5 py-4">
                 <OppActions oppId={opp.id} stage={opp.stage} />
+                {opp.stage !== "draft" && !opp.response && (
+                  <ResponsePanel
+                    oppId={opp.id}
+                    response={null}
+                    respondedAt={null}
+                    note={null}
+                    stage={opp.stage}
+                    complete={false}
+                    enabled={"response" in opp}
+                    compact
+                  />
+                )}
                 <div className="text-sm text-[#5a6975]">
                   {opp.stage === "draft" ? (
                     "Accept the lead to move it into your pipeline and start the outreach sequence."

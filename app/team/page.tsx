@@ -75,7 +75,7 @@ export default async function Team(props: PageProps<"/team">) {
 
         {/* VS-8: all six territories; the click drawer opens under the map. */}
         <div className="mb-5">
-          <SignalMapLoader data={buildMapData(data, allSignals)} mode="manager" repId={null} layout="under" height={560} />
+          <SignalMapLoader data={buildMapData(data, allSignals)} mode="manager" repId={null} layout="beside" height={560} />
         </div>
 
         <Card className="overflow-x-auto">

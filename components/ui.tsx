@@ -135,6 +135,21 @@ export function InfoTip({ label, children, align = "left" }: { label: string; ch
   );
 }
 
+// VS-12 T4: the same tooltip bubble as InfoTip, on any trigger (a score, an amount).
+export function HoverTip({ tip, children, align = "left" }: { tip: ReactNode; children: ReactNode; align?: "left" | "right" }) {
+  return (
+    <span className="group relative inline-flex cursor-help align-middle" tabIndex={0}>
+      {children}
+      <span
+        role="tooltip"
+        className={`pointer-events-none invisible absolute top-full z-40 mt-1 w-72 rounded-lg border border-[#d9dee3] bg-white px-3 py-2 text-left text-xs font-normal normal-case leading-relaxed tracking-normal text-[#3f4e5b] opacity-0 shadow-lg transition-opacity duration-150 group-hover:visible group-hover:opacity-100 group-focus:visible group-focus:opacity-100 ${align === "right" ? "right-0" : "left-0"}`}
+      >
+        {tip}
+      </span>
+    </span>
+  );
+}
+
 export function StatusBadge({ status }: { status: "Customer" | "Prospect" }) {
   return status === "Customer" ? (
     <span className="rounded-full bg-[#e6f4ec] px-2 py-0.5 text-xs font-medium text-[#14693a]">Customer</span>

@@ -20,7 +20,8 @@ export const STAGE_LABEL: Record<Stage, string> = {
 };
 
 export type StepChannel = "email" | "call" | "text";
-export type StepStatus = "planned" | "scheduled" | "done";
+// "skipped" needs supabase/migrations/vs12.sql (VS-12 T8).
+export type StepStatus = "planned" | "scheduled" | "done" | "skipped";
 export type OutreachStep = {
   id: string;
   opportunity_id: string;
@@ -32,6 +33,7 @@ export type OutreachStep = {
   ai_offline: boolean;
   done_at: string | null;
   created_at: string;
+  due_on?: string | null; // VS-12 T7 (vs12.sql): a rescheduled due date; else accepted + day
 };
 // Day 0 is the opportunity's own email; the stored steps are the follow-ups.
 export const SEQUENCE_DAYS = [3, 7, 14] as const;
@@ -113,6 +115,18 @@ export type Opportunity = {
   sent_at: string | null;
   email_history?: { subject: string; body: string; at: string; note?: string }[]; // VS-5
   promoted?: boolean; // VS-5
+  // VS-12 T8 (vs12.sql): the customer's response, logged by the rep. Absent
+  // (undefined) until the migration runs.
+  responded_at?: string | null;
+  response?: Response | null;
+  response_note?: string | null;
+};
+
+export type Response = "interested" | "not_now" | "not_interested";
+export const RESPONSE_LABEL: Record<Response, string> = {
+  interested: "Interested",
+  not_now: "Not now",
+  not_interested: "Not interested",
 };
 
 export type PriceList = Record<Module, number> & { setup: number };

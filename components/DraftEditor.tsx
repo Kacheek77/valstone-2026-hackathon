@@ -3,6 +3,7 @@
 import { useRef, useState, useTransition } from "react";
 import { resetEmailAction, rewriteEmailAction, saveDraftAction } from "@/app/actions";
 import { useHydrated } from "@/lib/useHydrated";
+import { wordCount } from "@/lib/format";
 
 const TONES = ["Direct", "Warm", "Technical", "Shorter"] as const;
 
@@ -166,6 +167,7 @@ export function DraftEditor({
         disabled={!hydrated || busy}
         className="rounded-lg border border-[#d9dee3] px-3 py-2 leading-relaxed text-[#3f4e5b] outline-none focus:border-[#3a728a] disabled:bg-[#f6f7f8]"
       />
+      <p className="-mt-2 text-right text-xs text-[#9aa5ae]">{wordCount(body)} words</p>
 
       <div className="flex flex-wrap items-center gap-4 text-sm">
         <button

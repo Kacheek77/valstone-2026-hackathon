@@ -4,7 +4,8 @@ import { BackLink, ErrorBox, Page } from "@/components/ui";
 import { loadAll } from "@/lib/data";
 import { dateTime, eventLine, weekLabel } from "@/lib/format";
 import { stepProgress } from "@/lib/steps";
-import { isLead } from "@/lib/types";
+import { amountExplain } from "@/lib/pricing";
+import { isLead, RESPONSE_LABEL } from "@/lib/types";
 import { getView } from "@/lib/view";
 
 export const dynamic = "force-dynamic";
@@ -30,7 +31,7 @@ export default async function Pipeline(props: PageProps<"/pipeline">) {
     );
   }
 
-  const { reps, accounts, signals, opps, steps } = loaded.data;
+  const { reps, accounts, signals, opps, steps, settings } = loaded.data;
   const accountById = new Map(accounts.map((a) => [a.id, a]));
   const signalById = new Map(signals.map((s) => [s.id, s]));
   const repById = new Map(reps.map((r) => [r.id, r]));
@@ -60,6 +61,8 @@ export default async function Pipeline(props: PageProps<"/pipeline">) {
       createdLabel: dateTime(o.created_at),
       signalDriven: o.is_signal_driven,
       steps: p ? `${p.done}/${p.total} steps` : null,
+      amountTip: a ? amountExplain(o.lead_with, a.acres, settings.price_list) : "Module rate per acre × acres + setup.",
+      replied: o.response ? RESPONSE_LABEL[o.response] : null,
     };
   });
 

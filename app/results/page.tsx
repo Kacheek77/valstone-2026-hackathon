@@ -5,7 +5,7 @@ import { BarLegend, StackedBar, wonColor } from "@/components/StackedBar";
 import { Card, EmptyState, ErrorBox, Page } from "@/components/ui";
 import { currentWeek, loadAll } from "@/lib/data";
 import { usd, weekLabel } from "@/lib/format";
-import { periodFor, periodRange, totalBreakdown, weeklyBreakdowns, type Period, type PeriodKey, type WeekRow } from "@/lib/metrics";
+import { mondaysBetween, periodFor, periodRange, totalBreakdown, weekStart, weeklyBreakdowns, type Period, type PeriodKey, type WeekRow } from "@/lib/metrics";
 import { getView, parseView } from "@/lib/view";
 
 export const dynamic = "force-dynamic";
@@ -17,20 +17,36 @@ function heading(period: Period, label: string): string {
   return period.key === "week" ? "This week" : `${label} to date`;
 }
 
-function WeekRows({ rows }: { rows: WeekRow[] }) {
+// VS-12 T17: every week of the period, newest first; weeks with no value are a
+// thin gray row, so the calendar reads continuously.
+function WeekRows({ rows, weeks }: { rows: WeekRow[]; weeks: string[] }) {
   const scale = Math.max(0, ...rows.map((r) => r.breakdown.available));
+  const byWeek = new Map(rows.map((r) => [r.week, r]));
+  const all = [...new Set([...weeks, ...rows.map((r) => r.week)])].sort().reverse();
   return (
     <Card className="px-5 py-4">
       <div className="flex flex-col gap-3">
-        {rows.map((r) => (
-          <div key={r.week} className="grid grid-cols-[56px_minmax(0,1fr)_130px] items-center gap-3 text-sm">
-            <span className="font-medium text-[#3f4e5b]">{weekLabel(r.week)}</span>
-            <StackedBar b={r.breakdown} scale={scale} />
-            <span className="whitespace-nowrap text-right tabular-nums text-[#5a6975]">
-              {usd(r.breakdown.available)} · {r.breakdown.signals} sig
-            </span>
-          </div>
-        ))}
+        {all.map((w) => {
+          const r = byWeek.get(w);
+          if (!r || r.breakdown.available === 0) {
+            return (
+              <div key={w} className="grid grid-cols-[56px_minmax(0,1fr)_130px] items-center gap-3 text-sm">
+                <span className="font-medium text-[#9aa5ae]">{weekLabel(w)}</span>
+                <span className="h-1 rounded-full bg-[#e3e7eb]" />
+                <span className="text-right text-xs text-[#9aa5ae]">no signals</span>
+              </div>
+            );
+          }
+          return (
+            <div key={w} className="grid grid-cols-[56px_minmax(0,1fr)_130px] items-center gap-3 text-sm">
+              <span className="font-medium text-[#3f4e5b]">{weekLabel(w)}</span>
+              <StackedBar b={r.breakdown} scale={scale} />
+              <span className="whitespace-nowrap text-right tabular-nums text-[#5a6975]">
+                {usd(r.breakdown.available)} · {r.breakdown.signals} sig
+              </span>
+            </div>
+          );
+        })}
       </div>
     </Card>
   );
@@ -69,6 +85,10 @@ export default async function Results(props: PageProps<"/results">) {
   const salesReps = data.reps.filter((r) => !r.is_manager);
   const week = currentWeek(data.signals);
   const range = week ? periodRange(week, period) : FALLBACK;
+  // Calendar weeks of the period so far (the quarter to date is 13 weeks).
+  const weeks = mondaysBetween(range.from, week && weekStart(week) < range.to ? weekStart(week) : range.to);
+  const weekCount = (rows: WeekRow[]) =>
+    `${weeks.length} week${weeks.length === 1 ? "" : "s"} · ${rows.filter((r) => r.breakdown.signals > 0).length} with signals`;
 
   // ---------------------------------------------------------------- rep view
   if (repId !== null) {
@@ -105,7 +125,7 @@ export default async function Results(props: PageProps<"/results">) {
               <h1 className="text-2xl font-bold">{heading(period, range.label)} · closed against what the weather created</h1>
               <p className="text-[#5a6975]">
                 {rep.name} · Won {usd(total.segments.won.value)} of {usd(total.available)} expected value available ·{" "}
-                {rows.length} week{rows.length === 1 ? "" : "s"}
+                {weekCount(rows)}
               </p>
             </div>
             <PeriodPills current={period.key} href={(k) => href(k, { rep: rep.id })} />
@@ -119,7 +139,7 @@ export default async function Results(props: PageProps<"/results">) {
                 <BarLegend b={total} />
               </Card>
               <h2 className="mb-2 font-semibold text-[#3f4e5b]">By week</h2>
-              <WeekRows rows={rows} />
+              <WeekRows rows={rows} weeks={weeks} />
             </>
           )}
           <p className="mt-3 text-xs text-[#7a8794]">
@@ -149,7 +169,7 @@ export default async function Results(props: PageProps<"/results">) {
             <p className="text-[#5a6975]">
               Won {usd(team.segments.won.value)} of {usd(team.available)} expected value available · team close rate{" "}
               <b className={wonColor(team.wonPct)}>{team.wonPct === null ? "—" : `${Math.round(team.wonPct)}%`}</b> ·{" "}
-              {teamRows.length} weeks
+              {weekCount(teamRows)}
             </p>
           </div>
           <PeriodPills current={period.key} href={(k) => href(k, byWeek ? { by: "week" } : {})} />
@@ -179,7 +199,7 @@ export default async function Results(props: PageProps<"/results">) {
         </div>
 
         {byWeek ? (
-          <WeekRows rows={teamRows} />
+          <WeekRows rows={teamRows} weeks={weeks} />
         ) : (
           <Card className="px-5 py-4">
             <div className="flex flex-col gap-1">

@@ -139,14 +139,24 @@ export default async function Dashboard(props: PageProps<"/dashboard">) {
 
         {/* VS-8: MapLibre map with the click drawer beside it. */}
         <div className="mb-5">
-          <SignalMapLoader data={buildMapData(data, repSignals)} mode="rep" repId={rep.id} layout="beside" height={460} />
+          <SignalMapLoader data={buildMapData(data, repSignals)} mode="rep" repId={rep.id} layout="beside" height={560} />
         </div>
 
         <div>
           <div className="flex flex-col gap-3">
             {repSignals.length === 0 ? (
               <EmptyState>
-                {period.key === "week" ? "No signals yet. Refresh to load this week's weather." : `No signals ${period.phrase}.`}
+                {period.key === "week" ? (
+                  <>
+                    No new signals this week. Drought in your territory is steady (US Drought Monitor, Sep 22); Signal Desk raises a
+                    signal when a county&apos;s category rises, or on heavy rain or heat.{" "}
+                    <Link href={periodHref("month")} className="text-[#3a728a] underline underline-offset-2">
+                      See this month
+                    </Link>
+                  </>
+                ) : (
+                  `No signals ${period.phrase}.`
+                )}
               </EmptyState>
             ) : (
               repSignals.map((s) => {

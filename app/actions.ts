@@ -7,7 +7,7 @@ import SEED from "@/lib/seed-snapshot.json";
 import { buildSequence } from "@/lib/sequence";
 import { refreshSignals, type RefreshResult } from "@/lib/signals-refresh";
 import { getSupabase } from "@/lib/supabase";
-import { SEQUENCE_DAYS, type Account, type Opportunity, type OutreachStep, type Rep, type Signal, type Stage } from "@/lib/types";
+import { SEQUENCE_DAYS, type Account, type Opportunity, type OutreachStep, type Rep, type Response, type Signal, type Stage } from "@/lib/types";
 import { getView } from "@/lib/view";
 
 // The dataset is small and every page reads all of it, so any write
@@ -212,7 +212,7 @@ export type SequenceResult = { ok: true; aiOffline: boolean } | { ok: false; err
 
 // Build the sequence, or Rebuild it: regenerates every step not yet done and
 // leaves done steps (and their status) alone.
-export async function buildSequenceAction(oppId: string): Promise<SequenceResult> {
+export async function buildSequenceAction(oppId: string, tone?: string | null): Promise<SequenceResult> {
   try {
     const guard = await repGuard(oppId);
     if (guard) return { ok: false, error: guard };
@@ -222,12 +222,14 @@ export async function buildSequenceAction(oppId: string): Promise<SequenceResult
     const { data: existing, error: readErr } = await db.from("outreach_steps").select("*").eq("opportunity_id", oppId);
     if (readErr) return { ok: false, error: `Sequences are not available yet (${readErr.message}).` };
     const byDay = new Map(((existing ?? []) as OutreachStep[]).map((s) => [s.day, s]));
-    if (SEQUENCE_DAYS.every((d) => byDay.get(d)?.status === "done")) return { ok: true, aiOffline: false };
+    const finished = (st?: OutreachStep) => st?.status === "done" || st?.status === "skipped";
+    if (SEQUENCE_DAYS.every((d) => finished(byDay.get(d)))) return { ok: true, aiOffline: false };
 
-    const draft = await buildSequence(account, signal, opp, { name: rep?.name ?? "Your rep", voice_note: rep?.voice_note ?? null });
+    const toneName = tone && TONES.includes(tone) ? tone : null;
+    const draft = await buildSequence(account, signal, opp, { name: rep?.name ?? "Your rep", voice_note: rep?.voice_note ?? null }, toneName);
     for (const step of draft.steps) {
       const prev = byDay.get(step.day);
-      if (prev?.status === "done") continue;
+      if (finished(prev)) continue;
       const row = { title: step.title, body: step.body, channel: step.channel, ai_offline: draft.ai_offline };
       const { error } = prev
         ? await db.from("outreach_steps").update(row).eq("id", prev.id)
@@ -236,6 +238,132 @@ export async function buildSequenceAction(oppId: string): Promise<SequenceResult
     }
     revalidateAll();
     return { ok: true, aiOffline: draft.ai_offline };
+  } catch (e) {
+    return { ok: false, error: message(e) };
+  }
+}
+
+const TONES = ["Direct", "Warm", "Technical", "Shorter"];
+const DAY_MS = 86_400_000;
+
+// Today in US Central as an ISO date, plus n days.
+function centralDate(plusDays = 0): string {
+  const today = new Date().toLocaleDateString("en-CA", { timeZone: "America/Chicago" });
+  const d = new Date(`${today}T12:00:00Z`);
+  d.setUTCDate(d.getUTCDate() + plusDays);
+  return d.toISOString().slice(0, 10);
+}
+
+// Whole days from acceptance to today + n: the "day" of a step added now.
+function dayFromAccept(opp: Opportunity, plusDays: number): number {
+  const base = Date.parse(opp.pushed_at ?? opp.created_at);
+  return Math.max(0, Math.round((Date.parse(`${centralDate(plusDays)}T12:00:00Z`) - base) / DAY_MS));
+}
+
+const NEEDS_VS12 = "This needs supabase/migrations/vs12.sql, which has not been run yet.";
+// Errors that mean the VS-12 columns or the "skipped" status are not there yet.
+const missingColumn = (m: string) => /due_on|responded_at|response|schema cache|status_check|check constraint/i.test(m);
+
+// VS-12 T7: move every unfinished step to today + 0 / 3 / 7 days, in order.
+export async function rescheduleAction(oppId: string): Promise<{ ok: boolean; error?: string }> {
+  if (!OPP_ID.test(oppId)) return { ok: false, error: "Unknown opportunity." };
+  const guard = await repGuard(oppId);
+  if (guard) return { ok: false, error: guard };
+  const db = getSupabase();
+  const { data, error } = await db.from("outreach_steps").select("*").eq("opportunity_id", oppId).order("day");
+  if (error) return { ok: false, error: error.message };
+  const open = ((data ?? []) as OutreachStep[]).filter((st) => st.status === "planned" || st.status === "scheduled");
+  const offsets = [0, 3, 7];
+  for (let i = 0; i < open.length; i++) {
+    const plus = offsets[i] ?? offsets[offsets.length - 1] + 7 * (i - offsets.length + 1);
+    const { error: e } = await db.from("outreach_steps").update({ due_on: centralDate(plus) }).eq("id", open[i].id);
+    if (e) return { ok: false, error: missingColumn(e.message) ? NEEDS_VS12 : e.message };
+  }
+  revalidateAll();
+  return { ok: true };
+}
+
+async function addStep(opp: Opportunity, plusDays: number, channel: "email" | "call", title: string, body: string) {
+  const db = getSupabase();
+  const { data } = await db.from("outreach_steps").select("day").eq("opportunity_id", opp.id);
+  const used = new Set((data ?? []).map((r) => Number(r.day)));
+  let day = dayFromAccept(opp, plusDays);
+  while (used.has(day)) day++;
+  return db.from("outreach_steps").insert({
+    opportunity_id: opp.id,
+    day,
+    channel,
+    title,
+    body,
+    status: "scheduled",
+    ai_offline: false,
+    due_on: centralDate(plusDays),
+  });
+}
+
+// VS-12 T8: the rep logs the customer's response. Interested or Not now skip
+// the remaining steps; Not now also adds a check-in email in 30 days.
+export async function logResponseAction(oppId: string, response: Response, note: string): Promise<{ ok: boolean; error?: string }> {
+  if (!OPP_ID.test(oppId)) return { ok: false, error: "Unknown opportunity." };
+  if (!["interested", "not_now", "not_interested"].includes(response)) return { ok: false, error: "Unknown response." };
+  const guard = await repGuard(oppId);
+  if (guard) return { ok: false, error: guard };
+  try {
+    const { opp, account } = await loadOpp(oppId);
+    const db = getSupabase();
+    const { error } = await db
+      .from("opportunities")
+      .update({ responded_at: new Date().toISOString(), response, response_note: note.trim().slice(0, 200) || null })
+      .eq("id", oppId);
+    if (error) return { ok: false, error: missingColumn(error.message) ? NEEDS_VS12 : error.message };
+    if (response === "interested" || response === "not_now") {
+      const { error: e } = await db
+        .from("outreach_steps")
+        .update({ status: "skipped" })
+        .eq("opportunity_id", oppId)
+        .in("status", ["planned", "scheduled"]);
+      if (e) return { ok: false, error: missingColumn(e.message) ? NEEDS_VS12 : e.message };
+    }
+    if (response === "not_now") {
+      const first = (account.contact_name ?? "").split(" ")[0] || "there";
+      const { error: e } = await addStep(
+        opp,
+        30,
+        "email",
+        "Check in",
+        `Hi ${first},
+
+Checking back in as promised. How did the season finish on your acres? If ${opp.lead_with} is worth a look now, I can show you in 15 minutes.
+
+Thanks`,
+      );
+      if (e) return { ok: false, error: e.message };
+    }
+    revalidateAll();
+    return { ok: true };
+  } catch (e) {
+    return { ok: false, error: message(e) };
+  }
+}
+
+// VS-12 T8: after an Interested reply, one Call step dated today + 2.
+export async function bookFollowUpAction(oppId: string): Promise<{ ok: boolean; error?: string }> {
+  if (!OPP_ID.test(oppId)) return { ok: false, error: "Unknown opportunity." };
+  const guard = await repGuard(oppId);
+  if (guard) return { ok: false, error: guard };
+  try {
+    const { opp, account } = await loadOpp(oppId);
+    const first = (account.contact_name ?? "").split(" ")[0] || "the contact";
+    const { error } = await addStep(
+      opp,
+      2,
+      "call",
+      `Follow-up call with ${first}`,
+      `${first} replied interested. Confirm a time to walk through ${opp.lead_with} on their fields, and who else should join.`,
+    );
+    if (error) return { ok: false, error: missingColumn(error.message) ? NEEDS_VS12 : error.message };
+    revalidateAll();
+    return { ok: true };
   } catch (e) {
     return { ok: false, error: message(e) };
   }
@@ -353,12 +481,15 @@ export async function resetDemoAction(): Promise<{ ok: boolean; message: string 
           sent_at: o.sent_at,
           email_subject: o.email_subject,
           email_body: o.email_body,
+          why_now: o.why_now,
           promoted: false,
           email_history: [],
         })
         .eq("id", o.id);
       if (error) restoreErrors++;
     });
+    // VS-12 T8: clear logged replies (a no-op, with no error surfaced, before vs12.sql).
+    await db.from("opportunities").update({ responded_at: null, response: null, response_note: null }).not("responded_at", "is", null);
     await chunked(SEED.signals, 10, async (s) => {
       const { error } = await db.from("signals").update({ status: s.status }).eq("id", s.id);
       if (error) restoreErrors++;

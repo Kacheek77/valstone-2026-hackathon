@@ -25,6 +25,7 @@ Built for the Valstone Fall Summit 2026 Hackathon, Problem 1 (Sales), on Next.js
 - Amounts come from one formula: module rate per acre × acres + $2,500 setup, rounded to $100.
 - Tone pills and "Tell Claude what to change" rewrite a draft live, in the rep's own voice note; every earlier version is kept so the original can be restored.
 - Accept lead, the outreach sequence and the task list are the working pipeline; nothing leaves the app.
+- Customer replies are logged by the rep in this version (Customer replied? on the sequence and opportunity pages); reading replies from the mailbox is a production integration.
 
 **Seeded or stand-in**
 - All 50 accounts, their contacts and the six reps are synthetic, placed in real Plains counties. A real deployment would read the company's CRM account base.

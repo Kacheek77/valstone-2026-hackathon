@@ -5,6 +5,14 @@ export function usd(n: number): string {
   return `$${Math.round(n).toLocaleString("en-US")}`;
 }
 
+export function wordCount(text: string): number {
+  return text.trim() ? text.trim().split(/\s+/).length : 0;
+}
+
+// VS-12 T4: the methodology behind a score, wherever one is shown.
+export const SCORE_TIP =
+  "Score 0–100: Claude's estimate that this account engages this week, from the rubric: signal severity, crop fit, acres, module gap, customer or prospect, recent contact. Sorts leads; does not set the amount. Threshold for a lead: 50.";
+
 export function usdExact(n: number): string {
   return `$${Math.round(n).toLocaleString("en-US")}`;
 }

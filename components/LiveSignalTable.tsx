@@ -4,11 +4,13 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { finishSignalAction } from "@/app/actions";
-import { usdExact as usd } from "@/lib/format";
+import { SCORE_TIP, usdExact as usd } from "@/lib/format";
+import { amountExplain } from "@/lib/pricing";
+import type { PriceList } from "@/lib/types";
 import type { ScoredOpp } from "@/lib/generate";
 import { PromoteButton } from "./PromoteButton";
 import { runGenerate } from "./runGenerate";
-import { Card, InfoTip, StatusBadge } from "./ui";
+import { Card, HoverTip, InfoTip, StatusBadge } from "./ui";
 
 export type LiveRow = {
   accountId: string;
@@ -60,6 +62,7 @@ export function LiveSignalTable({
   canPromote,
   county,
   drought,
+  prices,
 }: {
   signalId: string;
   rows: LiveRow[];
@@ -67,6 +70,7 @@ export function LiveSignalTable({
   canPromote: boolean;
   county: string;
   drought: boolean;
+  prices: PriceList;
 }) {
   const router = useRouter();
   const pendingKey = serverRows.filter((r) => !r.opp).map((r) => r.accountId).join(",");
@@ -249,7 +253,9 @@ export function LiveSignalTable({
                   >
                     <td className="px-4 py-2.5">
                       {opp ? (
-                        <ScoreRing score={opp.score} threshold={threshold} sweep={isNew} />
+                        <HoverTip tip={SCORE_TIP}>
+                          <ScoreRing score={opp.score} threshold={threshold} sweep={isNew} />
+                        </HoverTip>
                       ) : waiting ? (
                         <span className="sd-shimmer mt-1 block h-8 w-8 rounded-full" aria-label="Scoring" />
                       ) : (
@@ -293,7 +299,9 @@ export function LiveSignalTable({
                       )}
                     </td>
                     <td className="px-4 py-3 text-right tabular-nums">
-                      {opp ? usd(opp.amount) : <span className="text-[#9aa5ae]">{usd(r.estimate)}</span>}
+                      <HoverTip tip={amountExplain(opp?.lead_with ?? r.leadWith, r.acres, prices)} align="right">
+                        {opp ? usd(opp.amount) : <span className="text-[#9aa5ae]">{usd(r.estimate)}</span>}
+                      </HoverTip>
                     </td>
                   </tr>
                 );

@@ -53,6 +53,9 @@ export default async function RepSummary(props: PageProps<"/team/[repId]">) {
     .filter((o) => o.rep_id === rep.id && (o.signal_id ? signalIds.has(o.signal_id) : inPeriodWeek(o.created_at)))
     .sort((a, b) => b.score - a.score);
 
+  // VS-12 T8: opportunities with a logged reply ÷ opportunities sent.
+  const sent = data.opps.filter((o) => o.rep_id === rep.id && o.sent_at);
+  const replyRate = sent.length ? (sent.filter((o) => o.responded_at).length / sent.length) * 100 : null;
   const weekly = weeklyCapture(rep.id, data);
   const sparkValues = weekly.map((w) => w.capture).filter((v): v is number => v !== null);
   const tasks = tasksDue(data, rep.id);
@@ -79,7 +82,7 @@ export default async function RepSummary(props: PageProps<"/team/[repId]">) {
         </div>
 
         {/* 1. The same numbers as this rep's /team row. */}
-        <div className="mb-5 grid grid-cols-2 gap-3 md:grid-cols-4 lg:grid-cols-8">
+        <div className="mb-5 grid grid-cols-2 gap-3 md:grid-cols-5 lg:grid-cols-9">
           <Tile label="Signals"><p className="text-xl font-bold tabular-nums">{row.signals.length}</p></Tile>
           <Tile label="Opps"><p className="text-xl font-bold tabular-nums">{row.value.generated}</p></Tile>
           <Tile label="Available"><p className="text-xl font-bold tabular-nums">{row.value.available > 0 ? usd(row.value.available) : "—"}</p></Tile>
@@ -88,6 +91,7 @@ export default async function RepSummary(props: PageProps<"/team/[repId]">) {
           <Tile label="Time to act"><p className="text-xl font-bold tabular-nums">{hoursLabel(row.tta)}</p></Tile>
           <Tile label="Off-territory"><p className="text-xl font-bold tabular-nums">{row.offTerritory}</p></Tile>
           <Tile label="Signal-driven"><p className="text-xl font-bold tabular-nums">{pct(row.signalDriven)}</p></Tile>
+          <Tile label="Reply rate"><p className="text-xl font-bold tabular-nums" title="Opportunities with a logged customer reply ÷ opportunities sent">{pct(replyRate)}</p></Tile>
         </div>
 
         <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_300px]">

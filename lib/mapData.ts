@@ -1,4 +1,4 @@
-import type { AllData } from "./data";
+import { currentWeek, inWeek, type AllData } from "./data";
 import { matchAccounts } from "./match";
 import type { Signal } from "./types";
 
@@ -18,6 +18,7 @@ export type MapSignal = {
   module: string;
   repId: string | null;
   week: string;
+  thisWeek: boolean; // VS-12 T2: raised in the current week
   n: number; // opportunities generated
   amount: number; // Σ amount of those opportunities
   stages: Record<string, number>;
@@ -56,6 +57,7 @@ const OPEN = new Set(["draft", "pushed", "sent"]);
 
 export function buildMapData(data: AllData, periodSignals: Signal[]): MapData {
   const signalIds = new Set(periodSignals.map((s) => s.id));
+  const week = currentWeek(data.signals);
   const signals: MapSignal[] = periodSignals.map((s) => {
     const opps = data.opps.filter((o) => o.signal_id === s.id);
     const stages: Record<string, number> = {};
@@ -75,7 +77,7 @@ export function buildMapData(data: AllData, periodSignals: Signal[]): MapData {
       source: s.source,
       module: s.target_module,
       repId: s.rep_id,
-      week: s.week_of,
+      week: s.week_of, thisWeek: inWeek(s.week_of, week),
       n: opps.length,
       amount: opps.reduce((sum, o) => sum + o.amount, 0),
       stages,

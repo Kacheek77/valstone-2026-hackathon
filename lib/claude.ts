@@ -1,5 +1,6 @@
 import Anthropic from "@anthropic-ai/sdk";
 import type { Account, Signal } from "./types";
+import { wordCount } from "./format";
 
 export type Draft = {
   score: number;
@@ -83,18 +84,34 @@ Return JSON only.`;
 
 const REWRITE_SYSTEM = `You are a sales assistant for FieldSense. ${FIELDSENSE}
 
-You rewrite an existing outreach email. Keep every fact: the county, the weather event, the acreage, the module, whether they are a customer or prospect, and the 15-minute ask. Do not invent new facts. Apply the requested tone or instruction.
+You rewrite an existing outreach email. Keep every fact: the county, the weather event, the acreage, the module, whether they are a customer or prospect, and the ask. Do not invent new facts; you may use the account's contact role, last contact date and the rep's note on the account. Apply the requested tone or instruction.
 
 ${EMAIL_RULES}
 
+When a tone is given, its rules are hard requirements and override the general rules above on length, greeting and structure. Count the words of email_body (greeting and sign-off included) before answering; the count must fall inside the tone's range. Each tone must open differently from the current draft.
+
 Return JSON with email_subject and email_body only.`;
 
-const TONE_GUIDE: Record<string, string> = {
-  Direct: "Direct: lead with the point, cut pleasantries and hedges.",
-  Warm: "Warm: friendly and personal, acknowledge the relationship or the season, still brief.",
-  Technical: "Technical: add one concrete detail of how the module works (data it uses, what it outputs).",
-  Shorter: "Shorter: cut to about 60 words, keep the three-paragraph shape and the ask.",
+// VS-12 T3: hard, checkable rules, so the four tones read clearly differently.
+export const TONE_GUIDE: Record<string, string> = {
+  Direct:
+    `Direct: 50-80 words. The greeting is only "<first name>," on its own line. The first sentence states the weather event and its consequence for this farm. One sentence on the module. Then the ask with a specific day (for example "Can we take 15 minutes on Thursday?"). No softeners: never "just", "I hope", "wanted to", "reaching out". Sign off with the rep's first name only.`,
+  Warm:
+    "Warm: 110-150 words. Open on the relationship or the account note (history, the last contact, something they care about) before any mention of the weather. Acknowledge the pressure they are under this week. Offer help, with a low-pressure ask. Sign off with a friendly close and the rep's first name. Fit the contact's role.",
+  Technical:
+    "Technical: 120-170 words, written for an agronomist or operations manager (fit the contact's role). Use the numbers: the drought category and what it means (D1 moderate, D2 severe: crop losses likely, D3 extreme: major crop losses, D4 exceptional), the acres, the crop stage, what the module measures (soil moisture, evapotranspiration, acre-inches, allocation, field-work windows, yield records) and one concrete output (for example \"ranks your pivots by return per acre-inch\"). Plain ask.",
+  Shorter:
+    "Shorter: at most 45 words in email_body, greeting and sign-off included. Subject at most 5 words. Exactly two sentences plus the ask.",
 };
+
+// Word ranges the tone rules promise (body, greeting and sign-off included).
+export const TONE_RANGE: Record<string, [number, number]> = {
+  Direct: [50, 80],
+  Warm: [110, 150],
+  Technical: [120, 170],
+  Shorter: [1, 45],
+};
+
 
 // ---------------------------------------------------------------- helpers
 
@@ -307,19 +324,27 @@ export async function rewriteEmail(
   current: { subject: string; body: string },
   req: RewriteRequest,
 ): Promise<Rewrite> {
-  const parsed = await callJson<{ email_subject: string; email_body: string }>(
-    REWRITE_SYSTEM,
-    {
-      account: accountFacts(account),
-      signal: signal ? signalFacts(signal) : null,
-      lead_with: leadWith,
-      rep: { name: rep.name, voice_note: rep.voice_note ?? null },
-      current_draft: current,
-      tone: req.tone ? TONE_GUIDE[req.tone] ?? req.tone : null,
-      instruction: req.instruction ?? null,
-    },
-    REWRITE_SCHEMA,
-  );
+  const input = {
+    account: accountFacts(account),
+    signal: signal ? signalFacts(signal) : null,
+    lead_with: leadWith,
+    rep: { name: rep.name, voice_note: rep.voice_note ?? null },
+    current_draft: current,
+    tone: req.tone ? TONE_GUIDE[req.tone] ?? req.tone : null,
+    instruction: req.instruction ?? null,
+  };
+  let parsed = await callJson<{ email_subject: string; email_body: string }>(REWRITE_SYSTEM, input, REWRITE_SCHEMA);
   if (!parsed?.email_subject || !parsed?.email_body) return rulesRewrite(account, leadWith, current, req);
+  // One corrective retry when a tone's word range is missed.
+  const range = req.tone ? TONE_RANGE[req.tone] : undefined;
+  const n = wordCount(parsed.email_body);
+  if (range && (n < range[0] || n > range[1])) {
+    const retry = await callJson<{ email_subject: string; email_body: string }>(
+      REWRITE_SYSTEM,
+      { ...input, correction: `Your previous version had ${n} words: ${JSON.stringify(parsed.email_body)}. The ${req.tone} rule requires ${range[0]}-${range[1]} words. Rewrite it to fit.` },
+      REWRITE_SCHEMA,
+    );
+    if (retry?.email_subject && retry.email_body) parsed = retry;
+  }
   return { email_subject: parsed.email_subject.trim(), email_body: parsed.email_body.trim(), ai_offline: false };
 }

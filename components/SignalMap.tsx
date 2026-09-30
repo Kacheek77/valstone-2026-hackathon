@@ -168,7 +168,8 @@ function Kv({ rows }: { rows: [string, React.ReactNode][] }) {
   );
 }
 
-const btn = "flex items-center gap-2.5 rounded-md border-2 px-3.5 py-2 text-sm font-bold transition-opacity duration-150 hover:opacity-85";
+const btn =
+  "flex min-w-0 items-center gap-2.5 rounded-md border-2 px-3.5 py-2 text-left text-sm font-bold leading-snug transition-opacity duration-150 [overflow-wrap:anywhere] hover:opacity-85 [&>svg]:shrink-0";
 const btnPrimary = `${btn} border-[#f55a00] bg-[#f55a00] text-white`;
 const btnSecondary = `${btn} border-[#3a728a] bg-white text-[#3a728a]`;
 const btnQuiet = "flex items-center gap-2.5 px-3.5 py-1 text-sm text-[#5a6975] hover:underline";
@@ -266,7 +267,7 @@ function AccountCard({ a, reps }: { a: MapAccount; reps: MapRep[] }) {
               {a.email && (
                 <>
                   <br />
-                  <span className="text-[#5a6975]">{a.email}</span>
+                  <span className="text-[#5a6975] [overflow-wrap:anywhere]">{a.email}</span>
                 </>
               )}
             </span>,
@@ -581,7 +582,10 @@ export default function SignalMap({
           if (map!.queryRenderedFeatures(e.point, { layers: ["sig-fill", ...(manager ? ["terr-fill"] : [])] }).length) return;
           const dm = Number(e.features?.[0]?.properties?.DM);
           if (!(dm >= 0 && dm <= 4)) return;
-          tip(e.lngLat, `<b>D${dm} ${USDM_NAMES[dm]}</b> · US Drought Monitor, ${USDM_LABEL}`);
+          tip(
+            e.lngLat,
+            `<b>D${dm} ${USDM_NAMES[dm]}</b> · US Drought Monitor, ${USDM_LABEL}<br><span style="color:#5a6975">No change this week: no new signal</span>`,
+          );
         });
         map.on("mouseleave", "usdm-fill", untip);
 
@@ -596,7 +600,13 @@ export default function SignalMap({
           const s = byId.get(sid);
           if (!s) return;
           map!.getCanvas().style.cursor = "pointer";
-          tip(e.lngLat, `<b>${esc(s.headline)}</b><br><span style="color:#5a6975">Click for details</span>`);
+          const dmHit = s.type === "drought" ? map!.queryRenderedFeatures(e.point, { layers: ["usdm-fill"] })[0] : undefined;
+          const dm = Number(dmHit?.properties?.DM);
+          const usdm =
+            dm >= 0 && dm <= 4
+              ? `<b>D${dm} ${USDM_NAMES[dm]}</b> · US Drought Monitor, ${USDM_LABEL}<br>${s.thisWeek ? "Worsened this week: signal raised" : "No change this week: no new signal"}<br>`
+              : "";
+          tip(e.lngLat, `${usdm}<b>${esc(s.headline)}</b><br><span style="color:#5a6975">Click for details</span>`);
         });
         map.on("mouseleave", "sig-fill", () => {
           map!.getCanvas().style.cursor = "";
@@ -720,8 +730,7 @@ export default function SignalMap({
 
   const drawer = (
     <aside
-      className={`relative rounded-xl border border-[#d9dee3] bg-white p-4 ${layout === "beside" ? "overflow-auto" : ""}`}
-      style={layout === "beside" ? { height } : undefined}
+      className="relative min-w-0 overflow-x-hidden rounded-xl border border-[#d9dee3] bg-white p-4"
       aria-live="polite"
     >
       {selected && sel ? (
@@ -752,10 +761,11 @@ export default function SignalMap({
 
   return (
     <div className="flex flex-col gap-2">
-      <div className={layout === "beside" ? "grid gap-4 lg:grid-cols-[minmax(0,1fr)_340px]" : "flex flex-col gap-4"}>
+      <div className={layout === "beside" ? "grid items-stretch gap-4 lg:grid-cols-[minmax(0,1fr)_400px]" : "flex flex-col gap-4"}>
         <div
           className={`relative overflow-hidden rounded-xl bg-[#dfe6ec] shadow-[0_8px_24px_rgba(15,20,25,0.12)] ${mode === "manager" ? "sd-mgr" : ""}`}
-          style={{ height }}
+          // VS-12 T1: the map row is max(height, drawer content); the map fills it.
+          style={layout === "beside" ? { minHeight: height } : { height }}
         >
           {noWebgl || geoError ? (
             geo ? (

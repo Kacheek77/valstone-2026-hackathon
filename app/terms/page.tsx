@@ -33,6 +33,10 @@ export default function Terms() {
             ))}
           </dl>
         </Card>
+        <p className="mt-3 text-sm text-[#5a6975]">
+          Customer replies (Interested, Not now, Not interested) are logged by the rep in this version; reading replies from the
+          mailbox is a production integration.
+        </p>
       </div>
     </Page>
   );

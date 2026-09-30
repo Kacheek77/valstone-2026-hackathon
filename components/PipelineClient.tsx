@@ -2,7 +2,9 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
+import { SCORE_TIP } from "@/lib/format";
 import { STAGE_LABEL, type Stage } from "@/lib/types";
+import { HoverTip } from "./ui";
 
 export type PipelineRow = {
   id: string;
@@ -23,6 +25,8 @@ export type PipelineRow = {
   createdLabel: string;
   signalDriven: boolean;
   steps: string | null; // "2/4 steps"
+  amountTip: string; // VS-12 T4
+  replied: string | null; // VS-12 T8: "Interested" etc. once a reply is logged
 };
 
 export type SignalOption = { id: string; label: string };
@@ -259,7 +263,9 @@ export function PipelineClient({
               {visible.map((r) => (
                 <tr key={r.id} className={`relative border-t border-[#eef0f2] transition-colors duration-150 hover:bg-[#f6f7f8] ${r.lead ? "" : "text-[#9aa5ae]"}`}>
                   <td className="px-4 py-3 font-bold tabular-nums text-[#3a728a]">
-                    {r.score}
+                    <span className="relative z-10">
+                      <HoverTip tip={SCORE_TIP}>{r.score}</HoverTip>
+                    </span>
                     {r.promoted && <span className="ml-1 text-xs font-normal text-[#1f9d55]" title="Promoted to lead">↑</span>}
                   </td>
                   <td className="px-3 py-3">
@@ -274,12 +280,21 @@ export function PipelineClient({
                   {manager && <td className="px-3 py-3">{r.rep}</td>}
                   <td className="px-3 py-3">{r.signalId ? r.signalLabel : <span className="text-[#7a8794]">List prospecting</span>}</td>
                   <td className="px-3 py-3">{r.module}</td>
-                  <td className="px-3 py-3 text-right tabular-nums">{usd(r.amount)}</td>
+                  <td className="px-3 py-3 text-right tabular-nums">
+                    <span className="relative z-10">
+                      <HoverTip tip={r.amountTip} align="right">{usd(r.amount)}</HoverTip>
+                    </span>
+                  </td>
                   <td className="px-3 py-3">
                     <span className="inline-flex items-center gap-1.5 text-sm font-medium" style={{ color: STAGE_COLOR[r.stage] }}>
                       <span className="h-2 w-2 rounded-full" style={{ background: STAGE_COLOR[r.stage] }} />
                       {STAGE_LABEL[r.stage]}
                     </span>
+                    {r.replied && (
+                      <span className="ml-2 rounded-full bg-[#e6f4ec] px-2 py-0.5 text-xs font-medium text-[#14693a]" title={`Customer replied: ${r.replied}`}>
+                        Replied
+                      </span>
+                    )}
                   </td>
                   <td className="whitespace-nowrap px-3 py-3 text-[#5a6975]">{r.createdLabel}</td>
                   <td className="px-4 py-3 text-right">
