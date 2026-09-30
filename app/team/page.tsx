@@ -3,7 +3,7 @@ import { CountUp } from "@/components/CountUp";
 import { Header } from "@/components/Header";
 import { SignalMapLoader } from "@/components/SignalMapLoader";
 import { hoursLabel } from "@/components/hoursLabel";
-import { Card, ErrorBox, Page, Tile } from "@/components/ui";
+import { Card, ErrorBox, InfoTip, Page, Tile } from "@/components/ui";
 import { currentWeek, loadAll } from "@/lib/data";
 import { buildMapData, buildSeason } from "@/lib/mapData";
 import SEED from "@/lib/seed-snapshot.json";
@@ -94,7 +94,16 @@ export default async function Team(props: PageProps<"/team">) {
           <table className="w-full min-w-[1060px] text-sm [&_td]:whitespace-nowrap [&_th]:whitespace-nowrap">
             <thead className="bg-[#efefef] text-[#3f4e5b]">
               <tr>
-                <th className="sticky left-0 z-20 bg-[#efefef] px-4 py-2.5 text-left font-semibold">Rep</th>
+                <th className="sticky left-0 z-20 bg-[#efefef] px-4 py-2.5 text-left font-semibold">
+                  <span className="flex items-center gap-1.5">
+                    Rep
+                    <InfoTip label="How these numbers work">
+                      Available = expected value (amount × score) of the period&apos;s opportunities, plus matched accounts at a score of 50
+                      on any signal nobody worked. Captured = the part accepted, sent or won. Capture: green 70%+, amber 50–69%, red under
+                      50%.
+                    </InfoTip>
+                  </span>
+                </th>
                 <th className="px-3 py-2.5 text-left font-semibold">Territory</th>
                 <th className="px-3 py-2.5 text-right font-semibold">Signals</th>
                 <th className="px-3 py-2.5 text-right font-semibold">Opps</th>
@@ -142,14 +151,6 @@ export default async function Team(props: PageProps<"/team">) {
             </tbody>
           </table>
         </Card>
-        <p className="mt-3 text-xs text-[#7a8794]">
-          Click a rep for their summary. Available = Σ amount × score ÷ 100 over the period&apos;s generated opportunities,
-          plus, for any signal with no opportunities at all, its matched accounts at a score of 50, so an ignored signal
-          still counts against the rep. Captured = the same over those accepted, sent or won. Capture rate: green 70%+, amber
-          50–69%, red under 50%. Time to act = signal to accept: median hours from a signal&apos;s week to the rep accepting the
-          lead, across all weeks. Off-territory and signal-driven cover all of the rep&apos;s opportunities; signal-driven is
-          weighted by open pipeline dollars. Score is a model estimate until a season of closes calibrates it.
-        </p>
       </Page>
     </>
   );

@@ -2,7 +2,7 @@ import { notFound, redirect } from "next/navigation";
 import { Header } from "@/components/Header";
 import { ResponsePanel } from "@/components/ResponsePanel";
 import { SequenceTable, type SequenceRow } from "@/components/SequenceTable";
-import { BackLink, EmptyState, ErrorBox, Page } from "@/components/ui";
+import { BackLink, EmptyState, ErrorBox, InfoTip, Page } from "@/components/ui";
 import { loadAll } from "@/lib/data";
 import { usdExact } from "@/lib/format";
 import { day0Status, dueDate, formatDue, isOpenStep, stepDue, stepsFor, stepStatus } from "@/lib/steps";
@@ -85,7 +85,13 @@ export default async function SequencePage(props: PageProps<"/opportunities/[id]
           {closed ? ` · Closed (${opp.stage === "won" ? "won" : "lost"})` : ""}
         </p>
         <h1 className="mb-4 mt-1 text-2xl font-bold">
-          Outreach sequence · {SEQUENCE_DAYS.length + 1} touches over {SEQUENCE_DAYS[SEQUENCE_DAYS.length - 1]} days
+          Outreach sequence · {SEQUENCE_DAYS.length + 1} touches over {SEQUENCE_DAYS[SEQUENCE_DAYS.length - 1]} days{" "}
+          <span className="align-middle text-base font-normal">
+            <InfoTip label="How this works">
+              Due dates run from the day the lead was accepted; Day 0 is the opening email.
+              {readOnly ? "" : " Schedule all puts the steps on My tasks; a tone or Rebuild rewrites every step not yet done."}
+            </InfoTip>
+          </span>
         </h1>
 
         {/* VS-13 M1: the manager gets one read-only line, never rep instructions. */}
@@ -146,14 +152,6 @@ export default async function SequencePage(props: PageProps<"/opportunities/[id]
               </p>
             )}
           </>
-        )}
-        {!readOnly && (
-        <p className="mt-3 text-xs text-[#7a8794]">
-          Due dates run from the day the lead was accepted. Day 0 mirrors the opportunity: Sent ✓ once it is marked sent.
-          Schedule all puts the steps on the dashboard&apos;s My tasks list. Rebuild, or a tone, rewrites every step not yet done. Click
-          a step to read or edit it. Log the customer&apos;s reply on a done step; reading replies from the mailbox is a production
-          integration.
-        </p>
         )}
       </Page>
     </>

@@ -134,7 +134,6 @@ export default async function OpportunityPage(props: PageProps<"/opportunities/[
                   <p className="text-xl font-bold">{usdExact(opp.amount)}</p>
                 </HoverTip>
               </div>
-              <p className="text-xs text-[#7a8794]">Module rate per acre × acres + $2,500 setup, rounded to $100</p>
               {opp.ai_offline && <p className="mt-2 text-xs text-[#8a5a00]">AI offline: rules-based score and template draft.</p>}
               {opp.is_off_territory && (
                 <p className="mt-2 text-xs text-[#8a5a00]">Off-territory: the account sits outside the rep&apos;s counties.</p>

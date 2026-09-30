@@ -1,6 +1,6 @@
 import { Header } from "@/components/Header";
 import { PipelineClient, type PipelineRow, type SignalOption } from "@/components/PipelineClient";
-import { BackLink, ErrorBox, Page } from "@/components/ui";
+import { BackLink, ErrorBox, InfoTip, Page } from "@/components/ui";
 import { loadAll } from "@/lib/data";
 import { dateTime, eventLine, weekLabel } from "@/lib/format";
 import { stepProgress } from "@/lib/steps";
@@ -83,7 +83,15 @@ export default async function Pipeline(props: PageProps<"/pipeline">) {
             <BackLink href={`/signals/${filterSignal.id}`} label={filterSignal.headline} />
           </div>
         )}
-        <h1 className="mb-4 text-2xl font-bold">Generated leads</h1>
+        <h1 className="mb-4 flex items-center gap-2 text-2xl font-bold">
+          Generated leads
+          <span className="text-base font-normal">
+            <InfoTip label="How this works">
+              Leads are opportunities scoring 50 or more, plus any a rep promoted. Open pipeline counts Draft, Accepted and Sent in
+              this view.
+            </InfoTip>
+          </span>
+        </h1>
         <PipelineClient
           rows={rows}
           signalOptions={signalOptions}
@@ -92,10 +100,6 @@ export default async function Pipeline(props: PageProps<"/pipeline">) {
           initialSignal={filterSignal ? filterSignal.id : null}
           initialQuery={initialQuery}
         />
-        <p className="mt-3 text-xs text-[#7a8794]">
-          Leads are opportunities scoring 50 or more, plus any a rep promoted. Open pipeline counts Draft, Accepted and Sent in the
-          current view. Click Score, Amount or Created to sort.
-        </p>
       </Page>
     </>
   );

@@ -39,6 +39,7 @@ export function LiveSignalTable({
   signalId,
   rows: serverRows,
   threshold,
+  filter,
   canPromote,
   county,
   drought,
@@ -47,6 +48,8 @@ export function LiveSignalTable({
   signalId: string;
   rows: LiveRow[];
   threshold: number;
+  // VS-14 P1: scored rows under this score are hidden (0 = show all).
+  filter: number;
   canPromote: boolean;
   county: string;
   drought: boolean;
@@ -62,6 +65,7 @@ export function LiveSignalTable({
     return { done: 0, total, offline: 0, failed: [], state: total ? "running" : "idle" };
   });
   const [barHidden, setBarHidden] = useState(false);
+  const [showHidden, setShowHidden] = useState(false);
   const started = useRef(false);
 
   useEffect(() => {
@@ -147,6 +151,8 @@ export function LiveSignalTable({
   }, [orderKey]);
 
   const leads = rows.filter((r) => r.opp && (r.opp.score >= threshold || r.opp.promoted)).length;
+  const hiddenIds = new Set(rows.filter((r) => r.opp && r.opp.score < filter).map((r) => r.accountId));
+  const shownRows = showHidden ? rows : rows.filter((r) => !hiddenIds.has(r.accountId));
 
   return (
     <>
@@ -189,7 +195,8 @@ export function LiveSignalTable({
           {drought ? " or the rest of the territory" : ""}, or they already own every module.
         </p>
       ) : (
-        <Card className="overflow-x-auto">
+        // VS-14 P1: the table grows with the page (no inner scroll on desktop).
+        <Card className="overflow-x-auto lg:overflow-visible">
           <table className="w-full min-w-[760px] text-left text-sm">
             <thead className="bg-[#efefef] text-[#3f4e5b]">
               <tr>
@@ -216,10 +223,10 @@ export function LiveSignalTable({
               </tr>
             </thead>
             <tbody>
-              {rows.map((r) => {
+              {shownRows.map((r) => {
                 const opp = r.opp;
                 const isNew = fresh.has(r.accountId);
-                const below = opp !== null && !(opp.score >= threshold || opp.promoted);
+                const below = (opp !== null && !(opp.score >= threshold || opp.promoted)) || hiddenIds.has(r.accountId);
                 const underScore = opp !== null && opp.score < threshold;
                 const waiting = !opp && running;
                 return (
@@ -289,6 +296,14 @@ export function LiveSignalTable({
             </tbody>
           </table>
         </Card>
+      )}
+      {hiddenIds.size > 0 && (
+        <p className="mt-2 text-sm text-[#5a6975]">
+          {hiddenIds.size} account{hiddenIds.size === 1 ? "" : "s"} below {filter} {showHidden ? "shown greyed" : "hidden"} ·{" "}
+          <button type="button" onClick={() => setShowHidden((v) => !v)} className="text-[#3a728a] underline underline-offset-2">
+            {showHidden ? "Hide" : "Show"}
+          </button>
+        </p>
       )}
     </>
   );

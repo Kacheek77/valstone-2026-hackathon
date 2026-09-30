@@ -151,7 +151,18 @@ export function SequenceTable({
   // VS-12 T8: the inline "Customer replied?" control on done steps.
   reply: { enabled: boolean; logged: boolean; stage: string; at: { day: number; label: string } | null };
 }) {
-  const [open, setOpen] = useState<number | null>(null);
+  // VS-14 P3: any number of steps can be open; Expand all opens every one.
+  const [open, setOpen] = useState<Set<number>>(() => new Set());
+  const allOpen = rows.length > 0 && rows.every((r) => open.has(r.day));
+  const expandToggle = (
+    <button
+      type="button"
+      onClick={() => setOpen(allOpen ? new Set() : new Set(rows.map((r) => r.day)))}
+      className="text-sm text-[#3a728a] underline underline-offset-2 hover:text-[#142e3a]"
+    >
+      {allOpen ? "Collapse all" : "Expand all"}
+    </button>
+  );
   const [busy, startTransition] = useTransition();
   const hydrated = useHydrated();
   const [toast, show] = useToast();
@@ -254,13 +265,15 @@ export function SequenceTable({
               </button>
             ))}
           </span>
+          {expandToggle}
         </div>
       )}
+      {readOnly && <div className="mb-3 flex justify-end">{expandToggle}</div>}
       <Timeline
         rows={rows}
         reply={reply.at}
         onOpen={(day) => {
-          setOpen(day);
+          setOpen((o) => new Set(o).add(day));
           requestAnimationFrame(() =>
             document.getElementById(`step-${day}`)?.scrollIntoView({
               block: "center",
@@ -282,7 +295,7 @@ export function SequenceTable({
           </thead>
           <tbody>
             {rows.map((r) => {
-              const expanded = open === r.day;
+              const expanded = open.has(r.day);
               return (
                 <tr key={r.day} id={`step-${r.day}`} className="scroll-mt-24 border-t border-[#eef0f2] align-top">
                   <td className="px-4 py-3 font-semibold tabular-nums">{r.day}</td>
@@ -291,7 +304,14 @@ export function SequenceTable({
                   <td className="px-3 py-3">
                     <button
                       type="button"
-                      onClick={() => setOpen(expanded ? null : r.day)}
+                      onClick={() =>
+                        setOpen((o) => {
+                          const n = new Set(o);
+                          if (n.has(r.day)) n.delete(r.day);
+                          else n.add(r.day);
+                          return n;
+                        })
+                      }
                       aria-expanded={expanded}
                       className="text-left font-medium text-[#3a728a] hover:underline"
                     >

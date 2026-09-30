@@ -156,7 +156,6 @@ export function ResponsePanel({
           </button>
         </form>
       )}
-      {!compact && <p className="text-xs text-[#7a8794]">Logged by you in this version; reading replies from the mailbox is a production integration.</p>}
       {toast}
     </div>
   );

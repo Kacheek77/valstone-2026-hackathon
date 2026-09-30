@@ -3,7 +3,7 @@ import { CountUp } from "@/components/CountUp";
 import { Header } from "@/components/Header";
 import { PeriodPills } from "@/components/PeriodPills";
 import { BarLegend, StackedBar, wonColor } from "@/components/StackedBar";
-import { Card, EmptyState, ErrorBox, Page } from "@/components/ui";
+import { Card, EmptyState, ErrorBox, InfoTip, Page } from "@/components/ui";
 import { currentWeek, loadAll } from "@/lib/data";
 import { usd, weekLabel } from "@/lib/format";
 import { mondaysBetween, periodFor, periodRange, totalBreakdown, weekStart, weeklyBreakdowns, type Period, type PeriodKey, type WeekRow } from "@/lib/metrics";
@@ -53,8 +53,10 @@ function WeekRows({ rows, weeks }: { rows: WeekRow[]; weeks: string[] }) {
   );
 }
 
-const FOOTNOTE =
-  "Bar length = expected value available that week. Hatched = open, not yet worked (drafts and unscored matches from the last 21 days). Gray = lost or expired. Prior-week figures are seeded history. Time to act = signal to accept.";
+const WEEK_TIP =
+  "Bar length = expected value available that week (amount × score ÷ 100). Hatched = open, not yet worked; gray = lost or expired. Hover a segment for counts.";
+const REP_TIP =
+  "Bar length = expected value available to that rep in the period. Won % = won ÷ available: green 15%+, amber 8–14%, red under 8%.";
 
 export default async function Results(props: PageProps<"/results">) {
   const sp = await props.searchParams;
@@ -140,14 +142,12 @@ export default async function Results(props: PageProps<"/results">) {
                 <StackedBar b={total} scale={total.available} height="h-8" />
                 <BarLegend b={total} />
               </Card>
-              <h2 className="mb-2 font-semibold text-[#3f4e5b]">By week</h2>
+              <h2 className="mb-2 flex items-center gap-1.5 font-semibold text-[#3f4e5b]">
+                By week <InfoTip label="How this works">{WEEK_TIP}</InfoTip>
+              </h2>
               <WeekRows rows={rows} weeks={weeks} />
             </>
           )}
-          <p className="mt-3 text-xs text-[#7a8794]">
-            {FOOTNOTE} All values are expected value (amount × score ÷ 100). List-prospected opportunities sit in the week they
-            were created. Hover a segment for counts.
-          </p>
         </Page>
       </>
     );
@@ -184,7 +184,10 @@ export default async function Results(props: PageProps<"/results">) {
         </Card>
 
         <div className="mb-2 flex items-center justify-between">
-          <h2 className="font-semibold text-[#3f4e5b]">{byWeek ? "Team, week by week" : `Each rep ${period.phrase}`}</h2>
+          <h2 className="flex items-center gap-1.5 font-semibold text-[#3f4e5b]">
+            {byWeek ? "Team, week by week" : `Each rep ${period.phrase}`}
+            <InfoTip label="How this works">{byWeek ? WEEK_TIP : REP_TIP}</InfoTip>
+          </h2>
           <div className="flex gap-2 text-sm" role="group" aria-label="Rows">
             <Link
               href={href(period.key)}
@@ -224,11 +227,6 @@ export default async function Results(props: PageProps<"/results">) {
             </div>
           </Card>
         )}
-        <p className="mt-3 text-xs text-[#7a8794]">
-          {byWeek ? FOOTNOTE : "Bar length = expected value available to that rep in the period. Hatched = open, not yet worked (drafts and unscored matches from the last 21 days). Gray = lost or expired. Prior-week figures are seeded history."}{" "}
-          Won % = won ÷ available, in expected value (amount × score ÷ 100); green 15%+, amber 8–14%, red under 8%. Click a rep
-          to open their results.
-        </p>
       </Page>
     </>
   );

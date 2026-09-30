@@ -230,7 +230,14 @@ export default async function Dashboard(props: PageProps<"/dashboard">) {
             )}
 
             <div className="mt-1 flex flex-col gap-3 sm:flex-row">
-              <Tile label={`Pipeline ${period.phrase}`}>
+              <Tile
+                label={
+                  <span className="flex items-center gap-1.5">
+                    Pipeline {period.phrase}
+                    <InfoTip label="About the sparklines">Sparklines: the four prior weeks of seeded history, then this week.</InfoTip>
+                  </span>
+                }
+              >
                 <p className="text-2xl font-bold text-[#3a728a]">
                   <CountUp value={now.pipeline} format="usd" />
                   <span className="ml-2 text-sm font-normal text-[#5a6975]">
@@ -274,9 +281,6 @@ export default async function Dashboard(props: PageProps<"/dashboard">) {
                 <Sparkline values={series((n) => n.hours)} color="#c64800" label="Hours saved, last five weeks" />
               </Tile>
             </div>
-            {period.key === "week" && (
-              <p className="text-xs text-[#7a8794]">Sparklines show the four prior weeks of seeded history, then this week.</p>
-            )}
 
             <Card className="px-4 py-3">
               <div className="mb-2 flex items-baseline justify-between">

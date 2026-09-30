@@ -3,12 +3,20 @@ import { notFound, redirect } from "next/navigation";
 import { Header } from "@/components/Header";
 import { LiveSignalTable, type LiveRow } from "@/components/LiveSignalTable";
 import { SignalBackdrop } from "@/components/SignalBackdrop";
-import { BackLink, ErrorBox, Page, SEVERITY_COLOR, SEVERITY_TINT } from "@/components/ui";
+import { BackLink, ErrorBox, InfoTip, Page, SEVERITY_COLOR, SEVERITY_TINT } from "@/components/ui";
 import { loadAll } from "@/lib/data";
 import { weekLabel } from "@/lib/format";
 import { matchAccounts } from "@/lib/match";
 import { amountFor } from "@/lib/pricing";
-import { DEFAULT_THRESHOLD, isLead, THRESHOLDS, type Account, type Opportunity, type SignalType } from "@/lib/types";
+import { DEFAULT_THRESHOLD, isLead, type Account, type Opportunity, type SignalType } from "@/lib/types";
+
+// VS-14 P1: view filters. 50+ is the app-wide lead line; the pills only filter this list.
+const FILTERS = [
+  { t: 0, label: "All" },
+  { t: 50, label: "50+" },
+  { t: 60, label: "60+" },
+  { t: 80, label: "80+" },
+];
 import { DEMO_REP_ID, getView } from "@/lib/view";
 
 export const dynamic = "force-dynamic";
@@ -29,7 +37,8 @@ export default async function SignalDetail(props: PageProps<"/signals/[id]">) {
   const sp = await props.searchParams;
   const tParam = Number(typeof sp.t === "string" ? sp.t : NaN);
   // Changing the threshold re-classifies rows; it never re-scores them.
-  const threshold = THRESHOLDS.includes(tParam) ? tParam : DEFAULT_THRESHOLD;
+  const filter = FILTERS.some((f) => f.t === tParam) ? tParam : DEFAULT_THRESHOLD;
+  const threshold = DEFAULT_THRESHOLD;
   const view = await getView();
 
   const loaded = await loadAll();
@@ -125,19 +134,27 @@ export default async function SignalDetail(props: PageProps<"/signals/[id]">) {
         </div>
 
         <div className="mb-2 flex flex-wrap items-center justify-between gap-3">
-          <h2 className="font-semibold text-[#3f4e5b]">Affected accounts, ranked</h2>
-          <nav className="flex items-center gap-2 text-sm" aria-label="Lead threshold">
-            <span className="text-[#5a6975]">Lead threshold</span>
-            {THRESHOLDS.map((t) => (
+          <h2 className="flex items-center gap-1.5 font-semibold text-[#3f4e5b]">
+            Affected accounts, ranked
+            <InfoTip label="How this works">
+              Accounts in the county{signal.type === "drought" ? " (for drought, the whole territory)" : ""} with a relevant crop that do
+              not yet own the module. Claude scores each one as the page opens; a rules-based score marked AI offline stands in if it
+              cannot.
+            </InfoTip>
+          </h2>
+          <nav className="flex items-center gap-2 text-sm" aria-label="Show accounts scoring">
+            <span className="text-[#5a6975]">Show</span>
+            {FILTERS.map(({ t, label }) => (
               <Link
                 key={t}
                 href={t === DEFAULT_THRESHOLD ? `/signals/${signal.id}` : `/signals/${signal.id}?t=${t}`}
                 scroll={false}
+                aria-current={t === filter ? "true" : undefined}
                 className={`rounded-full px-3 py-1 transition-colors duration-150 ${
-                  t === threshold ? "bg-[#3a728a] font-medium text-white" : "border border-[#bcc4cb] text-[#3f4e5b] hover:bg-white"
+                  t === filter ? "bg-[#3a728a] font-medium text-white" : "border border-[#bcc4cb] text-[#3f4e5b] hover:bg-white"
                 }`}
               >
-                {t}
+                {label}
               </Link>
             ))}
           </nav>
@@ -146,16 +163,12 @@ export default async function SignalDetail(props: PageProps<"/signals/[id]">) {
           signalId={signal.id}
           rows={liveRows}
           threshold={threshold}
+          filter={filter}
           canPromote={view.kind === "rep"}
           county={signal.county}
           drought={signal.type === "drought"}
           prices={settings.price_list}
         />
-        <p className="mt-3 text-xs text-[#7a8794]">
-          Matching is deterministic: accounts in the county{signal.type === "drought" ? " and the rest of its territory" : ""}, with a
-          relevant crop, that do not yet own the module. Claude scores and writes each row as soon as the page opens; a rules-based score marked
-          &ldquo;AI offline&rdquo; stands in if Claude is unavailable. Rows under the threshold ({threshold}) are grayed unless promoted to a lead.
-        </p>
       </Page>
     </>
   );
